@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+motor
+beanie
+python-dotenv
+pyjwt
+bcrypt
+pydantic
+passlib
+email-validator
+orjson
+ujson
+httptools
+watchfiles
+aiostream
