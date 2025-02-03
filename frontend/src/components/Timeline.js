@@ -8,7 +8,6 @@ const Timeline = () => {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        // Adjust the URL to match your backend's address and port
         const response = await fetch('http://127.0.0.1:8000/api/posts');
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
