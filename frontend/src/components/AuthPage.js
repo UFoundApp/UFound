@@ -28,6 +28,7 @@ function AuthPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [password, setPassword] = useState("");
+  const [showVerification, setShowVerification] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,6 +67,22 @@ function AuthPage() {
 
   const handleResetPassword = () => {
     navigate('/reset-password');
+  };
+
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.endsWith("@mail.utoronto.ca")) {
+      alert("Only @mail.utoronto.ca emails are allowed.");
+      return;
+    }
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/auth/send-verification-code", { email });
+      if (response.data.message === "Verification code sent") {
+        setShowVerification(true); // Show verification code input after successful send
+      }
+    } catch (error) {
+      alert(error.response?.data?.detail || "Failed to send verification code");
+    }
   };
 
   return (
@@ -130,85 +147,47 @@ function AuthPage() {
                   Log In
                 </Button>
               </VStack>
-            ) : (
-              <VStack spacing={6} w="100%">
-                {!email ? (
-                  <>
-                    <VStack spacing={6} w="100%">
-                      <VStack align="stretch" w="100%" spacing={2}>
-                        <Text fontSize="sm" fontWeight="medium">University Email</Text>
-                        <Input 
-                          type="email"
-                          placeholder="john.doe@utoronto.ca"
-                          onChange={(e) => setEmail(e.target.value)}
-                          size="lg"
-                        />
-                      </VStack>
+            ) : !showVerification ? (
+              <VStack as="form" onSubmit={handleSignupSubmit} spacing={6} w="100%">
+                <VStack align="stretch" w="100%" spacing={2}>
+                  <Text fontSize="sm" fontWeight="medium">University Email</Text>
+                  <Input 
+                    type="email"
+                    placeholder="john.doe@mail.utoronto.ca"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    size="lg"
+                    required
+                  />
+                </VStack>
 
-                      <VStack align="stretch" w="100%" spacing={2}>
-                        <Text fontSize="sm" fontWeight="medium">Password</Text>
-                        <Input type="password" placeholder="********" size="lg" />
-                      </VStack>
+                <VStack align="stretch" w="100%" spacing={2}>
+                  <Text fontSize="sm" fontWeight="medium">Password</Text>
+                  <Input 
+                    type="password" 
+                    placeholder="********" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    size="lg"
+                    required 
+                  />
+                </VStack>
 
-                      <Button
-                        colorScheme="blue"
-                        size="lg"
-                        width="100%"
-                        borderRadius="full"
-                      >
-                        Sign Up
-                      </Button>
-                    </VStack>
-                  </>
-                ) : !isVerified ? (
-                  <VStack spacing={4}>
-                    <Text color="gray.600" fontSize="sm" textAlign="center">
-                      Check your email for the 6-digit verification code.
-                    </Text>
-                    <Input
-                      placeholder="Enter verification code"
-                      size="lg"
-                      maxLength={6}
-                    />
-                    <Button
-                      colorScheme="blue"
-                      size="lg"
-                      width="100%"
-                      borderRadius="full"
-                    >
-                      Verify Code
-                    </Button>
-                  </VStack>
-                ) : !isRegistered ? (
-                  <VStack spacing={4}>
-                    <Text color="gray.600" fontSize="sm" textAlign="center">
-                      Set your username and password to complete registration.
-                    </Text>
-                    <Input
-                      placeholder="Choose a username"
-                      size="lg"
-                    />
-                    <Input
-                      type="password"
-                      placeholder="Choose a password"
-                      size="lg"
-                    />
-                    <Button
-                      colorScheme="blue"
-                      size="lg"
-                      width="100%"
-                      borderRadius="full"
-                    >
-                      Complete Registration
-                    </Button>
-                  </VStack>
-                ) : (
-                  <VStack spacing={4}>
-                    <Heading size="md">🎉 Registration Successful!</Heading>
-                    <Text color="gray.600">Your account has been created. You can now log in.</Text>
-                  </VStack>
-                )}
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  size="lg"
+                  width="100%"
+                  borderRadius="full"
+                >
+                  Sign Up
+                </Button>
               </VStack>
+            ) : (
+              <VerifyCode 
+                email={email} 
+                onSuccess={() => navigate("/home")} 
+              />
             )}
           </>
 
