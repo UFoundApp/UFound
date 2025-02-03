@@ -13,7 +13,7 @@ function Home() {
 
         {isLoggedIn() ? (
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/home")}
             className="w-full p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
           >
             Go to Dashboard
