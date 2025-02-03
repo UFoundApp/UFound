@@ -6,6 +6,7 @@ from app.models.posts import PostModel, CommentModel  # Ensure correct import
 from app.models.user import UserModel
 from app.routes.posts import router as post_router 
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes.auth import router as auth_router # Import auth routes
 
 app = FastAPI()
 
@@ -21,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"],  # ✅ Allows all headers
 )
 
+app.include_router(auth_router, prefix="/auth") # Include authentication routes
 
 async def init_db():
     await init_beanie(db, document_models=[PostModel, UserModel, CommentModel])  # Register discussion model
