@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from datetime import datetime
 from beanie import Document
 
-
 class UserModel(Document):
     id: UUID = Field(default_factory=uuid4)  # Generate a unique user ID
     username: str = Field(..., min_length=3, max_length=30)
