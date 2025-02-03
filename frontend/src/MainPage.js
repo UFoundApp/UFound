@@ -20,9 +20,8 @@ const MainPage = () => {
                 <Box
                     as="aside"
                     width={{ base: '0', md: '20%' }}
-                    bg="secondary"    // Use "secondary" directly
                     display={{ base: 'none', md: 'block' }}
-                    p={4}
+                    bg="gray.50"
                 >
                     <LeftSidebar />
                 </Box>
@@ -36,8 +35,8 @@ const MainPage = () => {
                 <Box
                     as="aside"
                     width={{ base: '0', md: '20%' }}
-                    bg="secondary"    // Use "secondary" directly
                     display={{ base: 'none', md: 'block' }}
+                    bg="gray.50"
                     p={4}
                 >
                     <RightSidebar />

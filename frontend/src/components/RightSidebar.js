@@ -4,8 +4,12 @@ import { Box, Text } from '@chakra-ui/react';
 
 const RightSidebar = () => {
     return (
-        <Box>
-            <Text fontWeight="bold" color="white">
+        <Box
+            bg="gray.50"  // Very light grey background
+            height="100%"
+            p={4}
+        >
+            <Text fontWeight="bold" color="gray.700">
                 Right Sidebar
             </Text>
             {/* Additional content can go here */}

@@ -1,29 +1,72 @@
 // src/components/TopNav.js
 import React from 'react';
-import { Flex, Input, Button } from '@chakra-ui/react';
+import { Flex, Input, Button, Text } from '@chakra-ui/react';
 
 const TopNav = () => {
     return (
         <Flex
-            bg="primary"   // Use "primary" (not "primary.500")
-            color="white"
+            bg="white"
+            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
             p={4}
             alignItems="center"
             justifyContent="space-between"
+            borderBottom="1px"
+            borderColor="gray.200"
+            position="relative"
+            zIndex={1}
         >
-            {/* Search Bar */}
-            <Input placeholder="Search" width="30%" bg="white" color="black" />
+            {/* Logo */}
+            <Text
+                fontSize="2xl"
+                fontWeight="bold"
+                fontFamily="'Poppins', sans-serif"
+                color="primary"
+                cursor="pointer"
+            >
+                UFound
+            </Text>
 
-            {/* Center Buttons */}
-            <Flex>
-                <Button bg="secondary" color="white" mx={2}>Home</Button>
-                <Button bg="secondary" color="white" mx={2}>About</Button>
+            {/* Search Bar */}
+            <Input 
+                placeholder="Search" 
+                maxW="400px"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                _hover={{ bg: "gray.100" }}
+                _focus={{ 
+                    bg: "white",
+                    borderColor: "primary",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                }}
+            />
+
+            {/* Navigation Links */}
+            <Flex alignItems="center" gap={4}>
+                <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                    Community
+                </Button>
+                <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                    Reviews
+                </Button>
+                <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                    Forum
+                </Button>
+                <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                    Profile
+                </Button>
             </Flex>
 
-            {/* Sign-In/Log-In Options */}
-            <Flex>
-                <Button variant="outline" borderColor="white" color="white" mx={2}>Sign In</Button>
-                <Button variant="outline" borderColor="white" color="white" mx={2}>Log In</Button>
+            {/* Auth Buttons */}
+            <Flex alignItems="center" gap={3}>
+                <Button variant="ghost" color="gray.700">Sign in</Button>
+                <Button 
+                    bg="primary"
+                    color="white"
+                    _hover={{ bg: "primary", opacity: 0.9 }}
+                >
+                    Sign up
+                </Button>
             </Flex>
         </Flex>
     );
