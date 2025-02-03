@@ -9,4 +9,3 @@ class UserModel(BaseModel):
     email: str  # Ensures a valid email format
     password: str = Field(..., min_length=8)  # Enforce password strength
     confirm_password: str
-
