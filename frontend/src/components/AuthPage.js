@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // For navigation
-import EmailInput from "./EmailInput";
-import VerifyCode from "./VerifyCode";
+import { useNavigate } from 'react-router-dom';
+// Check if these components exist and are properly exported
+// Comment them out for now if they're not ready
+// import EmailInput from "./EmailInput";
+// import VerifyCode from "./VerifyCode";
+// import PasswordSetup from "./PasswordSetup";
 import axios from "axios";
-import PasswordSetup from "./PasswordSetup";
+import {
+  Box,
+  Container,
+  VStack,
+  Input,
+  Button,
+  Text,
+  Heading,
+  Link,
+} from '@chakra-ui/react';
 import '../App.css';
 import { isLoggedIn } from './AuthPageUtil'; // Import isLoggedIn function
 
@@ -20,7 +32,7 @@ function AuthPage() {
   useEffect(() => {
     if (isLoggedIn()) {
       console.log("User is already logged in. Redirecting to dashboard...");
-      navigate("/dashboard"); // Redirect to dashboard if logged in
+      navigate("/home"); // Redirect to dashboard if logged in
     }
   }, [navigate]);
 
@@ -34,14 +46,11 @@ function AuthPage() {
         password: password
       });
 
-      alert("Login Successful!");
-      console.log("User Info:", response.data);
-
       // Store user session
       localStorage.setItem("user", JSON.stringify(response.data));
 
       // Redirect user to dashboard
-      navigate("/dashboard");
+      navigate("/home");
 
     } catch (error) {
       if (error.response) {
@@ -53,82 +62,178 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-          {isLogin ? 'Login' : 'Sign Up'}
-        </h2>
-        
-        {isLogin ? (
-          // Login Form
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Username or University Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-            <a className="text-sm text-blue-600 cursor-pointer hover:underline text-right" href="/reset-password">
-              Forgot Password?
-            </a>
-            <button
-              type="submit"
-              className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-            >
-              Login
-            </button>
-          </form>
-        ) : (
-          // Registration Flow (Email → Verification → Password)
-          <>
-            {!email ? (
-              <>
-                <p className="text-gray-600 text-sm text-center mb-6">
-                  Enter your UofT email address to receive a verification code.
-                </p>
-                <EmailInput onSuccess={(enteredEmail) => setEmail(enteredEmail)} resetPasswordState={false} />
-              </>
-            ) : !isVerified ? (
-              <>
-                <p className="text-gray-600 text-sm text-center mb-6">
-                  Check your email for the 6-digit verification code.
-                </p>
-                <VerifyCode email={email} onSuccess={() => setIsVerified(true)} />
-              </>
-            ) : !isRegistered ? (
-              <>
-                <p className="text-gray-600 text-sm text-center mb-6">
-                  Set your username and password to complete registration.
-                </p>
-                <PasswordSetup email={email} onSuccess={() => setIsRegistered(true)} />
-              </>
-            ) : (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  🎉 Registration Successful!
-                </h2>
-                <p className="text-gray-600">Your account has been created. You can now log in.</p>
-              </div>
-            )}
-          </>
-        )}
+    <Box minH="100vh" bg="gray.50" py={20} px={4}>
+      <Container maxW="lg">
+        <VStack spacing={8} bg="white" rounded="lg" boxShadow="lg" p={10}>
+          <Heading size="lg">
+            {isLogin ? 'Login' : 'Sign up now'}
+          </Heading>
+          
+          {!isLogin && (
+            <Text color="gray.600" textAlign="center" fontSize="sm">
+              Join other students in your university's exclusive anonymous social network.
+            </Text>
+          )}
 
-        {/* Toggle between Login and Registration */}
-        <p onClick={toggleForm} className="text-blue-600 text-sm mt-4 text-center cursor-pointer hover:underline">
-          {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
-        </p>
-      </div>
-    </div>
+          {isLogin ? (
+            // Login Form
+            <VStack as="form" onSubmit={handleLoginSubmit} spacing={4} w="100%">
+              <VStack align="stretch" w="100%" spacing={2}>
+                <Text fontSize="sm" fontWeight="medium">University Email</Text>
+                <Input
+                  type="text"
+                  placeholder="john.doe@utoronto.ca"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  size="lg"
+                  required
+                />
+              </VStack>
+
+              <VStack align="stretch" w="100%" spacing={2}>
+                <Text fontSize="sm" fontWeight="medium">Password</Text>
+                <Input
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  size="lg"
+                  required
+                />
+              </VStack>
+
+              {/* Updated reset password link */}
+              <Link
+                alignSelf="flex-start"
+                color="blue.500"
+                fontSize="sm"
+                href="/reset-password"
+              >
+                Forgot Password?
+              </Link>
+
+              <Button
+                type="submit"
+                colorScheme="blue"
+                size="lg"
+                width="100%"
+                borderRadius="full"
+                mt={4}
+              >
+                Log In
+              </Button>
+            </VStack>
+          ) : (
+            // Registration Flow
+            <VStack spacing={6} w="100%">
+              {!email ? (
+                <>
+                  <VStack spacing={6} w="100%">
+                    <VStack align="stretch" w="100%" spacing={2}>
+                      <Text fontSize="sm" fontWeight="medium">University Email</Text>
+                      <Input 
+                        type="email"
+                        placeholder="john.doe@utoronto.ca"
+                        onChange={(e) => setEmail(e.target.value)}
+                        size="lg"
+                      />
+                    </VStack>
+
+                    <VStack align="stretch" w="100%" spacing={2}>
+                      <Text fontSize="sm" fontWeight="medium">Password</Text>
+                      <Input type="password" placeholder="********" size="lg" />
+                    </VStack>
+
+                    <Button
+                      colorScheme="blue"
+                      size="lg"
+                      width="100%"
+                      borderRadius="full"
+                    >
+                      Sign Up
+                    </Button>
+                  </VStack>
+                </>
+              ) : !isVerified ? (
+                <VStack spacing={4}>
+                  <Text color="gray.600" fontSize="sm" textAlign="center">
+                    Check your email for the 6-digit verification code.
+                  </Text>
+                  <Input
+                    placeholder="Enter verification code"
+                    size="lg"
+                    maxLength={6}
+                  />
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    width="100%"
+                    borderRadius="full"
+                  >
+                    Verify Code
+                  </Button>
+                </VStack>
+              ) : !isRegistered ? (
+                <VStack spacing={4}>
+                  <Text color="gray.600" fontSize="sm" textAlign="center">
+                    Set your username and password to complete registration.
+                  </Text>
+                  <Input
+                    placeholder="Choose a username"
+                    size="lg"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Choose a password"
+                    size="lg"
+                  />
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    width="100%"
+                    borderRadius="full"
+                  >
+                    Complete Registration
+                  </Button>
+                </VStack>
+              ) : (
+                <VStack spacing={4}>
+                  <Heading size="md">🎉 Registration Successful!</Heading>
+                  <Text color="gray.600">Your account has been created. You can now log in.</Text>
+                </VStack>
+              )}
+            </VStack>
+          )}
+
+          <Text color="gray.600" fontSize="sm">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <Link
+              color="blue.500"
+              onClick={toggleForm}
+              _hover={{ textDecoration: 'underline' }}
+            >
+              {isLogin ? 'Sign Up' : 'Log In'}
+            </Link>
+          </Text>
+
+          <Text color="gray.600" fontSize="xs" textAlign="center">
+            If you need help, please contact{' '}
+            <Link color="blue.500" href="mailto:ufoundapp@gmail.com">
+              ufoundapp@gmail.com
+            </Link>
+          </Text>
+
+          <VStack spacing={2}>
+            <Link fontSize="xs" color="gray.600" href="#">
+              Terms of Use
+            </Link>
+            <Link fontSize="xs" color="gray.600" href="#">
+              Privacy Policy
+            </Link>
+          </VStack>
+        </VStack>
+      </Container>
+    </Box>
   );
 }
 

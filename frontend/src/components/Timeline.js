@@ -1,4 +1,3 @@
-// src/components/Timeline.jsx
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';

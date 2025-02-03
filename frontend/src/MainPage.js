@@ -8,21 +8,14 @@ import Timeline from './components/Timeline';
 
 const MainPage = () => {
     return (
-        <Flex direction="column" height="100vh">
-            {/* Top Navigation */}
-            <Box as="header">
-                <TopNav />
-            </Box>
-
             {/* Main Content */}
             <Flex as="main" flex="1" overflow="hidden">
                 {/* Left Sidebar */}
                 <Box
                     as="aside"
                     width={{ base: '0', md: '20%' }}
-                    bg="secondary"    // Use "secondary" directly
                     display={{ base: 'none', md: 'block' }}
-                    p={4}
+                    bg="gray.50"
                 >
                     <LeftSidebar />
                 </Box>
@@ -36,8 +29,8 @@ const MainPage = () => {
                 <Box
                     as="aside"
                     width={{ base: '0', md: '20%' }}
-                    bg="secondary"    // Use "secondary" directly
                     display={{ base: 'none', md: 'block' }}
+                    bg="gray.50"
                     p={4}
                 >
                     <RightSidebar />
