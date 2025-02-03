@@ -9,6 +9,7 @@ const LeftSidebar = () => {
             bg="gray.50"  // Very light grey background
             height="85vh"  // Changed to viewport height
             p={4}
+            pl={14}  // Added more left padding
             width="100%"
             overflowY="auto"  // Enable vertical scrolling when needed
             css={{
@@ -95,7 +96,7 @@ const LeftSidebar = () => {
                 {/* Industries Section */}
                 <Box as="hr" my={4} borderColor="gray.200" />
                 <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
-                    INDUSTRIES
+                    Reviews
                 </Text>
                 <Stack spacing={1} align="stretch" pl={4}>
                     <Button variant="ghost" justifyContent="flex-start" py={2}>Tech</Button>
