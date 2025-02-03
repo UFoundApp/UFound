@@ -12,5 +12,6 @@ class PostModel(BaseModel):
     content: str
     created_at: datetime = Field(default_factory=datetime.now)
     likes : int
+    anonymous : bool = Field(default=True)
     comments : List[CommentModel] = Field(default_factory=list)
 
