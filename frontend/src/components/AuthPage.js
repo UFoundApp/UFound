@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // For navigation
 import EmailInput from "./EmailInput";
 import VerifyCode from "./VerifyCode";
+import axios from "axios";
 import PasswordSetup from "./PasswordSetup";
 import '../App.css';
+import { isLoggedIn } from './AuthPageUtil'; // Import isLoggedIn function
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,13 +13,43 @@ function AuthPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const navigate = useNavigate(); // Initialize navigation
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    if (isLoggedIn()) {
+      console.log("User is already logged in. Redirecting to dashboard...");
+      navigate("/dashboard"); // Redirect to dashboard if logged in
+    }
+  }, [navigate]);
 
   const toggleForm = () => setIsLogin(!isLogin);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    alert(`Logging in with email: ${email}`);
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/auth/login", {
+        identifier: email, // Can be email or username
+        password: password
+      });
+
+      alert("Login Successful!");
+      console.log("User Info:", response.data);
+
+      // Store user session
+      localStorage.setItem("user", JSON.stringify(response.data));
+
+      // Redirect user to dashboard
+      navigate("/dashboard");
+
+    } catch (error) {
+      if (error.response) {
+        alert(` ${error.response.data.detail}`); // Show backend error messages
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    }
   };
 
   return (
@@ -30,8 +63,8 @@ function AuthPage() {
           // Login Form
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <input
-              type="email"
-              placeholder="University Email"
+              type="text"
+              placeholder="Username or University Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -97,4 +130,3 @@ function AuthPage() {
 }
 
 export default AuthPage;
-
