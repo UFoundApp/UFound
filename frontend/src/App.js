@@ -24,6 +24,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/home" element={<MainPage />} />
+              <Route path="/view-post/:id" element={<ViewPost />} />
             </Routes>
           </Box>
         </Flex>
