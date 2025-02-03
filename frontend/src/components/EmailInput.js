@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-function EmailInput({ onSuccess }) {
+function EmailInput({ onSuccess, resetPasswordState }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -17,8 +17,18 @@ function EmailInput({ onSuccess }) {
     }
 
     setLoading(true);
-
     try {
+      if (resetPasswordState) {
+        // Make sure the email is registered
+        const response = await axios.post("http://127.0.0.1:8000/auth/verify-user-exists", { email });
+        if (response.data.exists) {
+          setMessage("");
+        } else {
+          setMessage("This email is not registered.");
+          setLoading(false);
+          return;
+        }
+      } 
       const response = await axios.post("http://127.0.0.1:8000/auth/send-verification-code", { email });
       setMessage(response.data.message);
       onSuccess(email); // Proceed to verification step

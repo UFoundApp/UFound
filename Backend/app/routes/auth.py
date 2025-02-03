@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db import verification_codes_collection, users_collection
-from app.registerUtils import generate_verification_code, send_verification_email, hash_password, pwd_context
+from app.registerUtils import generate_verification_code, send_verification_email, hash_password
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 
@@ -19,28 +19,17 @@ class RegisterUserRequest(BaseModel):
     confirm_password: str
     username: str
 
-class LoginRequest(BaseModel):
-    identifier: str  # Can be either email or username
+class UpdatePasswordRequest(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_password: str
+    username: str
+
+class PasswordCheckRequest(BaseModel):
+    email: EmailStr
     password: str
 
-async def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
-@router.post("/login")
-async def login_user(request: LoginRequest):
-    # Check if user exists by email or username
-    user = await users_collection.find_one(
-        {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
-    )
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Verify the password
-    if not await verify_password(request.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Incorrect password")
-
-    return {"message": "Login successful", "username": user["username"], "email": user["email"]}
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
@@ -119,3 +108,60 @@ async def register_user(request: RegisterUserRequest):
     await users_collection.insert_one(user_data)
 
     return {"message": "User registered successfully"}
+
+@router.post("/update-password")
+async def update_password(request: UpdatePasswordRequest):
+    # Check if the email has been verified
+    verification_record = await verification_codes_collection.find_one(
+        {"email": request.email},
+        sort=[("_id", -1)]
+    )
+
+    if not verification_record:
+        raise HTTPException(status_code=400, detail="Email has not been verified")
+    
+    # Ensure passwords match
+    if request.password != request.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    # Hash the password before storing
+    hashed_password = hash_password(request.password)
+
+    # Update the user's password in MongoDB
+    await users_collection.update_one(
+        {"email": request.email},
+        {"$set": {"password": hashed_password, "username": request.username}}
+    )
+
+    return {"message": "Password updated successfully"}
+
+# Verify if a user exists in the database
+@router.post("/verify-user-exists")
+async def verify_user_exists(request: EmailRequest):
+    user = await users_collection.find_one({"email": request.email})
+    if user:
+        return {"exists": True}
+    else:
+        return {"exists": False}
+    
+@router.post("/get-username")
+async def get_user_data(request: EmailRequest):
+    user = await users_collection.find_one({"email": request.email})
+
+    if user:
+        return {"username": user["username"]}
+    else:
+        return {"username": None}
+    
+@router.post("/check-password")
+async def check_password(request: PasswordCheckRequest):
+    user = await users_collection.find_one({"email": request.email})
+    pass_user = user["password"]
+
+    request_pass = hash_password(request.password)
+
+    # Check if the code matches
+    if pass_user == request_pass:
+        return {"status": False}
+    else:
+        return {"status": True}

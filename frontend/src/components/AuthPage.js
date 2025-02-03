@@ -78,6 +78,9 @@ function AuthPage() {
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             />
+            <a className="text-sm text-blue-600 cursor-pointer hover:underline text-right" href="/reset-password">
+              Forgot Password?
+            </a>
             <button
               type="submit"
               className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
@@ -93,7 +96,7 @@ function AuthPage() {
                 <p className="text-gray-600 text-sm text-center mb-6">
                   Enter your UofT email address to receive a verification code.
                 </p>
-                <EmailInput onSuccess={(enteredEmail) => setEmail(enteredEmail)} />
+                <EmailInput onSuccess={(enteredEmail) => setEmail(enteredEmail)} resetPasswordState={false} />
               </>
             ) : !isVerified ? (
               <>

@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
-function PasswordSetup({ email, onSuccess }) {
+function PasswordSetup({ email, onSuccess, resetPasswordState }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  // Run once to get username if reset password flow
+
+  const getUserInfo = async () => {
+    try {
+      if (!email) return;
+      const response = await axios.post("http://127.0.0.1:8000/auth/get-username", { email });
+      setUsername(response.data.username);
+    } catch {
+      setMessage("Failed to get username.");
+    }
+  };
+
+  useEffect(() => {
+    if (resetPasswordState) {
+      getUserInfo();
+    }
+  }, []);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,18 +48,45 @@ function PasswordSetup({ email, onSuccess }) {
 
     setLoading(true);
 
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/register", {
-        email,
-        username,
-        password,
-        confirm_password: confirmPassword,
-      });
+    if (resetPasswordState) {
+      // Reset password flow
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/auth/check-password", { email, password});
+        if (response.data.status) {
+          setMessage("Password is valid.");
+        } else {
+          setMessage("Password is invalid. Use a different password.");
+          setLoading(false);
+          return;
+        }
 
-      setMessage(response.data.message);
-      setTimeout(() => onSuccess(), 1000); // Transition to next step
-    } catch (error) {
-      setMessage(error.response?.data?.detail || "Registration failed.");
+        const response_update_pass = await axios.post("http://127.0.0.1:8000/auth/update-password", {
+          email: email,
+          password: password,
+          confirm_password: confirmPassword,
+          username: username
+        });
+
+        setMessage(response_update_pass.data.message);
+        setTimeout(() => onSuccess(), 1000); // Transition to next step
+      } catch (error) {
+        setMessage(error.response?.data?.detail || "Password update failed.");
+      }
+    } else {
+      // Registration
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/auth/register", {
+          email,
+          username,
+          password,
+          confirm_password: confirmPassword,
+        });
+
+        setMessage(response.data.message);
+        setTimeout(() => onSuccess(), 1000); // Transition to next step
+      } catch (error) {
+        setMessage(error.response?.data?.detail || "Registration failed.");
+      }
     }
 
     setLoading(false);
@@ -48,7 +95,7 @@ function PasswordSetup({ email, onSuccess }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-96">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Create Your Account</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4"> { resetPasswordState ? "Update Password" : "Create Account"} </h2>
 
         <input
           type="text"
