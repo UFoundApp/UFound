@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db import verification_codes_collection, users_collection
-from app.registerUtils import generate_verification_code, send_verification_email, hash_password
+from app.registerUtils import generate_verification_code, send_verification_email, hash_password, pwd_context
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 
@@ -18,6 +18,29 @@ class RegisterUserRequest(BaseModel):
     password: str
     confirm_password: str
     username: str
+
+class LoginRequest(BaseModel):
+    identifier: str  # Can be either email or username
+    password: str
+
+async def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+@router.post("/login")
+async def login_user(request: LoginRequest):
+    # Check if user exists by email or username
+    user = await users_collection.find_one(
+        {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify the password
+    if not await verify_password(request.password, user["password"]):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+
+    return {"message": "Login successful", "username": user["username"], "email": user["email"]}
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
