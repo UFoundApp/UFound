@@ -126,7 +126,7 @@ function PasswordSetup({ email, onSuccess, resetPasswordState }) {
           className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
           disabled={loading}
         >
-          {loading ? "Registering..." : "Register"}
+          {loading ? (resetPasswordState ? "Updating..." : "Registering...") : (resetPasswordState ? "Update" : "Register")}
         </button>
         {message && <p className="mt-2 text-center text-red-600">{message}</p>}
       </form>
