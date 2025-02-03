@@ -8,16 +8,16 @@ import ViewPost from './Posts/ViewPost';
 import './App.css';
 
 function App() {
-  return (
-    <ChakraProvider value={system}>
-      <Router>
-        <Routes>
-          <Route path="/view-post/:id" element={<ViewPost />} />
-          <Route path="/" element={<MainPage />} />
-        </Routes>
-      </Router>
-    </ChakraProvider>
-  );
+    return (
+        <ChakraProvider value={system}>
+            <Router>
+                <Routes>
+                    <Route path="/view-post/:id" element={<ViewPost />} />
+                    <Route path="/" element={<MainPage />} />
+                </Routes>
+            </Router>
+        </ChakraProvider>
+    );
 }
 
 export default App;
