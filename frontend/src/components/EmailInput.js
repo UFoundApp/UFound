@@ -1,5 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
+import {
+  VStack,
+  Input,
+  Button,
+  Text,
+} from '@chakra-ui/react';
 
 function EmailInput({ onSuccess, resetPasswordState }) {
   const [email, setEmail] = useState("");
@@ -10,7 +16,6 @@ function EmailInput({ onSuccess, resetPasswordState }) {
     e.preventDefault();
     setMessage("");
 
-    // Validate email format
     if (!email.endsWith("@mail.utoronto.ca")) {
       setMessage("Only @mail.utoronto.ca emails are allowed.");
       return;
@@ -19,8 +24,8 @@ function EmailInput({ onSuccess, resetPasswordState }) {
     setLoading(true);
     try {
       if (resetPasswordState) {
-        // Make sure the email is registered
         const response = await axios.post("http://127.0.0.1:8000/auth/verify-user-exists", { email });
+        console.log("User verification response:", response.data);
         if (response.data.exists) {
           setMessage("");
         } else {
@@ -29,38 +34,57 @@ function EmailInput({ onSuccess, resetPasswordState }) {
           return;
         }
       } 
+
+      console.log("Sending verification code to:", email);
       const response = await axios.post("http://127.0.0.1:8000/auth/send-verification-code", { email });
-      setMessage(response.data.message);
-      onSuccess(email); // Proceed to verification step
+      console.log("Verification code response:", response.data);
+      
+      if (response.data.message === "Verification code sent") {
+        setMessage("Verification code sent! Please check your email.");
+        onSuccess(email);
+      } else {
+        setMessage("Failed to send verification code. Please try again.");
+      }
     } catch (error) {
+      console.error("Error in email verification:", error);
       setMessage(error.response?.data?.detail || "Failed to send verification email.");
     }
-
     setLoading(false);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-96">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Enter Your UofT Email</h2>
-        <input
+    <VStack as="form" onSubmit={handleSubmit} spacing={4} w="100%">
+      <VStack align="stretch" w="100%" spacing={2}>
+        <Text fontSize="sm" fontWeight="medium">University Email</Text>
+        <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="yourname@mail.utoronto.ca"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="john.doe@mail.utoronto.ca"
+          size="lg"
           required
         />
-        <button
-          type="submit"
-          className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-          disabled={loading}
-        >
-          {loading ? "Sending..." : "Send Verification Code"}
-        </button>
-        {message && <p className="mt-2 text-center text-red-600">{message}</p>}
-      </form>
-    </div>
+      </VStack>
+      
+      <Button
+        type="submit"
+        colorScheme="blue"
+        size="lg"
+        width="100%"
+        borderRadius="full"
+        isLoading={loading}
+        loadingText="Sending..."
+        mt={4}
+      >
+        Send Code
+      </Button>
+
+      {message && (
+        <Text color="red.500" fontSize="sm" textAlign="center">
+          {message}
+        </Text>
+      )}
+    </VStack>
   );
 }
 

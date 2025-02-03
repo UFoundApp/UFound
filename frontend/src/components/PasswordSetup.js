@@ -1,32 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+import {
+  VStack,
+  Input,
+  Button,
+  Text,
+} from '@chakra-ui/react';
 
 function PasswordSetup({ email, onSuccess, resetPasswordState }) {
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
-  // Run once to get username if reset password flow
-
-  const getUserInfo = async () => {
-    try {
-      if (!email) return;
-      const response = await axios.post("http://127.0.0.1:8000/auth/get-username", { email });
-      setUsername(response.data.username);
-    } catch {
-      setMessage("Failed to get username.");
-    }
-  };
-
-  useEffect(() => {
-    if (resetPasswordState) {
-      getUserInfo();
-    }
-  }, []);
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,96 +26,97 @@ function PasswordSetup({ email, onSuccess, resetPasswordState }) {
       setMessage("Password must be at least 6 characters.");
       return;
     }
-    if (username.length < 3) {
-      setMessage("Username must be at least 3 characters.");
-      return;
-    }
 
     setLoading(true);
 
-    if (resetPasswordState) {
-      // Reset password flow
-      try {
-        const response = await axios.post("http://127.0.0.1:8000/auth/check-password", { email, password});
-        if (response.data.status) {
-          setMessage("Password is valid.");
-        } else {
-          setMessage("Password is invalid. Use a different password.");
-          setLoading(false);
-          return;
-        }
+    try {
+      // First verify if the password meets requirements
+      const checkResponse = await axios.post("http://127.0.0.1:8000/auth/check-password", { 
+        email, 
+        new_password: password 
+      });
 
-        const response_update_pass = await axios.post("http://127.0.0.1:8000/auth/update-password", {
-          email: email,
-          password: password,
-          confirm_password: confirmPassword,
-          username: username
-        });
-
-        setMessage(response_update_pass.data.message);
-        setTimeout(() => onSuccess(), 1000); // Transition to next step
-      } catch (error) {
-        setMessage(error.response?.data?.detail || "Password update failed.");
+      if (!checkResponse.data.status) {
+        setMessage("Password is invalid. Please choose a different password.");
+        setLoading(false);
+        return;
       }
-    } else {
-      // Registration
-      try {
-        const response = await axios.post("http://127.0.0.1:8000/auth/register", {
-          email,
-          username,
-          password,
-          confirm_password: confirmPassword,
-        });
 
-        setMessage(response.data.message);
-        setTimeout(() => onSuccess(), 1000); // Transition to next step
-      } catch (error) {
-        setMessage(error.response?.data?.detail || "Registration failed.");
+      // If password is valid, proceed with update
+      const updateResponse = await axios.post("http://127.0.0.1:8000/auth/update-password", {
+        email: email,
+        new_password: password,
+        confirm_new_password: confirmPassword
+      });
+
+      console.log('Update Response:', updateResponse.data); // Debug log
+
+      if (updateResponse.data.message) {
+        setMessage("Password updated successfully!");
+        setTimeout(() => onSuccess(), 1000);
+      } else {
+        setMessage("Failed to update password. Please try again.");
       }
+    } catch (error) {
+      console.error('Error details:', error.response?.data); // Debug log
+      const errorMessage = error.response?.data?.detail;
+      setMessage(typeof errorMessage === 'string' 
+        ? errorMessage 
+        : "Failed to update password. Please try again.");
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-96">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4"> { resetPasswordState ? "Update Password" : "Create Account"} </h2>
-
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3"
-          required
-        />
-        <input
+    <VStack as="form" onSubmit={handleSubmit} spacing={4} w="100%">
+      <VStack align="stretch" w="100%" spacing={2}>
+        <Text fontSize="sm" fontWeight="medium">New Password</Text>
+        <Input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3"
+          placeholder="Enter new password"
+          size="lg"
           required
         />
-        <input
+      </VStack>
+
+      <VStack align="stretch" w="100%" spacing={2}>
+        <Text fontSize="sm" fontWeight="medium">Confirm Password</Text>
+        <Input
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3"
+          placeholder="Confirm new password"
+          size="lg"
           required
         />
-        <button
-          type="submit"
-          className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-          disabled={loading}
+      </VStack>
+      
+      <Button
+        type="submit"
+        colorScheme="blue"
+        size="lg"
+        width="100%"
+        borderRadius="full"
+        isLoading={loading}
+        loadingText="Updating..."
+        mt={4}
+      >
+        Update Password
+      </Button>
+
+      {message && (
+        <Text 
+          color={message.includes("success") ? "green.500" : "red.500"} 
+          fontSize="sm" 
+          textAlign="center"
         >
-          {loading ? (resetPasswordState ? "Updating..." : "Registering...") : (resetPasswordState ? "Update" : "Register")}
-        </button>
-        {message && <p className="mt-2 text-center text-red-600">{message}</p>}
-      </form>
-    </div>
+          {message}
+        </Text>
+      )}
+    </VStack>
   );
 }
 

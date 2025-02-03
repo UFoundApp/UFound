@@ -1,6 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
-
+import {
+  VStack,
+  Input,
+  Button,
+  Text,
+} from '@chakra-ui/react';
 
 function VerifyCode({ email, onSuccess }) {
   const [code, setCode] = useState("");
@@ -12,7 +17,7 @@ function VerifyCode({ email, onSuccess }) {
     setMessage("");
 
     if (code.length !== 6 || isNaN(code)) {
-      setMessage("Enter a valid 6-digit code.");
+      setMessage("Please enter a valid 6-digit code.");
       return;
     }
 
@@ -24,7 +29,7 @@ function VerifyCode({ email, onSuccess }) {
         code,
       });
       setMessage(response.data.message);
-      onSuccess(); // Proceed to the next step (e.g., password setup)
+      onSuccess();
     } catch (error) {
       setMessage(error.response?.data?.detail || "Invalid or expired verification code.");
     }
@@ -33,28 +38,41 @@ function VerifyCode({ email, onSuccess }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-96">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Enter Your Verification Code</h2>
-        <input
+    <VStack as="form" onSubmit={handleSubmit} spacing={4} w="100%">
+      <VStack align="stretch" w="100%" spacing={2}>
+        <Text fontSize="sm" fontWeight="medium">Verification Code</Text>
+        <Input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="Enter 6-digit code"
-          maxLength="6"
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+          size="lg"
+          maxLength={6}
+          textAlign="center"
+          letterSpacing="0.5em"
           required
         />
-        <button
-          type="submit"
-          className="w-full mt-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-          disabled={loading}
-        >
-          {loading ? "Verifying..." : "Verify Code"}
-        </button>
-        {message && <p className="mt-2 text-center text-red-600">{message}</p>}
-      </form>
-    </div>
+      </VStack>
+      
+      <Button
+        type="submit"
+        colorScheme="blue"
+        size="lg"
+        width="100%"
+        borderRadius="full"
+        isLoading={loading}
+        loadingText="Verifying..."
+        mt={4}
+      >
+        Verify Code
+      </Button>
+
+      {message && (
+        <Text color="red.500" fontSize="sm" textAlign="center">
+          {message}
+        </Text>
+      )}
+    </VStack>
   );
 }
 

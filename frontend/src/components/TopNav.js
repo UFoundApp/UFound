@@ -8,6 +8,7 @@ const TopNav = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isAuthPage = location.pathname === '/login';
+    const isResetPasswordPage = location.pathname === '/reset-password';
 
     const handleAuth = (type) => {
         if (type === 'signin' || type === 'signup') {
@@ -26,7 +27,7 @@ const TopNav = () => {
             boxShadow="0 2px 4px rgba(0,0,0,0.2)"
             p={4}
             alignItems="center"
-            justifyContent="space-between"
+            justifyContent={isResetPasswordPage ? "flex-start" : "space-between"}
             borderBottom="1px"
             borderColor="gray.200"
             position="relative"
@@ -44,8 +45,8 @@ const TopNav = () => {
                 UFound
             </Text>
 
-            {/* Only show these elements if NOT on the auth page */}
-            {!isAuthPage && (
+            {/* Only show these elements if NOT on the auth or reset password page */}
+            {!isAuthPage && !isResetPasswordPage && (
                 <>
                     {/* Search Bar */}
                     <Input 
@@ -77,40 +78,38 @@ const TopNav = () => {
                             Profile
                         </Button>
                     </Flex>
-                </>
-            )}
 
-            {/* Auth Buttons */}
-            {!isAuthPage && (
-                <Flex alignItems="center" gap={3}>
-                    {isLoggedIn() ? (
-                        <Button 
-                            variant="ghost" 
-                            color="gray.700"
-                            onClick={handleLogout}
-                        >
-                            Sign out
-                        </Button>
-                    ) : (
-                        <>
+                    {/* Auth Buttons */}
+                    <Flex alignItems="center" gap={3}>
+                        {isLoggedIn() ? (
                             <Button 
                                 variant="ghost" 
                                 color="gray.700"
-                                onClick={() => handleAuth('signin')}
+                                onClick={handleLogout}
                             >
-                                Sign in
+                                Sign out
                             </Button>
-                            <Button 
-                                bg="primary"
-                                color="white"
-                                _hover={{ bg: "primary", opacity: 0.9 }}
-                                onClick={() => handleAuth('signup')}
-                            >
-                                Sign up
-                            </Button>
-                        </>
-                    )}
-                </Flex>
+                        ) : (
+                            <>
+                                <Button 
+                                    variant="ghost" 
+                                    color="gray.700"
+                                    onClick={() => handleAuth('signin')}
+                                >
+                                    Sign in
+                                </Button>
+                                <Button 
+                                    bg="primary"
+                                    color="white"
+                                    _hover={{ bg: "primary", opacity: 0.9 }}
+                                    onClick={() => handleAuth('signup')}
+                                >
+                                    Sign up
+                                </Button>
+                            </>
+                        )}
+                    </Flex>
+                </>
             )}
         </Flex>
     );
