@@ -8,12 +8,6 @@ import Timeline from './components/Timeline';
 
 const MainPage = () => {
     return (
-        <Flex direction="column" height="100vh" overflow="hidden" position="fixed" width="100%">
-            {/* Top Navigation
-            <Box as="header">
-                <TopNav />
-            </Box> */}
-
             {/* Main Content */}
             <Flex as="main" flex="1" overflow="hidden">
                 {/* Left Sidebar */}

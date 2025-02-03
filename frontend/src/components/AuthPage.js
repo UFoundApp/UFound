@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // For navigation
+import { useNavigate } from 'react-router-dom';
 // Check if these components exist and are properly exported
 // Comment them out for now if they're not ready
 // import EmailInput from "./EmailInput";
@@ -62,20 +62,9 @@ function AuthPage() {
   };
 
   return (
-    <Box
-      minH="100vh"
-      bg="gray.50"
-      py={20}
-      px={4}
-    >
+    <Box minH="100vh" bg="gray.50" py={20} px={4}>
       <Container maxW="lg">
-        <VStack
-          spacing={8}
-          bg="white"
-          rounded="lg"
-          boxShadow="lg"
-          p={10}
-        >
+        <VStack spacing={8} bg="white" rounded="lg" boxShadow="lg" p={10}>
           <Heading size="lg">
             {isLogin ? 'Login' : 'Sign up now'}
           </Heading>
@@ -113,11 +102,12 @@ function AuthPage() {
                 />
               </VStack>
 
+              {/* Updated reset password link */}
               <Link
                 alignSelf="flex-start"
                 color="blue.500"
                 fontSize="sm"
-                href="#"
+                href="/reset-password"
               >
                 Forgot Password?
               </Link>
@@ -139,16 +129,6 @@ function AuthPage() {
               {!email ? (
                 <>
                   <VStack spacing={6} w="100%">
-                    {/* <VStack align="stretch" w="100%" spacing={2}>
-                      <Text fontSize="sm" fontWeight="medium">First Name</Text>
-                      <Input placeholder="John" size="lg" />
-                    </VStack> */}
-
-                    {/* <VStack align="stretch" w="100%" spacing={2}>
-                      <Text fontSize="sm" fontWeight="medium">Last Name</Text>
-                      <Input placeholder="Doe" size="lg" />
-                    </VStack> */}
-
                     <VStack align="stretch" w="100%" spacing={2}>
                       <Text fontSize="sm" fontWeight="medium">University Email</Text>
                       <Input 
@@ -240,7 +220,6 @@ function AuthPage() {
             If you need help, please contact{' '}
             <Link color="blue.500" href="mailto:ufoundapp@gmail.com">
               ufoundapp@gmail.com
-
             </Link>
           </Text>
 
