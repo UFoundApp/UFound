@@ -4,6 +4,8 @@ from app.registerUtils import generate_verification_code, send_verification_emai
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+from app.models.user import UserModel
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -26,7 +28,6 @@ class UpdatePasswordRequest(BaseModel):
     email: EmailStr
     password: str
     confirm_password: str
-    username: str
 
 class PasswordCheckRequest(BaseModel):
     email: EmailStr
@@ -43,12 +44,17 @@ async def verify_password(plain_password, hashed_password):
 @router.post("/login")
 async def login_user(request: LoginRequest):
     # Check if user exists by email or username
-    user = await users_collection.find_one(
+    user = await UserModel.find_one(
         {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
     )
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if not await verify_password(request.password, user.password):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+
+    return {"message": "Login successful", "username": user.username, "email": user.email}
 
     # Verify the password
     if not await verify_password(request.password, user["password"]):
@@ -98,44 +104,61 @@ async def verify_code(request: VerifyCodeRequest):
     if record["code"] != request.code:
         raise HTTPException(status_code=400, detail="Invalid verification code")
 
+    # Update the record to mark the email as verified
+    await verification_codes_collection.update_one(
+        {"_id": record["_id"]},  # Find the exact record
+        {"$set": {"verified": True}}  # Set verified to True
+    )
+
     return {"message": "Email verified successfully"}
 
 @router.post("/register")
 async def register_user(request: RegisterUserRequest):
-    # Check if the email has been verified
+    # Check if email has been verified
     verification_record = await verification_codes_collection.find_one(
         {"email": request.email},
         sort=[("_id", -1)]
     )
 
-    if not verification_record:
+    if not verification_record or not verification_record.get("verified", False):
         raise HTTPException(status_code=400, detail="Email has not been verified")
+
+    # Check if email is unique
+    existing_email = await UserModel.find_one(UserModel.email == request.email)
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email is already registered")
+
+    # Check if username is unique
+    existing_user = await UserModel.find_one(UserModel.username == request.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username is already taken")
 
     # Ensure passwords match
     if request.password != request.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    # Check if username is unique
-    existing_user = await users_collection.find_one({"username": request.username})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username is already taken")
-
     # Hash the password before storing
     hashed_password = hash_password(request.password)
 
-    # Store the user in MongoDB
-    user_data = {
-        "email": request.email,
-        "username": request.username,
-        "password": hashed_password,
-        "created_at": datetime.utcnow()
-    }
-    await users_collection.insert_one(user_data)
+    # Create and insert new user 
+    new_user = UserModel(
+        email=request.email,
+        username=request.username,
+        password=hashed_password,
+        created_at=datetime.utcnow()
+    )
+    await new_user.insert()
 
     return {"message": "User registered successfully"}
 
+
 @router.post("/update-password")
 async def update_password(request: UpdatePasswordRequest):
+    user = await UserModel.find_one(UserModel.email == request.email)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Email is not registered")
+
     # Check if the email has been verified
     verification_record = await verification_codes_collection.find_one(
         {"email": request.email},
@@ -153,40 +176,32 @@ async def update_password(request: UpdatePasswordRequest):
     hashed_password = hash_password(request.password)
 
     # Update the user's password in MongoDB
-    await users_collection.update_one(
-        {"email": request.email},
-        {"$set": {"password": hashed_password, "username": request.username}}
-    )
+    user.password = hashed_password
+    await user.save()  # Saves the updated user password
 
     return {"message": "Password updated successfully"}
 
 # Verify if a user exists in the database
 @router.post("/verify-user-exists")
 async def verify_user_exists(request: EmailRequest):
-    user = await users_collection.find_one({"email": request.email})
-    if user:
-        return {"exists": True}
-    else:
-        return {"exists": False}
+    user = await UserModel.find_one(UserModel.email == request.email)
+    return {"exists": bool(user)}
+
     
 @router.post("/get-username")
 async def get_user_data(request: EmailRequest):
-    user = await users_collection.find_one({"email": request.email})
+    user = await UserModel.find_one(UserModel.email == request.email)
+    return {"username": user.username if user else None}
 
-    if user:
-        return {"username": user["username"]}
-    else:
-        return {"username": None}
     
 @router.post("/check-password")
 async def check_password(request: PasswordCheckRequest):
-    user = await users_collection.find_one({"email": request.email})
-    pass_user = user["password"]
+    user = await UserModel.find_one(UserModel.email == request.email)
 
-    request_pass = hash_password(request.password)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # Check if the code matches
-    if pass_user == request_pass:
-        return {"status": False}
+    if verify_password(request.password, user.password):
+        return {"status": True}  # Correct password
     else:
-        return {"status": True}
+        return {"status": False}  # Incorrect password
