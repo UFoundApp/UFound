@@ -29,6 +29,8 @@ function AuthPage() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [password, setPassword] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+  const [isSending, setIsSending] = useState(false);  // Track loading state
+
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,10 +73,16 @@ function AuthPage() {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSending) return; // Prevent multiple requests
+
     if (!email.endsWith("@mail.utoronto.ca")) {
       alert("Only @mail.utoronto.ca emails are allowed.");
       return;
     }
+    
+    setIsSending(true); // Disable button & show loading state
+    
     try {
       const response = await axios.post("http://127.0.0.1:8000/auth/send-verification-code", { email });
       if (response.data.message === "Verification code sent") {
@@ -83,6 +91,7 @@ function AuthPage() {
     } catch (error) {
       alert(error.response?.data?.detail || "Failed to send verification code");
     }
+    setTimeout(() => setIsSending(false), 5000); // 🔹 Ensure cooldown before enabling
   };
 
   return (
@@ -161,33 +170,28 @@ function AuthPage() {
                   />
                 </VStack>
 
-                <VStack align="stretch" w="100%" spacing={2}>
-                  <Text fontSize="sm" fontWeight="medium">Password</Text>
-                  <Input 
-                    type="password" 
-                    placeholder="********" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    size="lg"
-                    required 
-                  />
-                </VStack>
-
                 <Button
-                  type="submit"
-                  colorScheme="blue"
-                  size="lg"
-                  width="100%"
-                  borderRadius="full"
-                >
-                  Sign Up
+                 type="submit"
+                 colorScheme="blue"
+                 size="lg"
+                 width="100%"
+                 borderRadius="full"
+                 isLoading={isSending}  // Show loading indicator
+                 isDisabled={isSending} // Prevent multiple clicks
+               >
+                 {isSending ? "Sending..." : "Send Verification Code"}
                 </Button>
               </VStack>
-            ) : (
+            ) : !isVerified ? (
               <VerifyCode 
                 email={email} 
-                onSuccess={() => navigate("/home")} 
+                onSuccess={() => setIsVerified(true)} 
               />
+            ) : (
+              <PasswordSetup
+                email={email}
+                onSuccess={() => navigate("/home")}
+                />
             )}
           </>
 
