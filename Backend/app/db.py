@@ -14,6 +14,11 @@ uri = os.getenv("MONGO_URI")
 client = AsyncIOMotorClient(uri)
 db = client["UFound"]  
 
+# Collection for storing users and verification codes
+users_collection = db["users"]
+verification_codes_collection = db["verification_codes"]
+
+
 # Function to test MongoDB connection
 async def   test_connection():
     try:
