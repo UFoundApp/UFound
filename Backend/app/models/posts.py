@@ -12,5 +12,5 @@ class PostModel(Document):
     title: str
     content: str
     created_at: datetime = Field(default_factory=datetime.now)
-    likes : int
+    likes : int = Field(default_factory=0)
     comments: Optional[List[CommentModel]] = Field(default_factory=list)
