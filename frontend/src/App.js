@@ -10,6 +10,7 @@ import Home from "./components/home";
 import AuthPage from "./components/AuthPage";
 import TopNav from './components/TopNav';
 import { Box, Flex } from '@chakra-ui/react';
+import CreatePost from "./components/CreatePost";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/home" element={<MainPage />} />
               <Route path="/view-post/:id" element={<ViewPost />} />
+              <Route path="/create-post" element={<CreatePost />} />
             </Routes>
           </Box>
         </Flex>

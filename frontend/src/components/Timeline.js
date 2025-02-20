@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { Box, Text, Flex } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
+import WritePostButton from '../Posts/WritePostButton';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
@@ -27,9 +28,12 @@ const Timeline = () => {
 
   return (
       <Box>
-        <Text fontSize="xl" fontWeight="bold" color="primary">
-          Timeline
-        </Text>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text fontSize="xl" fontWeight="bold" color="primary">
+            Timeline
+          </Text>
+          <WritePostButton />
+        </Flex>
         {posts.map((post) => (
             <Link key={post._id} to={`/view-post/${post._id}`}>
               <Box
