@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID, uuid4
 from datetime import datetime
 from beanie import Document
@@ -10,3 +10,5 @@ class UserModel(Document):
     email: str  # Ensures a valid email format
     password: str = Field(..., min_length=6)  # Enforce password strength
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Automatically set creation time
+    bio: Optional[str] = Field(default=None)
+    posts: List[str] = Field(default_factory=list)  # Store post IDs, defaults to empty list
