@@ -14,5 +14,5 @@ class PostModel(Document):
     content: str
     created_at: datetime = Field(default_factory=datetime.now)
     comments: Optional[List[CommentModel]] = Field(default_factory=list)
-    likes: Optional[List[UUID]] = Field(default_factory=list)  # Store user IDs
+    likes: List[UUID] = Field(default_factory=list)  # Store user IDs
     author_id: Optional[UUID] = None  # Add author_id field
