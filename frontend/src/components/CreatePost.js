@@ -20,7 +20,7 @@ function CreatePost() {
         title,
         content,
         created_at: new Date(),
-        likes: 0,
+        likes: [],
         comments: [],
 
       });
