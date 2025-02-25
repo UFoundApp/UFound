@@ -124,21 +124,24 @@ async def get_comments(post_id: PydanticObjectId):
         raise HTTPException(status_code=404, detail="Post not found")
 
     def fetch_replies(comment: CommentModel):
-        """ Recursively fetch replies for a comment """
+        """ Recursively fetch replies for a comment, including likes count """
         return {
-            "id": comment.id,
-            "content": comment.content,
-            "author_id": comment.author_id,
-            "author_name": comment.author_name,
-            "created_at": comment.created_at,
-            "parent_id": comment.parent_id,
-            "replies": [fetch_replies(reply) for reply in comment.replies],  # 🔥 Recursive call
-        }
+        "id": comment.id,
+        "content": comment.content,
+        "author_id": comment.author_id,
+        "author_name": comment.author_name,
+        "created_at": comment.created_at,
+        "parent_id": comment.parent_id,
+        "likes": [str(like) for like in comment.likes] if comment.likes else [],
+        "likes_count": len(comment.likes) if comment.likes else 0,
+        "replies": [fetch_replies(reply) for reply in comment.replies],
+    }
 
-    # Convert top-level comments to include nested replies
+    # Convert top-level comments to include nested replies and likes
     comments_with_replies = [fetch_replies(comment) for comment in post.comments if comment.parent_id is None]
 
     return {"comments": comments_with_replies}
+
 
 @router.post("/posts/{post_id}/comments/{comment_id}/like")
 async def like_comment(post_id: PydanticObjectId, comment_id: UUID, request: LikeRequest):
