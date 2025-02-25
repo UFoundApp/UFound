@@ -68,7 +68,7 @@ const TopNav = () => {
                         <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
                             Community
                         </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/reviews")}>
                             Reviews
                         </Button>
                         <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
