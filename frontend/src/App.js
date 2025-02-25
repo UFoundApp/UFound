@@ -12,6 +12,7 @@ import TopNav from './components/TopNav';
 import { Box, Flex } from '@chakra-ui/react';
 import CreatePost from "./components/CreatePost";
 import UserProfile from "./components/UserProfile";
+import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
 
 function App() {
   return (
@@ -33,7 +34,8 @@ function App() {
               <Route path="/home" element={<MainPage />} />
               <Route path="/view-post/:id" element={<ViewPost />} />
               <Route path="/create-post" element={<CreatePost />} />
-              <Route path="/profile/:username" element={<UserProfile />} />
+              <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
+              <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
             </Routes>
           </Box>
         </Flex>
