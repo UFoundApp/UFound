@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 class CommentModel(BaseModel):
     id: UUID = Field(default_factory=uuid4)  # Unique ID for comment
     content: str
-    author_id: UUID  # Store user ID only
+    author_id: UUID  # Store user ID
     author_name: str  # Store username for easy access
     created_at: datetime = Field(default_factory=datetime.utcnow)
     parent_id: Optional[UUID] = None  # Changed to UUID
