@@ -2,7 +2,7 @@
 import React from 'react';
 import { Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { isLoggedIn, logout } from './AuthPageUtil';
+import { isLoggedIn, logout, getUser } from './AuthPageUtil';
 
 const TopNav = () => {
     const navigate = useNavigate();
@@ -40,7 +40,7 @@ const TopNav = () => {
                 fontFamily="'Poppins', sans-serif"
                 color="primary"
                 cursor="pointer"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/home')}
             >
                 UFound
             </Text>
@@ -74,21 +74,42 @@ const TopNav = () => {
                         <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
                             Forum
                         </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-                            Profile
+                        <Button 
+                            variant="ghost" 
+                            color="gray.600" 
+                            _hover={{ color: "primary" }} 
+                            onClick={() => navigate('/create-post')}
+                        >
+                            Write a post
                         </Button>
                     </Flex>
 
                     {/* Auth Buttons */}
                     <Flex alignItems="center" gap={3}>
                         {isLoggedIn() ? (
-                            <Button 
-                                variant="ghost" 
-                                color="gray.700"
-                                onClick={handleLogout}
-                            >
-                                Sign out
-                            </Button>
+                            <>
+                                <Button 
+                                    variant="ghost" 
+                                    color="gray.700"
+                                    onClick={() => {
+                                        const user = getUser();
+                                        if (user && user.username) {
+                                            navigate(`/profile/${user.username}`);
+                                        } else {
+                                            navigate('/login');
+                                        }
+                                    }}
+                                >
+                                    Profile
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    color="gray.700"
+                                    onClick={handleLogout}
+                                >
+                                    Sign out
+                                </Button>
+                            </>
                         ) : (
                             <>
                                 <Button 
