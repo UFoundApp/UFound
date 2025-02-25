@@ -1,31 +1,27 @@
+// src/components/ViewPost.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Box,
     Heading,
     Text,
-    Divider,
     Flex,
     Spinner,
     Button,
-    VStack,
     HStack,
-    Input,
-    IconButton
 } from '@chakra-ui/react';
 import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
+import CommentsSection from './CommentsSection.jsx';
 
 const ViewPost = () => {
     const { id } = useParams();
     const [post, setPost] = useState(null);
-    const [comment, setComment] = useState('');
     const [loading, setLoading] = useState(true);
     const [likes, setLikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isCommenting, setIsCommenting] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
@@ -36,7 +32,6 @@ const ViewPost = () => {
                 setPost(response.data);
                 setLikes(response.data.likes.length);
 
-                // Check if the user has already liked the post
                 const user = getUser();
                 if (user && response.data.likes.includes(user.id)) {
                     setHasLiked(true);
@@ -105,35 +100,6 @@ const ViewPost = () => {
         }
     };
 
-    const handleComment = async () => {
-        if (!comment.trim()) {
-            setMessage("Comment cannot be empty.");
-            setIsError(true);
-            return;
-        }
-
-        const newComment = { content: comment, author: "Anonymous" };
-
-        try {
-            setIsCommenting(true);
-            await axios.post(`http://localhost:8000/api/posts/${id}/comment`, newComment);
-
-            setPost((prev) => ({
-                ...prev,
-                comments: [...prev.comments, newComment]
-            }));
-            setComment('');
-            setMessage("Your comment was posted successfully!");
-            setIsError(false);
-        } catch (error) {
-            setMessage("Failed to post comment.");
-            setIsError(true);
-        } finally {
-            setIsCommenting(false);
-            setTimeout(() => setMessage(""), 3000);
-        }
-    };
-
     if (loading) {
         return (
             <Flex justify="center" align="center" height="100vh">
@@ -173,38 +139,8 @@ const ViewPost = () => {
                 </Button>
             </HStack>
 
-            <Heading as="h2" size="md" mb={4}>
-                Comments
-            </Heading>
-            <VStack align="stretch" spacing={3}>
-                {post.comments.length > 0 ? (
-                    post.comments.map((c, index) => (
-                        <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                            <Text fontSize="md">{c.content}</Text>
-                            <Text fontSize="sm" color="gray.500">By {c.author}</Text>
-                        </Box>
-                    ))
-                ) : (
-                    <Text fontStyle="italic" color="gray.500">
-                        Be the first to add a comment.
-                    </Text>
-                )}
-            </VStack>
-
-            <HStack mt={4}>
-                <Input
-                    placeholder="Write a comment..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    isDisabled={isCommenting}
-                />
-                <IconButton
-                    icon={<FaCommentAlt />}
-                    onClick={handleComment}
-                    aria-label="Add Comment"
-                    isLoading={isCommenting}
-                />
-            </HStack>
+            {/* Comments Section */}
+            <CommentsSection postId={id} />
         </Box>
     );
 };

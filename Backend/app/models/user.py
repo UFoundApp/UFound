@@ -1,12 +1,13 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from beanie import Document
+from pydantic import BaseModel, Field
+from typing import List
 from uuid import UUID, uuid4
 from datetime import datetime
-from beanie import Document
 
 class UserModel(Document):
-    id: UUID = Field(default_factory=uuid4)  # Generate a unique user ID
+    id: UUID = Field(default_factory=uuid4)
     username: str = Field(..., min_length=3, max_length=30)
-    email: str  # Ensures a valid email format
-    password: str = Field(..., min_length=6)  # Enforce password strength
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Automatically set creation time
+    email: str
+    password: str = Field(..., min_length=6)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    comments: List[UUID] = Field(default_factory=list)  # Only store Comment IDs
