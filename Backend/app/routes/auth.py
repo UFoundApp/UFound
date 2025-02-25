@@ -1,11 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, Request, Depends
+from jose import JWTError, jwt
 from app.db import verification_codes_collection, users_collection
 from app.registerUtils import generate_verification_code, send_verification_email, hash_password
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from app.models.user import UserModel
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+SECRET_KEY = os.getenv("JWT_SECRET", "your_secret_key")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -41,8 +49,20 @@ class LoginRequest(BaseModel):
 async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+# Function to generate JWT token
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
 @router.post("/login")
 async def login_user(request: LoginRequest):
+    # form = await request.json() 
+    # identifier = form.get("identifier")  
+    # password = form.get("password")
+
     # Check if user exists by email or username
     user = await UserModel.find_one(
         {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
@@ -54,6 +74,7 @@ async def login_user(request: LoginRequest):
     if not await verify_password(request.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
+<<<<<<< Updated upstream
     # Include the user's ID in the response
     return {
         "message": "Login successful", 
@@ -65,8 +86,50 @@ async def login_user(request: LoginRequest):
     # Verify the password
     if not await verify_password(request.password, user["password"]):
         raise HTTPException(status_code=400, detail="Incorrect password")
+=======
+    # Generate JWT token
+    access_token = create_access_token(data={"sub": user.email})
+    
+    # Store JWT in HTTP-only cookie
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True, 
+        samesite="Lax",
+        secure=True
+    )
+>>>>>>> Stashed changes
 
     return {"message": "Login successful", "username": user["username"], "email": user["email"]}
+
+# Logout - Clear the Cookie
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"message": "Logged out successfully"}
+
+# Extract User from JWT in Cookies
+async def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(token.replace("Bearer ", ""), SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = await UserModel.find_one(UserModel.email == email)
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# Protect an Endpoint
+@router.get("/me")
+async def get_user_info(current_user: UserModel = Depends(get_current_user)):
+    return {"username": current_user.username, "email": current_user.email}
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):

@@ -22,6 +22,21 @@ import EmailInput from "./EmailInput";
 import VerifyCode from "./VerifyCode";
 import PasswordSetup from "./PasswordSetup";
 
+export const isLoggedIn = async () => {
+  const response = await fetch("http://127.0.0.1:8000/auth/me", {
+      credentials: "include",  // Allows cookies to be sent
+  });
+
+  return response.ok;
+};
+
+export const logout = async () => {
+  await fetch("http://127.0.0.1:8000/auth/logout", {
+      method: "POST",
+      credentials: "include",
+  });
+};
+
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -55,17 +70,28 @@ function AuthPage() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", {
-        identifier: email,
-        password: password
-      });
-      localStorage.setItem("user", JSON.stringify(response.data));
-      navigate("/home");
+        const formData = new FormData();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const response = await fetch("http://127.0.0.1:8000/auth/login", {
+            method: "POST",
+            body: formData,
+            credentials: "include",  // Ensures cookie is stored
+        });
+
+        if (response.ok) {
+            navigate("/home"); 
+        } else {
+            alert("Login failed");
+        }
     } catch (error) {
-      alert(error.response?.data?.detail || "Login failed");
+        alert("Error logging in");
     }
-  };
+};
+
 
   const handleResetPassword = () => {
     navigate('/reset-password');
