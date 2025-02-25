@@ -11,27 +11,29 @@ import AuthPage from "./components/AuthPage";
 import TopNav from './components/TopNav';
 import { Box, Flex } from '@chakra-ui/react';
 import CreatePost from "./components/CreatePost";
+import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
 
 function App() {
   return (
-    <ChakraProvider value={system}>
-      <Router>
-        <Flex direction="column" minH="100vh">
-          <TopNav />
-          <Box flex="1">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<AuthPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/home" element={<MainPage />} />
-              <Route path="/view-post/:id" element={<ViewPost />} />
-              <Route path="/create-post" element={<CreatePost />} />
-            </Routes>
-          </Box>
-        </Flex>
-      </Router>
-    </ChakraProvider>
+      <ChakraProvider value={system}>
+        <Router>
+          <Flex direction="column" minH="100vh">
+            <TopNav />
+            <Box flex="1">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/home" element={<MainPage />} />
+                <Route path="/view-post/:id" element={<ViewPost />} />
+                <Route path="/create-post" element={<CreatePost />} />
+                <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
+              </Routes>
+            </Box>
+          </Flex>
+        </Router>
+      </ChakraProvider>
   );
 }
 
