@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models.posts import PostModel
+from app.models.user import UserModel
 from beanie import PydanticObjectId  # Needed for MongoDB ObjectId
 from uuid import UUID
 
@@ -8,7 +9,16 @@ router = APIRouter()
 # Create a new post
 @router.post("/posts", response_model=PostModel)
 async def create_post(post: PostModel):
+    # First, create the post
     await post.insert()
+    
+    # Get the user and update their posts array
+    if hasattr(post, 'author_id'):
+        user = await UserModel.find_one(UserModel.id == post.author_id)
+        if user:
+            user.posts.append(str(post.id))  # Add the post ID to user's posts array
+            await user.save()
+    
     return post
 
 # Get all posts
