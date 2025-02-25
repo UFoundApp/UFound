@@ -2,6 +2,7 @@ import { useState } from "react";
 import { VStack, Input, Textarea, Button, Box, Text } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getUser } from './AuthPageUtil';
 
 function CreatePost() {
   const [title, setTitle] = useState("");
@@ -9,6 +10,7 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const user = getUser();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +22,9 @@ function CreatePost() {
         title,
         content,
         created_at: new Date(),
-        likes: 0,
+        likes: [],
         comments: [],
-
+        author_id: user.id,
       });
       if (response.data) {
         setMessage("Post created successfully!");

@@ -10,6 +10,7 @@ from app.routes.posts import router as post_router
 from app.routes.professors import router as professor_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router # Import auth routes
+from app.routes.userProfile import router as profile_router
 
 app = FastAPI()
 
@@ -28,7 +29,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth") # Include authentication routes
 
 async def init_db():
-    await init_beanie(db, document_models=[PostModel, UserModel, CommentModel, ReviewModel, CourseModel, ProfessorModel, ProfessorReviewModel])
+await init_beanie(db, document_models=[PostModel, UserModel, CommentModel, ReviewModel, CourseModel, ProfessorModel, ProfessorReviewModel])
 
 @app.on_event("startup")
 async def startup():
@@ -37,6 +38,7 @@ async def startup():
  
 app.include_router(post_router, prefix="/api", tags=["Posts"])
 app.include_router(professor_router, prefix="/api", tags=["Professors"])
+app.include_router(profile_router, prefix="/api")
 
 @app.get("/")
 async def root():

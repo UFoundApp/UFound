@@ -5,33 +5,40 @@ import {
     Box,
     Heading,
     Text,
-    Separator,
     Flex,
     Spinner,
     Button,
-    VStack,
     HStack,
-    Input,
-    IconButton,
 } from '@chakra-ui/react';
-import { FaRegThumbsUp, FaCommentAlt } from 'react-icons/fa';
+import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import { getUser } from '../components/AuthPageUtil';
+import CommentsSection from './CommentsSection.jsx';
 
 const ViewPost = () => {
-    const { id } = useParams(); // Extract post ID from URL
+    const { id } = useParams();
     const [post, setPost] = useState(null);
-    const [comment, setComment] = useState('');
     const [loading, setLoading] = useState(true);
     const [likes, setLikes] = useState(0);
+    const [hasLiked, setHasLiked] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [message, setMessage] = useState("");
+    const [isError, setIsError] = useState(false);
 
     useEffect(() => {
         const fetchPost = async () => {
             try {
                 const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
                 setPost(response.data);
-                setLikes(response.data.likes || 0);
+                setLikes(response.data.likes.length);
+
+                const user = getUser();
+                if (user && response.data.likes.includes(user.id)) {
+                    setHasLiked(true);
+                }
             } catch (error) {
-                console.error("Error fetching post:", error);
+                setMessage("Failed to load post.");
+                setIsError(true);
             } finally {
                 setLoading(false);
             }
@@ -41,16 +48,56 @@ const ViewPost = () => {
     }, [id]);
 
     const handleLike = async () => {
-        setLikes((prev) => prev + 1);
-        await axios.post(`http://localhost:8000/api/posts/${id}/like`);
+        const user = getUser();
+        if (!user || !user.id) {
+            setMessage("You must be logged in to like a post.");
+            setIsError(true);
+            return;
+        }
+
+        if (hasLiked) {
+            await handleUnlike();
+            return;
+        }
+
+        try {
+            setIsProcessing(true);
+            await axios.post(`http://localhost:8000/api/posts/${id}/like?user_id=${user.id}`);
+            setLikes((prev) => prev + 1);
+            setHasLiked(true);
+            setMessage("You liked this post!");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to like post.");
+            setIsError(true);
+        } finally {
+            setIsProcessing(false);
+            setTimeout(() => setMessage(""), 3000);
+        }
     };
 
-    const handleComment = async () => {
-        if (!comment.trim()) return;
-        const newComment = { content: comment, author: "Anonymous" };
-        setPost((prev) => ({ ...prev, comments: [...prev.comments, newComment] }));
-        setComment('');
-        await axios.post(`http://localhost:8000/api/posts/${id}/comment`, newComment);
+    const handleUnlike = async () => {
+        const user = getUser();
+        if (!user || !user.id) {
+            setMessage("You must be logged in to unlike a post.");
+            setIsError(true);
+            return;
+        }
+
+        try {
+            setIsProcessing(true);
+            await axios.post(`http://localhost:8000/api/posts/${id}/unlike?user_id=${user.id}`);
+            setLikes((prev) => prev - 1);
+            setHasLiked(false);
+            setMessage("You unliked this post.");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to unlike post.");
+            setIsError(true);
+        } finally {
+            setIsProcessing(false);
+            setTimeout(() => setMessage(""), 3000);
+        }
     };
 
     if (loading) {
@@ -73,43 +120,27 @@ const ViewPost = () => {
                 {post.content}
             </Text>
 
+            {message && (
+                <Text color={isError ? "red.500" : "green.500"} mb={4}>
+                    {message}
+                </Text>
+            )}
+
             <HStack spacing={4} mb={6}>
-                <Button leftIcon={<FaRegThumbsUp />} onClick={handleLike}>
-                    {likes} Likes
+                <Button
+                    leftIcon={hasLiked ? <FaThumbsDown /> : <FaRegThumbsUp />}
+                    onClick={handleLike}
+                    isLoading={isProcessing}
+                >
+                    {likes} {hasLiked ? "Unlike" : "Like"}
                 </Button>
                 <Button leftIcon={<FaCommentAlt />}>
                     {post.comments.length} Comments
                 </Button>
             </HStack>
 
-            <Separator my={4} />
-
-            <Heading as="h2" size="md" mb={4}>
-                Comments
-            </Heading>
-            <VStack align="stretch" spacing={3}>
-                {post.comments.length > 0 ? (
-                    post.comments.map((c, index) => (
-                        <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                            <Text fontSize="md">{c.content}</Text>
-                            <Text fontSize="sm" color="gray.500">By {c.author}</Text>
-                        </Box>
-                    ))
-                ) : (
-                    <Text fontStyle="italic" color="gray.500">
-                        Be the first to add a comment.
-                    </Text>
-                )}
-            </VStack>
-
-            <HStack mt={4}>
-                <Input
-                    placeholder="Write a comment..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                />
-                <IconButton icon={<FaCommentAlt />} onClick={handleComment} aria-label="Add Comment" />
-            </HStack>
+            {/* Comments Section */}
+            <CommentsSection postId={id} />
         </Box>
     );
 };
