@@ -26,7 +26,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth") # Include authentication routes
 
 async def init_db():
-    await init_beanie(db, document_models=[PostModel, UserModel, CommentModel])  # Register discussion model
+    await init_beanie(db, document_models=[PostModel, UserModel])  # Register discussion model
 
 @app.on_event("startup")
 async def startup():
