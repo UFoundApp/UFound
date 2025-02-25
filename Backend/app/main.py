@@ -7,6 +7,7 @@ from app.models.user import UserModel
 from app.routes.posts import router as post_router 
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router # Import auth routes
+from app.routes.userProfile import router as profile_router
 
 app = FastAPI()
 
@@ -33,6 +34,7 @@ async def startup():
     await init_db()
  
 app.include_router(post_router, prefix="/api", tags=["Posts"])
+app.include_router(profile_router, prefix="/api")
 
 @app.get("/")
 async def root():

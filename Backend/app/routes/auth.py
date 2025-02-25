@@ -54,7 +54,13 @@ async def login_user(request: LoginRequest):
     if not await verify_password(request.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
-    return {"message": "Login successful", "username": user.username, "email": user.email, "id": str(user.id)}
+    # Include the user's ID in the response
+    return {
+        "message": "Login successful", 
+        "username": user.username, 
+        "email": user.email,
+        "id": str(user.id)  # Convert UUID to string
+    }
 
     # Verify the password
     if not await verify_password(request.password, user["password"]):

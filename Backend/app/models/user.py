@@ -1,6 +1,6 @@
 from beanie import Document
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -11,3 +11,5 @@ class UserModel(Document):
     password: str = Field(..., min_length=6)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     comments: List[UUID] = Field(default_factory=list)  # Only store Comment IDs
+    bio: Optional[str] = Field(default=None)
+    posts: List[str] = Field(default_factory=list)  # Store post IDs, defaults to empty list

@@ -62,10 +62,13 @@ const RightSidebar = () => {
                         borderRadius="md"
                         cursor="pointer"
                     >
-                        <Icon as={FaDiscord} color="gray.600" boxSize={5} mt={1} />
+                        <FontAwesomeIcon icon={faComments} color="gray.600" size="lg" style={{ marginTop: '4px' }} />
                         <Box ml={3}>
                             <Text color="gray.700" fontSize="sm">
                                 Anyone else having trouble with campus WiFi today?
+                            </Text>
+                            <Text color="gray.600" fontSize="xs" noOfLines={2}>
+                                Been trying to connect to UofT-Secure for the past hour. Anyone else experiencing issues? The library is packed and nobody can get work done...
                             </Text>
                             <Text color="gray.500" fontSize="xs" mt={1}>
                                 42 upvotes · 28 comments
@@ -83,6 +86,9 @@ const RightSidebar = () => {
                         <Box ml={3}>
                             <Text color="gray.700" fontSize="sm">
                                 Prof ghosted the entire class on exam day 💀
+                            </Text>
+                            <Text color="gray.600" fontSize="xs" noOfLines={2}>
+                                We all showed up for the final exam at SS1083 and waited for 30 mins. The prof never showed up and isn't responding to emails. The department is looking into it...
                             </Text>
                             <Text color="gray.500" fontSize="xs" mt={1}>
                                 342 likes · 156 comments

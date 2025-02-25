@@ -14,7 +14,6 @@ class CommentModel(BaseModel):
     replies: Optional[List["CommentModel"]] = Field(default_factory=list) 
     likes: List[UUID] = Field(default_factory=list)  # ✅ Added likes field
 
-    
     class Config:
         arbitrary_types_allowed = True
 
@@ -24,6 +23,7 @@ class PostModel(Document):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     comments: Optional[List[CommentModel]] = Field(default_factory=list)  # Comments stored here
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
+    author_id: Optional[UUID] = None  # Add author_id field
 
-class Settings:
+    class Settings:
         collection = "posts"
