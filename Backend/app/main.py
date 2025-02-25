@@ -5,6 +5,8 @@ from app.db import test_connection, db
 from app.models.posts import PostModel, CommentModel  # Ensure correct import
 from app.models.user import UserModel
 from app.routes.posts import router as post_router 
+from app.models.courses import CourseModel, ReviewModel
+from app.routes.courses import router as course_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router # Import auth routes
 
@@ -25,7 +27,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth") # Include authentication routes
 
 async def init_db():
-    await init_beanie(db, document_models=[PostModel, UserModel, CommentModel])  # Register discussion model
+    await init_beanie(db, document_models=[PostModel, UserModel, CommentModel, CourseModel, ReviewModel])  # Register discussion model
 
 @app.on_event("startup")
 async def startup():
@@ -37,3 +39,5 @@ app.include_router(post_router, prefix="/api", tags=["Posts"])
 @app.get("/")
 async def root():
     return {"message": "UFound API is running!"}
+
+app.include_router(course_router, prefix="/api", tags=["Courses"])

@@ -11,6 +11,8 @@ import AuthPage from "./components/AuthPage";
 import TopNav from './components/TopNav';
 import { Box, Flex } from '@chakra-ui/react';
 import CreatePost from "./components/CreatePost";
+import ReviewsPage from "./components/ReviewPage";
+import CoursePage from "./components/CoursePage";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
               <Route path="/home" element={<MainPage />} />
               <Route path="/view-post/:id" element={<ViewPost />} />
               <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/reviews" element={<ReviewsPage />} /> 
+              <Route path="/course/:courseId" element={<CoursePage />} />
             </Routes>
           </Box>
         </Flex>
