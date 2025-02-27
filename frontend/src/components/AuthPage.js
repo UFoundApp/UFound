@@ -22,20 +22,6 @@ import EmailInput from "./EmailInput";
 import VerifyCode from "./VerifyCode";
 import PasswordSetup from "./PasswordSetup";
 
-export const isLoggedIn = async () => {
-  const response = await fetch("http://127.0.0.1:8000/auth/me", {
-      credentials: "include",  // Allows cookies to be sent
-  });
-
-  return response.ok;
-};
-
-export const logout = async () => {
-  await fetch("http://127.0.0.1:8000/auth/logout", {
-      method: "POST",
-      credentials: "include",
-  });
-};
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -50,13 +36,22 @@ function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect logged-in users to dashboard
   useEffect(() => {
-    if (isLoggedIn()) {
-      console.log("User is already logged in. Redirecting to dashboard...");
-      navigate("/home"); // Redirect to dashboard if logged in
-    }
+    const checkAuthStatus = async () => {
+      try {
+        const loggedIn = await isLoggedIn();
+        if (loggedIn) {
+          console.log("User is already logged in. Redirecting to dashboard...");
+          navigate("/home"); // Redirect to dashboard if logged in
+        }
+      } catch (error) {
+        console.error("Error checking login status:", error);
+      }
+    };
+  
+    setTimeout(checkAuthStatus, 500); // Delay to ensure cookies are set
   }, [navigate]);
+  
 
   useEffect(() => {
     if (location.state?.isLogin !== undefined) {
@@ -72,22 +67,35 @@ function AuthPage() {
     e.preventDefault();
 
     try {
-        const formData = new FormData();
-        formData.append("username", email);
-        formData.append("password", password);
-
         const response = await fetch("http://127.0.0.1:8000/auth/login", {
             method: "POST",
-            body: formData,
-            credentials: "include",  // Ensures cookie is stored
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                identifier: email,
+                password: password,
+            }),
+            credentials: "include",  // ✅ Ensures cookies are sent & stored
         });
 
+        const data = await response.json();
+        console.log("🔹 Login Response:", data);
+
         if (response.ok) {
-            navigate("/home"); 
+            console.log("✅ Login Successful!");
+            
+            // ✅ Manually check authentication after login
+            const loggedIn = await isLoggedIn();
+            if (loggedIn) {
+              navigate("/home"); // ✅ Redirect only if confirmed
+            }
         } else {
-            alert("Login failed");
+            console.error("❌ Login failed:", data.detail);
+            alert("Login failed: " + data.detail);
         }
     } catch (error) {
+        console.error("⚠️ Error during login:", error);
         alert("Error logging in");
     }
 };

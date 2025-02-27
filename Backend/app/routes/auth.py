@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Response, Request, Depends
-from jose import JWTError, jwt
 from app.db import verification_codes_collection, users_collection
 from app.registerUtils import generate_verification_code, send_verification_email, hash_password
 from pydantic import BaseModel, EmailStr
@@ -8,16 +7,19 @@ from passlib.context import CryptContext
 from app.models.user import UserModel
 from dotenv import load_dotenv
 import os
+import jwt
 
 load_dotenv()
-
-SECRET_KEY = os.getenv("JWT_SECRET", "your_secret_key")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
+
+ACCESS_SECRET_KEY = os.getenv("JWT_SECRET")
+REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+REFRESH_TOKEN_EXPIRE_DAYS = 2
 
 class EmailRequest(BaseModel):
     email: EmailStr
@@ -41,7 +43,6 @@ class PasswordCheckRequest(BaseModel):
     email: EmailStr
     password: str
 
-
 class LoginRequest(BaseModel):
     identifier: str  # Can be either email or username
     password: str
@@ -50,19 +51,20 @@ async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 # Function to generate JWT token
-def create_access_token(data: dict, expires_delta: timedelta = None):
+def create_token(data: dict, expires_delta: timedelta, secret_key: str):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    to_encode.update({"exp": datetime.utcnow() + expires_delta})
+    return jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
+
+def create_access_token(data: dict):
+    return create_token(data, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), ACCESS_SECRET_KEY)
+
+def create_refresh_token(data: dict):
+    return create_token(data, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), REFRESH_SECRET_KEY)
 
 
 @router.post("/login")
-async def login_user(request: LoginRequest):
-    # form = await request.json() 
-    # identifier = form.get("identifier")  
-    # password = form.get("password")
-
+async def login_user(request: LoginRequest, response: Response):
     # Check if user exists by email or username
     user = await UserModel.find_one(
         {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
@@ -74,57 +76,89 @@ async def login_user(request: LoginRequest):
     if not await verify_password(request.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
-<<<<<<< Updated upstream
-    # Include the user's ID in the response
-    return {
-        "message": "Login successful", 
-        "username": user.username, 
-        "email": user.email,
-        "id": str(user.id)  # Convert UUID to string
-    }
-
-    # Verify the password
-    if not await verify_password(request.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Incorrect password")
-=======
-    # Generate JWT token
+    # Generate tokens
     access_token = create_access_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(data={"sub": user.email})
     
     # Store JWT in HTTP-only cookie
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
-        httponly=True, 
-        samesite="Lax",
-        secure=True
+        httponly=True,
+        samesite="None",
+        secure=False,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert minutes to seconds
     )
->>>>>>> Stashed changes
+    response.set_cookie(
+        key="refresh_token",
+        value=f"Bearer {refresh_token}",
+        httponly=True,
+        samesite="None",
+        secure=False,
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60  # Convert days to seconds
+    )
 
-    return {"message": "Login successful", "username": user["username"], "email": user["email"]}
+    return {"message": "Login successful", "username": user.username, "email": user.email}
 
-# Logout - Clear the Cookie
+# Logout - Clear the cookie
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie("access_token")
+    response.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        samesite="None",
+        secure=False,
+        max_age=0,  # ✅ Expire cookie immediately
+        expires=0   # ✅ Ensure browser removes it instantly
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        samesite="None",
+        secure=False,
+        max_age=0,
+        expires=0
+    )
     return {"message": "Logged out successfully"}
 
-# Extract User from JWT in Cookies
+
+
 async def get_current_user(request: Request):
     token = request.cookies.get("access_token")
+    
     if not token:
+        print("❌ No access token found in cookies")
         raise HTTPException(status_code=401, detail="Not authenticated")
 
+    if not token.startswith("Bearer "):
+        print("❌ Invalid token format:", token)
+        raise HTTPException(status_code=401, detail="Invalid token format")
+
     try:
-        payload = jwt.decode(token.replace("Bearer ", ""), SECRET_KEY, algorithms=[ALGORITHM])
+        token = token.split(" ")[1]  # Extract the actual token
+        payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
+
         if not email:
+            print("❌ No email found in token payload")
             raise HTTPException(status_code=401, detail="Invalid token")
+        
         user = await UserModel.find_one(UserModel.email == email)
         if not user:
+            print("❌ User not found for email:", email)
             raise HTTPException(status_code=401, detail="User not found")
+        
         return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+
+    except jwt.ExpiredSignatureError:
+        print("❌ Token expired")
+        raise HTTPException(status_code=401, detail="Access token has expired")
+    except jwt.PyJWTError:
+        print("❌ Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid access token")
+
 
 # Protect an Endpoint
 @router.get("/me")
@@ -182,7 +216,7 @@ async def verify_code(request: VerifyCodeRequest):
     return {"message": "Email verified successfully"}
 
 @router.post("/register")
-async def register_user(request: RegisterUserRequest):
+async def register_user(request: RegisterUserRequest, response: Response):
     # Check if email has been verified
     verification_record = await verification_codes_collection.find_one(
         {"email": request.email},
@@ -218,7 +252,19 @@ async def register_user(request: RegisterUserRequest):
     )
     await new_user.insert()
 
-    return {"message": "User registered successfully"}
+    # Generate JWT token and set it in a cookie
+    access_token = create_access_token(data={"sub": new_user.email})
+
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        samesite="None",
+        secure=False,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert minutes to seconds
+    )
+
+    return {"message": "User registered and logged in successfully", "username": new_user.username}
 
 
 @router.post("/update-password")
@@ -274,3 +320,40 @@ async def check_password(request: PasswordCheckRequest):
         return {"status": True}  # Correct password
     else:
         return {"status": False}  # Incorrect password
+
+@router.post("/refresh-token")
+async def refresh_token(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token or not refresh_token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Refresh token missing or invalid format")
+
+    try:
+        payload = jwt.decode(refresh_token.split(" ")[1], REFRESH_SECRET_KEY, algorithms=["HS256"])
+        email = payload.get("sub")
+
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = await UserModel.find_one(UserModel.email == email)
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        # Generate new access token
+        new_access_token = create_access_token(data={"sub": user.email})
+
+        # Set new access token in cookie
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {new_access_token}",
+            httponly=True,
+            samesite="None",
+            secure=False,
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert minutes to seconds
+        )
+
+        return {"message": "Access token refreshed"}
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")

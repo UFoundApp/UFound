@@ -1,139 +1,152 @@
 // src/components/TopNav.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { isLoggedIn, logout, getUser } from './AuthPageUtil';
 
 const TopNav = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const isAuthPage = location.pathname === '/login';
-    const isResetPasswordPage = location.pathname === '/reset-password';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login';
+  const isResetPasswordPage = location.pathname === '/reset-password';
 
-    const handleAuth = (type) => {
-        if (type === 'signin' || type === 'signup') {
-            navigate('/login', { state: { isLogin: type === 'signin' } });
-        }
+  // State to store auth status and username
+  const [authenticated, setAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
+
+  // Re-check auth status whenever the route changes
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const loggedIn = await isLoggedIn();
+      setAuthenticated(loggedIn);
+      if (loggedIn) {
+        const user = await getUser();
+        setUsername(user?.username || "");
+      } else {
+        setUsername("");
+      }
     };
+    checkAuthStatus();
+  }, [location]);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+  const handleAuth = (type) => {
+    navigate('/login', { state: { isLogin: type === 'signin' } });
+  };
 
-    return (
-        <Flex
-            bg="white"
-            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-            p={4}
-            alignItems="center"
-            justifyContent={isResetPasswordPage ? "flex-start" : "space-between"}
-            borderBottom="1px"
+  const handleLogout = async () => {
+    await logout();
+    // After logout, navigate to login (TopNav will re-check auth because location changes)
+    navigate('/login');
+  };
+
+  return (
+    <Flex
+      bg="white"
+      boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+      p={4}
+      alignItems="center"
+      justifyContent={isResetPasswordPage ? "flex-start" : "space-between"}
+      borderBottom="1px"
+      borderColor="gray.200"
+      position="relative"
+      zIndex={1}
+    >
+      {/* Logo */}
+      <Text
+        fontSize="2xl"
+        fontWeight="bold"
+        fontFamily="'Poppins', sans-serif"
+        color="primary"
+        cursor="pointer"
+        onClick={() => navigate('/home')}
+      >
+        UFound
+      </Text>
+
+      {/* Show nav elements only if not on login/reset-password pages */}
+      {!isAuthPage && !isResetPasswordPage && (
+        <>
+          {/* Search Bar */}
+          <Input
+            placeholder="Search"
+            maxW="400px"
+            bg="gray.50"
+            border="1px"
             borderColor="gray.200"
-            position="relative"
-            zIndex={1}
-        >
-            {/* Logo - always visible */}
-            <Text
-                fontSize="2xl"
-                fontWeight="bold"
-                fontFamily="'Poppins', sans-serif"
-                color="primary"
-                cursor="pointer"
-                onClick={() => navigate('/home')}
+            _hover={{ bg: "gray.100" }}
+            _focus={{
+              bg: "white",
+              borderColor: "primary",
+              boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+            }}
+          />
+
+          {/* Navigation Links */}
+          <Flex alignItems="center" gap={4}>
+            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+              Community
+            </Button>
+            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+              Reviews
+            </Button>
+            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+              Forum
+            </Button>
+            <Button
+              variant="ghost"
+              color="gray.600"
+              _hover={{ color: "primary" }}
+              onClick={() => navigate('/create-post')}
             >
-                UFound
-            </Text>
+              Write a post
+            </Button>
+          </Flex>
 
-            {/* Only show these elements if NOT on the auth or reset password page */}
-            {!isAuthPage && !isResetPasswordPage && (
-                <>
-                    {/* Search Bar */}
-                    <Input 
-                        placeholder="Search" 
-                        maxW="400px"
-                        bg="gray.50"
-                        border="1px"
-                        borderColor="gray.200"
-                        _hover={{ bg: "gray.100" }}
-                        _focus={{ 
-                            bg: "white",
-                            borderColor: "primary",
-                            boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
-                        }}
-                    />
-                    
-                    {/* Navigation Links */}
-                    <Flex alignItems="center" gap={4}>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-                            Community
-                        </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-                            Reviews
-                        </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-                            Forum
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            color="gray.600" 
-                            _hover={{ color: "primary" }} 
-                            onClick={() => navigate('/create-post')}
-                        >
-                            Write a post
-                        </Button>
-                    </Flex>
-
-                    {/* Auth Buttons */}
-                    <Flex alignItems="center" gap={3}>
-                        {isLoggedIn() ? (
-                            <>
-                                <Button 
-                                    variant="ghost" 
-                                    color="gray.700"
-                                    onClick={() => {
-                                        const user = getUser();
-                                        if (user && user.username) {
-                                            navigate(`/profile/${user.username}`);
-                                        } else {
-                                            navigate('/login');
-                                        }
-                                    }}
-                                >
-                                    Profile
-                                </Button>
-                                <Button 
-                                    variant="ghost" 
-                                    color="gray.700"
-                                    onClick={handleLogout}
-                                >
-                                    Sign out
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button 
-                                    variant="ghost" 
-                                    color="gray.700"
-                                    onClick={() => handleAuth('signin')}
-                                >
-                                    Sign in
-                                </Button>
-                                <Button 
-                                    bg="primary"
-                                    color="white"
-                                    _hover={{ bg: "primary", opacity: 0.9 }}
-                                    onClick={() => handleAuth('signup')}
-                                >
-                                    Sign up
-                                </Button>
-                            </>
-                        )}
-                    </Flex>
-                </>
+          {/* Auth Buttons */}
+          <Flex alignItems="center" gap={3}>
+            {authenticated ? (
+              <>
+                <Button
+                  variant="ghost"
+                  color="gray.700"
+                  onClick={() =>
+                    navigate(username ? `/profile/${username}` : '/login')
+                  }
+                >
+                  {username ? username : "Profile"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  color="gray.700"
+                  onClick={handleLogout}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  color="gray.700"
+                  onClick={() => handleAuth('signin')}
+                >
+                  Sign in
+                </Button>
+                <Button
+                  bg="primary"
+                  color="white"
+                  _hover={{ bg: "primary", opacity: 0.9 }}
+                  onClick={() => handleAuth('signup')}
+                >
+                  Sign up
+                </Button>
+              </>
             )}
-        </Flex>
-    );
+          </Flex>
+        </>
+      )}
+    </Flex>
+  );
 };
 
 export default TopNav;
