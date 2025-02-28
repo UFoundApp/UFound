@@ -12,6 +12,7 @@
     "axios": "^1.7.9",
     "cookie": "^1.0.2",
     "cra-template": "1.2.0",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
