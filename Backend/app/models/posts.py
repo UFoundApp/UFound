@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime
 from uuid import UUID, uuid4
 
-class CommentModel(Document):
+class CommentModel(BaseModel):
     id: UUID = Field(default_factory=uuid4)  # Unique ID for comment
     content: str
     author_id: UUID  # Store user ID only
