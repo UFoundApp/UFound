@@ -10,7 +10,7 @@ import {
     Button,
     HStack,
 } from '@chakra-ui/react';
-import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt } from 'react-icons/fa';
+import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt, FaEye } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
@@ -24,27 +24,61 @@ const ViewPost = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+    const [views, setViews] = useState(0);
 
     useEffect(() => {
+        let isMounted = true; // Flag to track if component is mounted
+        
         const fetchPost = async () => {
             try {
+                // First, get the post data
                 const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
+                
+                if (!isMounted) return; // Don't update state if component unmounted
+                
                 setPost(response.data);
                 setLikes(response.data.likes.length);
+                setViews(response.data.views || 0);
 
                 const user = getUser();
                 if (user && response.data.likes.includes(user.id)) {
                     setHasLiked(true);
                 }
+                
+                // Increment view count only once per session
+                // Use sessionStorage to track if this post has been viewed in this session
+                const viewedPosts = JSON.parse(sessionStorage.getItem('viewedPosts') || '{}');
+                
+                if (!viewedPosts[id]) {
+                    // Only increment if not already viewed in this session
+                    const viewResponse = await axios.post(`http://localhost:8000/api/posts/${id}/view`);
+                    
+                    if (!isMounted) return; // Don't update state if component unmounted
+                    
+                    setViews(viewResponse.data.views);
+                    
+                    // Mark this post as viewed in this session
+                    viewedPosts[id] = true;
+                    sessionStorage.setItem('viewedPosts', JSON.stringify(viewedPosts));
+                }
             } catch (error) {
-                setMessage("Failed to load post.");
-                setIsError(true);
+                if (isMounted) {
+                    setMessage("Failed to load post.");
+                    setIsError(true);
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
         fetchPost();
+        
+        // Cleanup function to set isMounted to false when component unmounts
+        return () => {
+            isMounted = false;
+        };
     }, [id]);
 
     const handleLike = async () => {
@@ -136,6 +170,9 @@ const ViewPost = () => {
                 </Button>
                 <Button leftIcon={<FaCommentAlt />}>
                     {post.comments.length} Comments
+                </Button>
+                <Button leftIcon={<FaEye />} variant="ghost">
+                    {views} Views
                 </Button>
             </HStack>
 

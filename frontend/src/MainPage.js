@@ -7,43 +7,50 @@ import Timeline from './components/Timeline';
 
 const MainPage = () => {
     return (
-        <Flex flex="1">
-            {/* Left Sidebar - Fixed */}
+        <Flex flex="1" bg="gray.50">
+            {/* Left Sidebar Area - Fixed */}
             <Box
                 as="aside"
-                width={{ base: '0', md: '20%' }}
+                width={{ base: '0', md: '25%' }}
                 display={{ base: 'none', md: 'block' }}
                 bg="gray.50"
                 height="calc(100vh - 60px)"
                 position="fixed"
                 left="0"
             >
-                <LeftSidebar />
+                {/* Actual Sidebar Content - Moved inward */}
+                <Box width="80%" ml="auto">
+                    <LeftSidebar />
+                </Box>
             </Box>
 
             {/* Timeline - Center aligned with margins for sidebars */}
             <Box 
                 flex="1"
-                bg="white"
-                ml={{ base: 0, md: '20%' }}
-                mr={{ base: 0, md: '20%' }}
+                ml={{ base: 0, md: '25%' }}
+                mr={{ base: 0, md: '25%' }}
+                bg="gray.50"
+                minH="calc(100vh - 60px)"
             >
-                <Box p={4} maxW="800px" mx="auto">
+                <Box p={4} maxW="900px" mx="auto" bg="gray.50">
                     <Timeline />
                 </Box>
             </Box>
 
-            {/* Right Sidebar - Fixed */}
+            {/* Right Sidebar Area - Fixed */}
             <Box
                 as="aside"
-                width={{ base: '0', md: '20%' }}
+                width={{ base: '0', md: '25%' }}
                 display={{ base: 'none', md: 'block' }}
                 bg="gray.50"
                 height="calc(100vh - 60px)"
                 position="fixed"
                 right="0"
             >
-                <RightSidebar />
+                {/* Actual Sidebar Content - Moved inward */}
+                <Box width="80%" mr="auto">
+                    <RightSidebar />
+                </Box>
             </Box>
         </Flex>
     );

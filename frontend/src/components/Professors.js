@@ -4,43 +4,44 @@ import { Link as RouterLink } from "react-router-dom";
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
 
-const ReviewPage = () => {
-  const [courses, setCourses] = useState([]);
+const Professors = () => {
+  const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Function to fetch courses with pagination
-  async function fetchCourses() {
+  // Function to fetch ONLY the next batch of professors
+  async function fetchNextBatch() {
     if (loading) return;
 
     setLoading(true);
     try {
-      console.log(`Fetching batch ${page + 1} of courses...`);
+      console.log(`Fetching batch ${page + 1} of professors...`);
       
-      // Load 20 courses at a time using page-based pagination
-      const response = await fetch(`http://localhost:8000/api/courses?page=${page}&limit=20`);
+      // ONLY fetch the next 20 professors, not all of them
+      const response = await fetch(`http://localhost:8000/api/professors?page=${page}&limit=20`);
       const data = await response.json();
 
-      console.log(`Received ${data.length} courses in batch ${page + 1}`);
+      console.log(`Received ${data.length} professors in batch ${page + 1}`);
 
       if (data.length === 0) {
         setHasMore(false);
       } else {
-        setCourses(prev => [...prev, ...data]);
+        // Append just this batch to our existing list
+        setProfessors(prev => [...prev, ...data]);
         setPage(prev => prev + 1);
       }
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      console.error("Error fetching professors batch:", error);
     }
     setLoading(false);
     setInitialLoading(false);
   }
 
-  // Initial data load
+  // Initial data load - just load the first batch
   useEffect(() => {
-    fetchCourses();
+    fetchNextBatch();
   }, []);
 
   // Handle scroll event for the entire window
@@ -53,7 +54,7 @@ const ReviewPage = () => {
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 500
       ) {
         console.log("User scrolled to bottom, loading next batch...");
-        fetchCourses();
+        fetchNextBatch();
       }
     };
 
@@ -97,22 +98,23 @@ const ReviewPage = () => {
       >
         <Box p={4} maxW="900px" mx="auto" bg="gray.50">
           <Heading as="h1" size="xl" mb={6}>
-            Courses
+            Professors
           </Heading>
           
-          {courses.length === 0 ? (
+          {professors.length === 0 ? (
             <Text fontSize="lg" color="gray.500" textAlign="center" mt={10}>
-              No courses found.
+              No professors found.
             </Text>
           ) : (
             <VStack spacing={4} align="stretch" pb={4}>
-              {courses.map((course) => (
+              {professors.map((professor) => (
                 <Link 
                   as={RouterLink} 
-                  to={`/course/${course._id}`} 
-                  key={course._id}
+                  to={`/professors/${professor._id}`} 
+                  key={professor.id}
                 >
                   <Box 
+                    width="100%"
                     p={4} 
                     border="1px" 
                     borderColor="gray.300" 
@@ -122,15 +124,18 @@ const ReviewPage = () => {
                     boxShadow="sm"
                     bg="white"
                   >
-                    <Text fontWeight="bold" fontSize="lg">{course.title}</Text>
-                    <Text fontSize="md" color="gray.600">{course.description}</Text>
-                    {course.rating && (
+                    <Text fontWeight="bold" fontSize="lg">{professor.name}</Text>
+                    <Text fontSize="md" color="gray.600">{professor.department}</Text>
+                    {professor.ratings && (
                       <Text fontSize="sm" color="gray.500">
-                        Rating: ⭐ {course.rating.toFixed(1)}/5
+                        Rating: ⭐ {professor.ratings.toFixed(1)}/5
                       </Text>
                     )}
+                    <Text fontSize="sm" color="gray.500">
+                      Current Courses: {professor.current_courses.length}
+                    </Text>
                   </Box>
-                </Link>        
+                </Link>
               ))}
               
               {loading && (
@@ -163,4 +168,4 @@ const ReviewPage = () => {
   );
 };
 
-export default ReviewPage;
+export default Professors;
