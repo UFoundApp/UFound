@@ -15,6 +15,7 @@ import ReviewsPage from "./components/ReviewPage";
 import CoursePage from "./components/CoursePage";
 import UserProfile from "./components/UserProfile";
 import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
+import SearchResults from './components/SearchResults';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
               <Route path="/course/:courseId" element={<CoursePage />} />
               <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
               <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
+              <Route path="/search" element={<SearchResults />} />
             </Routes>
           </Box>
         </Flex>
