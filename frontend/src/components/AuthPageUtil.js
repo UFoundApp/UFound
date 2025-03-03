@@ -1,55 +1,59 @@
 export const getUser = async () => {
   try {
     const response = await fetch("http://127.0.0.1:8000/auth/me", {
-      credentials: "include",  //  Must include credentials to send cookies
+      credentials: "include",  // Ensures cookies are sent
     });
 
-    const data = await response.json();
-    console.log("🔹 Auth Me Response:", data);
-
     if (response.ok) {
+      const data = await response.json();
+      console.log("User is authenticated:", data);
       return data;
     } else {
-      console.error("❌ User is NOT authenticated. Server response:", data);
+      console.warn("User is NOT authenticated. Server response:", await response.json());
       return null;
     }
   } catch (error) {
-    console.error("⚠️ Error fetching user:", error);
+    console.error("Error fetching user:", error);
     return null;
   }
 };
 
-
-
 export const isLoggedIn = async () => {
   try {
+    const refreshResponse = await fetch("http://127.0.0.1:8000/auth/check-refresh", {
+      credentials: "include",
+    });
+
+    if (refreshResponse.status === 204) {
+      console.warn("🔹 No refresh token found. Skipping auth check.");
+      return false;
+    }
     const response = await fetch("http://127.0.0.1:8000/auth/me", {
       credentials: "include",
     });
 
-    const data = await response.json();
-
     if (response.ok) {
-      console.log("✅ User is logged in:", data);
+      const data = await response.json();
+      console.log("User is logged in:", data);
       return true;
-    } 
-    
-    // ❌ Token might have expired, try refreshing it
-    console.warn("⚠️ Access token may have expired. Trying refresh...");
-    const refreshSuccess = await refreshAccessToken();
-    if (refreshSuccess) {
-      console.log("🔄 Token refreshed. Checking login again...");
-      return await isLoggedIn(); // ✅ Re-check authentication after refresh
     }
 
-    console.error("❌ User is NOT authenticated. Refresh token expired.");
-    return false;
+    console.warn("⚠️ Access token expired. Attempting refresh...");
+
+    const refreshSuccess = await refreshAccessToken();
+    if (!refreshSuccess) {
+      return false;
+    }
+    const retryResponse = await fetch("http://127.0.0.1:8000/auth/me", {
+      credentials: "include",
+    });
+    return retryResponse.ok;
+
   } catch (error) {
-    console.error("⚠️ Error checking login status:", error);
+    console.error("Error checking login status:", error);
     return false;
   }
 };
-
 
 
 export const logout = async () => {
@@ -67,24 +71,22 @@ export const refreshAccessToken = async () => {
       credentials: "include",
     });
 
-    if (response.ok) {
-      console.log("✅ Token refreshed successfully.");
-      return true; // Token refreshed
-    } else {
-      console.warn("❌ Refresh token expired. User must log in again.");
-      return false; // Refresh failed, user must log in again
-    }
+    return response.ok;
   } catch (error) {
-    console.error("⚠️ Error refreshing token:", error);
+    console.error("Error refreshing token:", error);
     return false;
   }
 };
 
-
-export const updateStoredUsername = (newUsername) => {
-  const userData = getUser();
-  if (userData) {
-    userData.username = newUsername;
-    localStorage.setItem('user', JSON.stringify(userData));
+export const updateStoredUsername = async (newUsername) => {
+  try {
+    const userData = await getUser(); // ✅ Ensure `getUser()` resolves before using its data
+    if (userData) {
+      userData.username = newUsername;
+      localStorage.setItem("user", JSON.stringify(userData));
+      console.log("✅ Username updated in local storage:", newUsername);
+    }
+  } catch (error) {
+    console.error("⚠️ Error updating username:", error);
   }
 };

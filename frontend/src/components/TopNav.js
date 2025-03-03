@@ -1,4 +1,3 @@
-// src/components/TopNav.js
 import React, { useEffect, useState } from 'react';
 import { Flex, Input, Button, Text } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -13,10 +12,12 @@ const TopNav = () => {
   // State to store auth status and username
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true); // ✅ Add loading state
 
   // Re-check auth status whenever the route changes
   useEffect(() => {
     const checkAuthStatus = async () => {
+      setLoading(true); // ✅ Start loading before checking auth
       const loggedIn = await isLoggedIn();
       setAuthenticated(loggedIn);
       if (loggedIn) {
@@ -25,6 +26,7 @@ const TopNav = () => {
       } else {
         setUsername("");
       }
+      setLoading(false); // ✅ Finish loading after auth check
     };
     checkAuthStatus();
   }, [location]);
@@ -35,7 +37,6 @@ const TopNav = () => {
 
   const handleLogout = async () => {
     await logout();
-    // After logout, navigate to login (TopNav will re-check auth because location changes)
     navigate('/login');
   };
 
@@ -104,7 +105,9 @@ const TopNav = () => {
 
           {/* Auth Buttons */}
           <Flex alignItems="center" gap={3}>
-            {authenticated ? (
+            {loading ? (
+              <Text color="gray.500">Loading...</Text> // ✅ Display loading state
+            ) : authenticated ? (
               <>
                 <Button
                   variant="ghost"

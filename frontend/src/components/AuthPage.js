@@ -76,26 +76,26 @@ function AuthPage() {
                 identifier: email,
                 password: password,
             }),
-            credentials: "include",  // ✅ Ensures cookies are sent & stored
+            credentials: "include",  // Ensures cookies are sent & stored
         });
 
         const data = await response.json();
         console.log("🔹 Login Response:", data);
 
         if (response.ok) {
-            console.log("✅ Login Successful!");
+            console.log("Login Successful!");
             
-            // ✅ Manually check authentication after login
+            // Manually check authentication after login
             const loggedIn = await isLoggedIn();
             if (loggedIn) {
-              navigate("/home"); // ✅ Redirect only if confirmed
+              navigate("/home"); 
             }
         } else {
-            console.error("❌ Login failed:", data.detail);
+            console.error("Login failed:", data.detail);
             alert("Login failed: " + data.detail);
         }
     } catch (error) {
-        console.error("⚠️ Error during login:", error);
+        console.error("Error during login:", error);
         alert("Error logging in");
     }
 };
