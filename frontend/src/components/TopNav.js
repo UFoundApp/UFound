@@ -65,14 +65,14 @@ const TopNav = () => {
                     
                     {/* Navigation Links */}
                     <Flex alignItems="center" gap={4}>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/home")}>
                             Community
                         </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/reviews")}>
-                            Reviews
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/courses")}>
+                            Courses
                         </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-                            Forum
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/professors")}>
+                            Professors
                         </Button>
                         <Button 
                             variant="ghost" 

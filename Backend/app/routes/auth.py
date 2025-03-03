@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.db import verification_codes_collection, users_collection
 from app.registerUtils import generate_verification_code, send_verification_email, hash_password
 from pydantic import BaseModel, EmailStr
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from app.models.user import UserModel
 
@@ -78,7 +78,7 @@ async def send_verification(request: EmailRequest):
     verification_code = generate_verification_code()
 
     # Store in MongoDB with expiration time (5 min)
-    expiration_time = datetime.utcnow() + timedelta(minutes=5)
+    expiration_time = datetime.now(timezone.utc) + timedelta(minutes=5)
     await verification_codes_collection.insert_one({
         "email": request.email,
         "code": verification_code,
@@ -103,7 +103,7 @@ async def verify_code(request: VerifyCodeRequest):
         raise HTTPException(status_code=400, detail="No verification code found for this email")
 
     # Check if the code has expired
-    if record["expires_at"] < datetime.utcnow():
+    if record["expires_at"] < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Verification code has expired")
 
     # Check if the code matches
@@ -151,7 +151,7 @@ async def register_user(request: RegisterUserRequest):
         email=request.email,
         username=request.username,
         password=hashed_password,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     await new_user.insert()
 

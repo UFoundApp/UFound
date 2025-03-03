@@ -5,7 +5,7 @@ from beanie import PydanticObjectId  # Needed for MongoDB ObjectId
 from uuid import UUID, uuid4
 from bson import ObjectId
 from app.models.user import UserModel
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel
 
@@ -23,6 +23,10 @@ class LikeRequest(BaseModel):
 # Create a new post
 @router.post("/posts", response_model=PostModel)
 async def create_post(post: PostModel):
+    # Initialize views to 0 if not provided
+    if not hasattr(post, 'views') or post.views is None:
+        post.views = 0
+        
     # First, create the post
     await post.insert()
     
@@ -99,7 +103,7 @@ async def add_comment(post_id: PydanticObjectId, request: CommentRequest = Body(
         content=request.content,
         author_id=request.author_id,
         author_name=user.username,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         parent_id=request.parent_id,
         replies=[]
     )
@@ -201,3 +205,21 @@ async def unlike_comment(post_id: PydanticObjectId, comment_id: UUID, request: L
     comment.likes.remove(request.user_id)
     await post.save()
     return {"message": "Comment unliked", "likes_count": len(comment.likes)}
+
+# Update the view increment endpoint
+@router.post("/posts/{post_id}/view")
+async def increment_view(post_id: PydanticObjectId):
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Initialize views if it doesn't exist
+    if not hasattr(post, 'views') or post.views is None:
+        post.views = 0
+    
+    # Increment view count
+    post.views += 1
+    await post.save()
+    
+    # Return the updated view count
+    return {"success": True, "views": post.views}

@@ -16,9 +16,12 @@ async def scrape_courses():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/courses")
-async def get_courses(skip: int = 0, limit: int = 10):
-
-    courses = await CourseModel.find_all().to_list()
+async def get_courses(page: int = 0, limit: int = 20):
+    # Calculate skip value based on page and limit
+    skip = page * limit
+    
+    # Use skip and limit for pagination
+    courses = await CourseModel.find_all().skip(skip).limit(limit).to_list()
     return courses
 
 

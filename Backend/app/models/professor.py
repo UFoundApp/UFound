@@ -1,7 +1,7 @@
 from beanie import Document
 from pydantic import Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 class ProfessorModel(Document):
@@ -12,7 +12,7 @@ class ProfessorModel(Document):
     current_courses: List[str] = Field(default_factory=list)
     past_courses: List[str] = Field(default_factory=list)
     ratings: Optional[float] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
         collection = "professors"
@@ -23,7 +23,7 @@ class ProfessorReviewModel(Document):
     course_id: Optional[UUID] = None  # Optional: Link to CourseModel
     content: str  # Review text
     author: str  # Reviewer (Anonymous or User)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     likes: List[UUID] = Field(default_factory=list)  # Upvoted user IDs
     overall_rating: float = Field(..., ge=1, le=5)  # ⭐ 1-5 rating
     strictness: Optional[int] = Field(default=None, ge=1, le=10)  # 1-10

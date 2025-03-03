@@ -15,6 +15,7 @@ import ReviewsPage from "./components/ReviewPage";
 import CoursePage from "./components/CoursePage";
 import UserProfile from "./components/UserProfile";
 import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
+import Professors from "./components/Professors";
 
 function App() {
   return (
@@ -36,8 +37,9 @@ function App() {
               <Route path="/home" element={<MainPage />} />
               <Route path="/view-post/:id" element={<ViewPost />} />
               <Route path="/create-post" element={<CreatePost />} />
-              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/courses" element={<ReviewsPage />} />
               <Route path="/course/:courseId" element={<CoursePage />} />
+              <Route path="/professors" element={<Professors />} />
               <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
               <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
             </Routes>

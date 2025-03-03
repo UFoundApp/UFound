@@ -1,7 +1,7 @@
 from beanie import Document
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 class CommentModel(BaseModel):
@@ -9,7 +9,7 @@ class CommentModel(BaseModel):
     content: str
     author_id: UUID  # Store user ID only
     author_name: str  # Store username for easy access
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     parent_id: Optional[UUID] = None  # Changed to UUID
     replies: Optional[List["CommentModel"]] = Field(default_factory=list) 
     likes: List[UUID] = Field(default_factory=list)  # ✅ Added likes field
@@ -20,10 +20,11 @@ class CommentModel(BaseModel):
 class PostModel(Document):
     title: str
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     comments: Optional[List[CommentModel]] = Field(default_factory=list)  # Comments stored here
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
     author_id: Optional[UUID] = None  # Add author_id field
+    views: int = Field(default=0)  # Add views counter
 
     class Settings:
         collection = "posts"

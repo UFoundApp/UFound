@@ -51,8 +51,13 @@ async def create_professor(professor: ProfessorModel):
 
 # ✅ Get all professors
 @router.get("/professors", response_model=List[ProfessorModel])
-async def get_professors():
-    return await ProfessorModel.find_all().to_list()
+async def get_professors(page: int = 0, limit: int = 20):
+    # Calculate skip value based on page and limit
+    skip = page * limit
+    
+    # Use skip and limit for pagination
+    professors = await ProfessorModel.find_all().skip(skip).limit(limit).to_list()
+    return professors
 
 # ✅ Get a single professor by ID
 @router.get("/professors/{professor_id}", response_model=ProfessorModel)
