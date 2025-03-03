@@ -12,12 +12,12 @@ const TopNav = () => {
   // State to store auth status and username
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(true); // ✅ Add loading state
+  const [loading, setLoading] = useState(true); // Add loading state
 
   // Re-check auth status whenever the route changes
   useEffect(() => {
     const checkAuthStatus = async () => {
-      setLoading(true); // ✅ Start loading before checking auth
+      setLoading(true); // Start loading before checking auth
       const loggedIn = await isLoggedIn();
       setAuthenticated(loggedIn);
       if (loggedIn) {
@@ -26,7 +26,7 @@ const TopNav = () => {
       } else {
         setUsername("");
       }
-      setLoading(false); // ✅ Finish loading after auth check
+      setLoading(false); // Finish loading after auth check
     };
     checkAuthStatus();
   }, [location]);
@@ -64,44 +64,44 @@ const TopNav = () => {
         UFound
       </Text>
 
-      {/* Show nav elements only if not on login/reset-password pages */}
-      {!isAuthPage && !isResetPasswordPage && (
-        <>
-          {/* Search Bar */}
-          <Input
-            placeholder="Search"
-            maxW="400px"
-            bg="gray.50"
-            border="1px"
-            borderColor="gray.200"
-            _hover={{ bg: "gray.100" }}
-            _focus={{
-              bg: "white",
-              borderColor: "primary",
-              boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
-            }}
-          />
-
-          {/* Navigation Links */}
-          <Flex alignItems="center" gap={4}>
-            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-              Community
-            </Button>
-            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-              Reviews
-            </Button>
-            <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
-              Forum
-            </Button>
-            <Button
-              variant="ghost"
-              color="gray.600"
-              _hover={{ color: "primary" }}
-              onClick={() => navigate('/create-post')}
-            >
-              Write a post
-            </Button>
-          </Flex>
+            {/* Only show these elements if NOT on the auth or reset password page */}
+            {!isAuthPage && !isResetPasswordPage && (
+                <>
+                    {/* Search Bar */}
+                    <Input 
+                        placeholder="Search" 
+                        maxW="400px"
+                        bg="gray.50"
+                        border="1px"
+                        borderColor="gray.200"
+                        _hover={{ bg: "gray.100" }}
+                        _focus={{ 
+                            bg: "white",
+                            borderColor: "primary",
+                            boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                        }}
+                    />
+                    
+                    {/* Navigation Links */}
+                    <Flex alignItems="center" gap={4}>
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                            Community
+                        </Button>
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/reviews")}>
+                            Reviews
+                        </Button>
+                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }}>
+                            Forum
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            color="gray.600" 
+                            _hover={{ color: "primary" }} 
+                            onClick={() => navigate('/create-post')}
+                        >
+                            Write a post
+                        </Button>
+                    </Flex>
 
           {/* Auth Buttons */}
           <Flex alignItems="center" gap={3}>
