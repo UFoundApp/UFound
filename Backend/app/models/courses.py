@@ -7,6 +7,7 @@ from uuid import UUID
 class ReviewModel(Document):
     content: str
     author: str
+    rating: int
     created_at: datetime = Field(default_factory=datetime.now)
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
 
@@ -16,7 +17,7 @@ class CourseModel(Document):
     prerequisites: str
     exclusions: str  # Fixed naming
     distribution: str  # Fixed typo
-    reviews: Optional[List[ReviewModel]] = Field(default_factory=list)
+    review_ids: Optional[List[UUID]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.now)
     professors: Optional[List[str]] = Field(default_factory=list)  # Placeholder
     ratings: Optional[float] = None
