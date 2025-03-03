@@ -9,6 +9,8 @@ const TopNav = () => {
     const location = useLocation();
     const isAuthPage = location.pathname === '/login';
     const isResetPasswordPage = location.pathname === '/reset-password';
+    const searchPosts = location.pathname === '/home';
+    const searchReviews = location.pathname === '/reviews';
 
     const handleAuth = (type) => {
         if (type === 'signin' || type === 'signup') {
@@ -20,6 +22,14 @@ const TopNav = () => {
         logout();
         navigate('/login');
     };
+
+    const [text, setText] = React.useState('');
+    const handlePostSearch = (e) => {
+        if (e.key === 'Enter') {
+            console.log('searching for:', text); //debugging
+            navigate(`/search?q=${encodeURIComponent(text)}`);
+        }
+    }
 
     return (
         <Flex
@@ -48,20 +58,40 @@ const TopNav = () => {
             {/* Only show these elements if NOT on the auth or reset password page */}
             {!isAuthPage && !isResetPasswordPage && (
                 <>
-                    {/* Search Bar */}
-                    <Input 
-                        placeholder="Search" 
-                        maxW="400px"
-                        bg="gray.50"
-                        border="1px"
-                        borderColor="gray.200"
-                        _hover={{ bg: "gray.100" }}
-                        _focus={{ 
-                            bg: "white",
-                            borderColor: "primary",
-                            boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
-                        }}
-                    />
+                    {/* Search Input */}
+                    {searchPosts && (
+                        <Input
+                            placeholder="Search Posts" 
+                            maxW="400px"
+                            bg="gray.50"
+                            border="1px"
+                            borderColor="gray.200"
+                            onChange={(e) => setText(e.target.value)}
+                            value={text}
+                            onKeyDown={handlePostSearch}
+                            _hover={{ bg: "gray.100" }}
+                            _focus={{ 
+                                bg: "white",
+                                borderColor: "primary",
+                                boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                            }}
+                        />
+                    )}
+                    {searchReviews && (
+                            <Input
+                            placeholder="Search Reviews" 
+                            maxW="400px"
+                            bg="gray.50"
+                            border="1px"
+                            borderColor="gray.200"
+                            _hover={{ bg: "gray.100" }}
+                            _focus={{ 
+                                bg: "white",
+                                borderColor: "primary",
+                                boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                            }}
+                        />
+                        )}
                     
                     {/* Navigation Links */}
                     <Flex alignItems="center" gap={4}>

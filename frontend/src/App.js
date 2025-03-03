@@ -16,6 +16,7 @@ import CoursePage from "./components/CoursePage";
 import UserProfile from "./components/UserProfile";
 import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
 import Professors from "./components/Professors";
+import SearchResults from './components/SearchResults';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
               <Route path="/professors" element={<Professors />} />
               <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
               <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
+              <Route path="/search" element={<SearchResults />} />
             </Routes>
           </Box>
         </Flex>
