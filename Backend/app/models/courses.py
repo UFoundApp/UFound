@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
 
-class ReviewModel(Document):
+class ReviewModel(BaseModel):
     content: str
     rating: int
     author: str
@@ -17,7 +17,7 @@ class CourseModel(Document):
     prerequisites: str
     exclusions: str  # Fixed naming
     distribution: str  # Fixed typo
-    reviews: List[PydanticObjectId] = Field(default_factory=list)  
+    reviews: List[ReviewModel] = Field(default_factory=list)  
     created_at: datetime = Field(default_factory=datetime.now)
     professors: Optional[List[str]] = Field(default_factory=list)  # Placeholder
     ratings: Optional[float] = None

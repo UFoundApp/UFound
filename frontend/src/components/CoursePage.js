@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
     Box,
@@ -6,7 +6,6 @@ import {
     Text,
     Flex,
     Spinner,
-    Button,
     VStack,
     HStack,
     Input,
@@ -20,14 +19,12 @@ import {
 import { FaPlusCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
-import dayjs from 'dayjs';
 
 const CoursePage = () => {
     const { courseId } = useParams();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [review, setReview] = useState('');
-    const [reviews, setReviews] = useState([]);
     const rating = useRatingGroup({ count: 5, defaultValue: 0 });
     const [overallRating, setOverallRating] = useState(0);
     const [allRating, setAllRating] = useState([]);
@@ -35,79 +32,44 @@ const CoursePage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    const update_ratings = async ({reviews_res}) => {
-        const rate_res = await axios.get(`http://localhost:8000/api/courses/get_overall_rating/${courseId}`);
-        setOverallRating(Math.round(rate_res.data.average_rating));
+     const fetchCourse = useCallback(async () => {
+        try {
+            const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
+            setCourse(response.data);
 
-        console.log(reviews);
-        
-        let l = reviews_res.length;
-        let one = 0;
-        let two = 0;
-        let three = 0;
-        let four = 0;
-        let five = 0;
-        for (let i = 0; i < l; i++) {
-            if (reviews_res[i].rating == 1) {
-                one++;
-            } else if (reviews_res[i].rating == 2) {
-                two++;
-            } else if (reviews_res[i].rating == 3) {
-                three++;
-            } else if (reviews_res[i].rating == 4) {
-                four++;
-            } else {
-                five++;
-            }
+        } catch (error) {
+            setMessage("Failed to load course.");
+            setIsError(true);
+        } finally {
+            setLoading(false);
         }
-        
-        if (one != 0 ){
-            one = (one/l)*100
-        } 
-        if (two != 0){
-            two = (two/l)*100
-        } 
-        if (three != 0){
-            three = (three/l)*100
+    }, [courseId]); 
+
+    const fetchRating = useCallback(async () => {
+        try {
+            const response = await axios.get(`http://localhost:8000/api/courses/get_overall_rating/${courseId}`);
+            setOverallRating(Math.round(response.data.average_rating));
+            let data = response.data.rating_distribution;
+            setAllRating([data["5_star"], data["4_star"], data["3_star"], data["2_star"], data["1_star"]]);
+        } catch (error) {
+            setMessage("Failed to load ratings.");
+            setIsError(true);
+        } finally {
+            setLoading(false);
         }
-        if (four != 0){
-            four = (four/l)*100
-        }  
-        if (five != 0){
-            five = (five/l)*100
-        }
-        
-        setAllRating([five, four, three, two, one]);
-    }
+    }, [course]);
 
     useEffect(() => {
-        const fetchCourse = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
-                
-                setCourse(response.data);
-
-                let reviews_res = [];
-                for (let i = 0; i < response.data.reviews.length; i++) {
-                    const r = response.data.reviews[i];
-                    const result = await axios.get(`http://localhost:8000/api/courses/get_post/${r}`);
-                    reviews_res.push(result.data);
-                }
-               
-                setReviews(reviews_res);
-
-                update_ratings({reviews_res});
-
-            } catch (error) {
-                setMessage("Failed to load course.");
-                setIsError(true);
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        if (!courseId) return;
         fetchCourse();
+
     }, [courseId]);
+
+    useEffect(() => {
+        if (!courseId) return;
+        fetchRating();
+    }, [course]);
+
 
     const handleAddReview = async () => {
         if (!review.trim()) {
@@ -139,9 +101,10 @@ const CoursePage = () => {
         try {
             setIsPostingReview(true);
             await axios.post(`http://localhost:8000/api/courses/${courseId}/review`, newReview);
-            setReviews((prev) => [...prev, newReview]);
-            update_ratings({reviews_res: [...reviews, newReview]});
-
+    
+            const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
+            setCourse(response.data);
+            
             setReview('');
             setMessage("Your review was posted successfully!");
             setIsError(false);
@@ -276,8 +239,8 @@ const CoursePage = () => {
 
             <Heading as="h2" size="md" mt={5} mb={3}>Reviews</Heading>
             <VStack spacing={3} align="stretch">
-                {reviews.length > 0 ? (
-                   reviews.map((r, index) => (
+                {course.reviews.length > 0 ? (
+                   course.reviews.map((r, index) => (
                         <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
                             <Text fontWeight="bold">{r.author}</Text>
                             <RatingGroup.Root readOnly count={5} defaultValue={r.rating} size="sm" colorPalette="orange">
