@@ -14,6 +14,7 @@ from app.routes.professors import router as professor_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router  # Import auth routes
 from app.routes.userProfile import router as profile_router
+from app.routes.search import router as search_router
 
 app = FastAPI()
 
@@ -51,6 +52,7 @@ app.include_router(post_router, prefix="/api", tags=["Posts"])
 app.include_router(course_router, prefix="/api", tags=["Courses"])
 app.include_router(professor_router, prefix="/api", tags=["Professors"])
 app.include_router(profile_router, prefix="/api")
+app.include_router(search_router)
 
 @app.get("/")
 async def root():
