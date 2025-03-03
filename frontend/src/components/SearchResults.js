@@ -15,7 +15,7 @@ const SearchResults = () => {
             async function fetchResults() {
                 try {
                     console.log("Fetching results from:", `http://127.0.0.1:8000/api/search?q=${query}`); // Debugging log
-                    const response = await axios.get(`http://127.0.0.1:8000/api/search`, { params: { q: query } });
+                    const response = await axios.get(`http://127.0.0.1:8000/api/search`, { params: { query: query } });
                     
                     
                     console.log("API Response Data:", response.data); // Debugging log
