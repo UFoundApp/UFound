@@ -97,7 +97,7 @@ const ReviewPage = () => {
       >
         <Box p={4} maxW="900px" mx="auto" bg="gray.50">
           <Heading as="h1" size="xl" mb={6}>
-            Course Reviews {courses.length > 0 && `(${courses.length} loaded)`}
+            Courses
           </Heading>
           
           {courses.length === 0 ? (
