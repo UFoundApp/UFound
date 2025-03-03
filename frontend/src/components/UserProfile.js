@@ -1,32 +1,33 @@
 // src/components/UserProfile.js
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Heading, 
-  VStack, 
-  Input,
-  Textarea,
-  Button,
-  Text,
-  Flex,
-} from '@chakra-ui/react';
+import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, updateStoredUsername } from './AuthPageUtil';
 import axios from 'axios';
 import LeftSidebar from './LeftSidebar';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments } from '@fortawesome/free-solid-svg-icons';
 
 function UserProfile() {
-  const { username } = useParams();
+  const { username } = useParams(); // username from URL
   const navigate = useNavigate();
-  const currentUser = getUser();
-  const [message, setMessage] = useState('');
+  
+  // State for current signed-in user
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // State for profile data (for the profile being viewed)
   const [profile, setProfile] = useState({
     username: '',
     bio: '',
     posts: []
   });
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const user = await getUser();
+      setCurrentUser(user);
+    };
+    fetchCurrentUser();
+  }, [username, navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -45,12 +46,14 @@ function UserProfile() {
     fetchProfile();
   }, [username]);
 
+  // Handle saving profile changes (only for own profile)
   const handleSave = async () => {
     try {
       await axios.put(`http://localhost:8000/api/profile/${username}`, profile);
       setMessage('Profile updated successfully');
       
-      if (profile.username !== username && isOwnProfile) {
+      // If the username was changed, update stored username and navigate to the new URL
+      if (profile.username !== username) {
         updateStoredUsername(profile.username);
         navigate(`/profile/${profile.username}`);
       }
@@ -63,7 +66,7 @@ function UserProfile() {
 
   return (
     <Flex flex="1">
-      {/* Left Sidebar - Fixed */}
+      {/* Left Sidebar */}
       <Box
         as="aside"
         width={{ base: '0', md: '20%' }}
@@ -76,7 +79,7 @@ function UserProfile() {
         <LeftSidebar />
       </Box>
 
-      {/* Main Content - Center aligned with margins for sidebars */}
+      {/* Main Content */}
       <Box 
         flex="1"
         bg="white"
@@ -84,23 +87,11 @@ function UserProfile() {
         mr={{ base: 0, md: '20%' }}
         overflowY="scroll"
         minH="calc(100vh - 75px)"
-        css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.200',
-            borderRadius: '24px',
-          },
-        }}
       >
         <Box p={4} maxW="800px" mx="auto">
           <VStack spacing={4} align="stretch">
             {isOwnProfile ? (
-              // Show editable profile for own profile
+              // Editable profile for the current user
               <>
                 <Heading size="lg" mb={2}>Your Profile</Heading>
                 {message && (
@@ -126,7 +117,7 @@ function UserProfile() {
                 </Button>
               </>
             ) : (
-              // Show read-only profile for other users
+              // Read-only view
               <>
                 <Heading mb={4}>{profile.username}'s Profile</Heading>
                 <Box p={6} borderWidth="1px" borderRadius="lg" bg="gray.50">
@@ -143,7 +134,7 @@ function UserProfile() {
         </Box>
       </Box>
 
-      {/* Right Sidebar - Fixed */}
+      {/* Right Sidebar */}
       <Box
         as="aside"
         width={{ base: '0', md: '20%' }}
@@ -153,57 +144,30 @@ function UserProfile() {
         position="fixed"
         right="0"
       >
-        <Box
-          bg="gray.50"
-          p={4}
-          width="100%"
-          overflowY="auto"
-        >
+        <Box p={4} width="100%" overflowY="auto">
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">
               {profile.username}'s RECENT POSTS
             </Text>
           </Flex>
-
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="sm"
-            p={3}
-            border="1px"
-            borderColor="gray.200"
-          >
+          <Box bg="white" borderRadius="xl" boxShadow="sm" p={3} border="1px" borderColor="gray.200">
             <VStack spacing={2} align="stretch">
-              {profile.posts.map((post) => (
-                <Flex 
-                  key={post._id}
-                  _hover={{ bg: 'gray.100' }}
-                  p={2}
-                  borderRadius="md"
-                  cursor="pointer"
-                  onClick={() => navigate(`/view-post/${post._id}`)}
-                >
-                  <FontAwesomeIcon 
-                    icon={faComments} 
-                    color="gray.600" 
-                    size="lg" 
-                    style={{ marginTop: '4px' }} 
-                  />
-                  <Box ml={3}>
+              {profile.posts && profile.posts.length > 0 ? (
+                profile.posts.map((post) => (
+                  <Flex 
+                    key={post._id}
+                    _hover={{ bg: 'gray.100' }}
+                    p={2}
+                    borderRadius="md"
+                    cursor="pointer"
+                    onClick={() => navigate(`/view-post/${post._id}`)}
+                  >
                     <Text color="gray.700" fontSize="sm">
                       {post.title}
                     </Text>
-                    <Text color="gray.600" fontSize="xs" noOfLines={2}>
-                      {post.content}
-                    </Text>
-                    <Text color="gray.500" fontSize="xs" mt={1}>
-                      {post.likes?.length || 0} likes · {post.comments?.length || 0} comments
-                    </Text>
-                  </Box>
-                </Flex>
-              ))}
-
-              {profile.posts.length === 0 && (
+                  </Flex>
+                ))
+              ) : (
                 <Text color="gray.500" fontSize="sm" p={2}>
                   No posts yet
                 </Text>

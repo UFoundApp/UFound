@@ -1,15 +1,25 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, Request, Depends
 from app.db import verification_codes_collection, users_collection
 from app.registerUtils import generate_verification_code, send_verification_email, hash_password
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from app.models.user import UserModel
+from dotenv import load_dotenv
+import os
+import jwt
 
+load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
+
+ACCESS_SECRET_KEY = os.getenv("JWT_SECRET")
+REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+REFRESH_TOKEN_EXPIRE_DAYS = 2
 
 class EmailRequest(BaseModel):
     email: EmailStr
@@ -33,7 +43,6 @@ class PasswordCheckRequest(BaseModel):
     email: EmailStr
     password: str
 
-
 class LoginRequest(BaseModel):
     identifier: str  # Can be either email or username
     password: str
@@ -41,32 +50,119 @@ class LoginRequest(BaseModel):
 async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-@router.post("/login")
-async def login_user(request: LoginRequest):
-    # Check if user exists by email or username
-    user = await UserModel.find_one(
-        {"$or": [{"email": request.identifier}, {"username": request.identifier}]}
-    )
+# Function to generate JWT token
+def create_token(data: dict, expires_delta: timedelta, secret_key: str):
+    to_encode = data.copy()
+    to_encode.update({"exp": datetime.utcnow() + expires_delta})
+    return jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
 
+def create_access_token(data: dict):
+    return create_token(data, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), ACCESS_SECRET_KEY)
+
+def create_refresh_token(data: dict):
+    return create_token(data, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), REFRESH_SECRET_KEY)
+
+
+@router.post("/login")
+async def login_user(request: LoginRequest, response: Response):
+    user = await UserModel.find_one({"$or": [{"email": request.identifier}, {"username": request.identifier}]})
+    
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not await verify_password(request.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
-    # Include the user's ID in the response
-    return {
-        "message": "Login successful", 
-        "username": user.username, 
-        "email": user.email,
-        "id": str(user.id)  # Convert UUID to string
-    }
+    access_token = create_access_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(data={"sub": user.email})
 
-    # Verify the password
-    if not await verify_password(request.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Incorrect password")
+    print(f"Generated Access Token: {access_token}")  # Debugging
+    print(f"Generated Refresh Token: {refresh_token}")  # Debugging
 
-    return {"message": "Login successful", "username": user["username"], "email": user["email"]}
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,  # 🔹 MUST BE False for local development
+        samesite="None",  # 🔹 CHANGE FROM "None" (which requires HTTPS)
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=f"Bearer {refresh_token}",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    )
+
+    return {"message": "Login successful", "username": user.username, "email": user.email}
+
+
+# Logout - Clear the cookie
+@router.post("/logout")
+async def logout(response: Response):
+    response.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        samesite="None",
+        secure=True,
+        max_age=0, 
+        expires=0  
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        samesite="None",
+        secure=True,
+        max_age=0,
+        expires=0
+    )
+    return {"message": "Logged out successfully"}
+
+
+
+async def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    
+    if not token:
+        return None  
+
+    if not token.startswith("Bearer "):
+        print("Invalid token format:", token) 
+        return None
+
+    try:
+        token = token.split(" ")[1]
+        payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+
+        if not email:
+            return None 
+
+        user = await UserModel.find_one(UserModel.email == email)
+        if not user:
+            return None
+
+        return user
+
+    except jwt.ExpiredSignatureError:
+        return None 
+    except jwt.PyJWTError:
+        print("Invalid access token")
+        return None
+
+
+
+# Protect an Endpoint
+@router.get("/me")
+async def get_user_info(current_user: UserModel = Depends(get_current_user)):
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="User not authenticated")
+    return {"username": current_user.username, "email": current_user.email}
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
@@ -119,7 +215,7 @@ async def verify_code(request: VerifyCodeRequest):
     return {"message": "Email verified successfully"}
 
 @router.post("/register")
-async def register_user(request: RegisterUserRequest):
+async def register_user(request: RegisterUserRequest, response: Response):
     # Check if email has been verified
     verification_record = await verification_codes_collection.find_one(
         {"email": request.email},
@@ -155,8 +251,26 @@ async def register_user(request: RegisterUserRequest):
     )
     await new_user.insert()
 
-    return {"message": "User registered successfully"}
+    # Generate JWT token and set it in a cookie
+    access_token = create_access_token(data={"sub": new_user.email})
 
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        samesite="None",
+        secure=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert minutes to seconds
+    )
+
+    return {"message": "User registered and logged in successfully", "username": new_user.username}
+
+@router.get("/check-refresh")
+async def check_refresh_token(request: Request):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        return Response(status_code=204)
+    return {"message": "Refresh token exists"}
 
 @router.post("/update-password")
 async def update_password(request: UpdatePasswordRequest):
@@ -211,3 +325,40 @@ async def check_password(request: PasswordCheckRequest):
         return {"status": True}  # Correct password
     else:
         return {"status": False}  # Incorrect password
+
+@router.post("/refresh-token")
+async def refresh_token(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        return Response(status_code=401)
+    if refresh_token.startswith("Bearer "): # case probably won't happen
+        refresh_token = refresh_token.split(" ")[1]
+
+    try:
+        payload = jwt.decode(refresh_token.split(" ")[1], REFRESH_SECRET_KEY, algorithms=["HS256"])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = await UserModel.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        new_access_token = create_access_token(data={"sub": user.email})
+
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {new_access_token}",
+            httponly=True,
+            secure=True,
+            samesite="None",
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        )
+
+        return {"message": "Access token refreshed"}
+
+    except jwt.ExpiredSignatureError:
+        raise Response(status_code=401)
+    except jwt.PyJWTError:
+        raise Response(status_code=401)
+
