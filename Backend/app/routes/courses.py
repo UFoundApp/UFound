@@ -34,38 +34,65 @@ async def get_course(course_id: PydanticObjectId):
 async def get_overall_rating(course_id: PydanticObjectId):
     course = await CourseModel.get(course_id)
     if not course:
-        raise HTTPException
+        raise HTTPException(status_code=404, detail="Course not found")
     
-    total = 0
-    n = 0
-    # Calculate the average rating
-    for review_id in course.reviews:
-        review = await ReviewModel.get(review_id)
-        total += review.rating
-        n += 1
-    
-    if total == 0:
-        return {"average_rating": 0}
-    else:
-        return {"average_rating": total / n}
+    if not course.reviews:
+        return {
+        "average_rating": 0,
+        "rating_distribution": {
+            "1_star": 0,
+            "2_star": 0,
+            "3_star": 0,
+            "4_star": 0,
+            "5_star": 0
+        }
+    }
 
-@router.get("/courses/get_post/{review_id}")
-async def get_review(review_id: PydanticObjectId):
-    review = await ReviewModel.get(review_id)
-    if not review:
-        raise HTTPException
-    return review
+    l = len(course.reviews)
+
+    # Initialize rating count variables
+    one = two = three = four = five = 0
+
+    for review in course.reviews:
+        if review.rating == 1:
+            one += 1
+        elif review.rating == 2:
+            two += 1
+        elif review.rating == 3:
+            three += 1
+        elif review.rating == 4:
+            four += 1
+        elif review.rating == 5:
+            five += 1
+
+    # Convert counts to percentages
+    one = (one / l) * 100 if one != 0 else 0
+    two = (two / l) * 100 if two != 0 else 0
+    three = (three / l) * 100 if three != 0 else 0
+    four = (four / l) * 100 if four != 0 else 0
+    five = (five / l) * 100 if five != 0 else 0
+
+    total = sum(review.rating for review in course.reviews)
+
+    # now calculate the percentage of the total rating 
+    return {"average_rating": total / l, 
+            "rating_distribution": {
+                "1_star": one,
+                "2_star": two,
+                "3_star": three,
+                "4_star": four,
+                "5_star": five
+            }
+    }
     
 @router.post("/courses/{course_id}/review")
 async def create_course_review(course_id: PydanticObjectId, review: ReviewModel):
     course = await CourseModel.get(course_id)
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-    
-    await review.insert()
+        raise HTTPException(status_code=404, detail="Course not found")   
     
     # Update the course's reviews array
-    course.reviews.append(review.id)
+    course.reviews.append(review)
     await course.save()
     
     return review
