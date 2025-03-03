@@ -8,6 +8,7 @@ class ReviewModel(BaseModel):
     content: str
     rating: int
     author: str
+    rating: int
     created_at: datetime = Field(default_factory=datetime.now)
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
 

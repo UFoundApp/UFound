@@ -19,6 +19,7 @@ import {
 import { FaPlusCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
+import dayjs from 'dayjs';
 
 const CoursePage = () => {
     const { courseId } = useParams();
@@ -100,10 +101,8 @@ const CoursePage = () => {
         try {
             setIsPostingReview(true);
             await axios.post(`http://localhost:8000/api/courses/${courseId}/review`, newReview);
-    
             const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
             setCourse(response.data);
-            
             setReview('');
             setMessage("Your review was posted successfully!");
             setIsError(false);
@@ -194,8 +193,6 @@ const CoursePage = () => {
                 <Box borderBottom="1px solid gray" my={4} />
 
                 {/* Reviews Section */}
-
-                {/* Add Review Section */}
                 <Heading as="h2" size="md" mt={5} mb={3}>Leave a Review</Heading>
                 <HStack mt={4}>
                     <RatingGroup.RootProvider value={rating} colorPalette="orange" size="lg">

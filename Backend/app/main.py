@@ -35,7 +35,6 @@ async def init_db():
     await init_beanie(db, document_models=[
         PostModel, 
         UserModel, 
-        CommentModel, 
         CourseModel, 
         ProfessorModel, 
         ProfessorReviewModel
