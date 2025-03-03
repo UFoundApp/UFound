@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
     Box,
@@ -6,7 +6,6 @@ import {
     Text,
     Flex,
     Spinner,
-    Button,
     VStack,
     HStack,
     Input,
@@ -27,7 +26,6 @@ const CoursePage = () => {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [review, setReview] = useState('');
-    const [reviews, setReviews] = useState([]);
     const rating = useRatingGroup({ count: 5, defaultValue: 0 });
     const [overallRating, setOverallRating] = useState(0);
     const [allRating, setAllRating] = useState([]);
@@ -35,79 +33,43 @@ const CoursePage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    const update_ratings = async ({reviews_res}) => {
-        const rate_res = await axios.get(`http://localhost:8000/api/courses/get_overall_rating/${courseId}`);
-        setOverallRating(Math.round(rate_res.data.average_rating));
+     const fetchCourse = useCallback(async () => {
+        try {
+            const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
+            setCourse(response.data);
+        } catch (error) {
+            setMessage("Failed to load course.");
+            setIsError(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [courseId]); 
 
-        console.log(reviews);
-        
-        let l = reviews_res.length;
-        let one = 0;
-        let two = 0;
-        let three = 0;
-        let four = 0;
-        let five = 0;
-        for (let i = 0; i < l; i++) {
-            if (reviews_res[i].rating == 1) {
-                one++;
-            } else if (reviews_res[i].rating == 2) {
-                two++;
-            } else if (reviews_res[i].rating == 3) {
-                three++;
-            } else if (reviews_res[i].rating == 4) {
-                four++;
-            } else {
-                five++;
-            }
+    const fetchRating = useCallback(async () => {
+        try {
+            const response = await axios.get(`http://localhost:8000/api/courses/get_overall_rating/${courseId}`);
+            setOverallRating(Math.round(response.data.average_rating));
+            let data = response.data.rating_distribution;
+            setAllRating([data["5_star"], data["4_star"], data["3_star"], data["2_star"], data["1_star"]]);
+        } catch (error) {
+            setMessage("Failed to load ratings.");
+            setIsError(true);
         }
-        
-        if (one != 0 ){
-            one = (one/l)*100
-        } 
-        if (two != 0){
-            two = (two/l)*100
-        } 
-        if (three != 0){
-            three = (three/l)*100
-        }
-        if (four != 0){
-            four = (four/l)*100
-        }  
-        if (five != 0){
-            five = (five/l)*100
-        }
-        
-        setAllRating([five, four, three, two, one]);
-    }
+    }, [course]);
 
     useEffect(() => {
-        const fetchCourse = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
-                
-                setCourse(response.data);
-
-                let reviews_res = [];
-                for (let i = 0; i < response.data.reviews.length; i++) {
-                    const r = response.data.reviews[i];
-                    const result = await axios.get(`http://localhost:8000/api/courses/get_post/${r}`);
-                    reviews_res.push(result.data);
-                }
-               
-                setReviews(reviews_res);
-
-                update_ratings({reviews_res});
-
-            } catch (error) {
-                setMessage("Failed to load course.");
-                setIsError(true);
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        if (!courseId) return;
+        setLoading(true);
         fetchCourse();
+
     }, [courseId]);
+
+    useEffect(() => {
+        if (!courseId) return;
+        fetchRating();
+
+    }, [course]);
+
 
     const handleAddReview = async () => {
         if (!review.trim()) {
@@ -139,9 +101,8 @@ const CoursePage = () => {
         try {
             setIsPostingReview(true);
             await axios.post(`http://localhost:8000/api/courses/${courseId}/review`, newReview);
-            setReviews((prev) => [...prev, newReview]);
-            update_ratings({reviews_res: [...reviews, newReview]});
-
+            const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
+            setCourse(response.data);
             setReview('');
             setMessage("Your review was posted successfully!");
             setIsError(false);
@@ -154,152 +115,149 @@ const CoursePage = () => {
         }
     };
 
-    if (loading) {
-        return (
+    return (
+        <div>
+        {loading ? (
             <Flex justify="center" align="center" height="100vh">
                 <Spinner size="xl" />
-            </Flex>
-        );
-    }
+            </Flex> ) : ( 
 
-    return (
-        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
-            <Heading as="h1" size="lg" mb={3}>
-                {course.title}
-            </Heading>
-            <Text fontSize="md" color="gray.600" mb={4}>
-                {course.description}
-            </Text>
+            <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
+                <Heading as="h1" size="lg" mb={3}>
+                    {course.title}
+                </Heading>
+                <Text fontSize="md" color="gray.600" mb={4}>
+                    {course.description}
+                </Text>
 
-            <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid gray" my={4} />
 
-            {/* Course Details */}
-            <Text fontSize="md" fontWeight="bold">Prerequisites:</Text>
-            <Text mb={2}>{course.prerequisites || "None"}</Text>
-            
-            <Text fontSize="md" fontWeight="bold">Exclusions:</Text>
-            <Text mb={2}>{course.exclusion || "None"}</Text>
-            
-            <Text fontSize="md" fontWeight="bold">Distribution:</Text>
-            <Text mb={4}>{course.distribution || "N/A"}</Text>
+                {/* Course Details */}
+                <Text fontSize="md" fontWeight="bold">Prerequisites:</Text>
+                <Text mb={2}>{course.prerequisites || "None"}</Text>
+                
+                <Text fontSize="md" fontWeight="bold">Exclusions:</Text>
+                <Text mb={2}>{course.exclusion || "None"}</Text>
+                
+                <Text fontSize="md" fontWeight="bold">Distribution:</Text>
+                <Text mb={4}>{course.distribution || "N/A"}</Text>
 
-            <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid gray" my={4} />
 
-            {/* Professors Section */}
-            <Heading as="h2" size="md" mb={3}>Professors</Heading>
-            <VStack spacing={2} align="stretch">
-                {course.professors.length > 0 ? (
-                    course.professors.map((prof, index) => (
-                        <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                            <Text fontWeight="bold">{prof.name}</Text>
-                            <Text fontSize="sm" color="gray.500">{prof.department}</Text>
-                        </Box>
-                    ))
-                ) : (
-                    <Text fontStyle="italic" color="gray.500">No professors listed.</Text>
-                )}
-            </VStack>
+                {/* Professors Section */}
+                <Heading as="h2" size="md" mb={3}>Professors</Heading>
+                <VStack spacing={2} align="stretch">
+                    {course.professors.length > 0 ? (
+                        course.professors.map((prof, index) => (
+                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
+                                <Text fontWeight="bold">{prof.name}</Text>
+                                <Text fontSize="sm" color="gray.500">{prof.department}</Text>
+                            </Box>
+                        ))
+                    ) : (
+                        <Text fontStyle="italic" color="gray.500">No professors listed.</Text>
+                    )}
+                </VStack>
 
-            <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid gray" my={4} />
 
-            <Heading as="h2" size="md" mt={5} mb={3}>Overall Rating</Heading>
-            <HStack mt={4}>
-                <RatingGroup.Root readOnly count={5} value={overallRating}  size="lg" colorPalette="orange">
-                    <RatingGroup.HiddenInput />
-                    <RatingGroup.Control>
-                        {Array.from({ length: 5 }).map((_, index) => (
-                        <RatingGroup.Item key={index} index={index + 1}>
-                            <RatingGroup.ItemIndicator />
-                        </RatingGroup.Item>
-                        ))}
-                    </RatingGroup.Control>
-                </RatingGroup.Root>
-            
-            
-            </HStack>
-            <VStack spacing={2} align="stretch" mt={4}>
-                {
-                allRating.map((rate, index) => (
-                        <Progress.Root variant="outline" colorPalette="orange" size="sm" value={rate} maxW="sm">
-                            <HStack>
-                                <Progress.Label>{5 - index } Stars</Progress.Label>
-                                <Progress.Track flex="1">
-                                    <Progress.Range />
-                                </Progress.Track>
-                            </HStack>
-                        </Progress.Root>
-                ))
-                }
-            </VStack>
-            <Box borderBottom="1px solid gray" my={4} />
-
-            {/* Reviews Section */}
-
-            {/* Add Review Section */}
-            <Heading as="h2" size="md" mt={5} mb={3}>Leave a Review</Heading>
-            <HStack mt={4}>
-                <RatingGroup.RootProvider value={rating} colorPalette="orange" size="lg">
+                <Heading as="h2" size="md" mt={5} mb={3}>Overall Rating</Heading>
+                <HStack mt={4}>
+                    <RatingGroup.Root readOnly count={5} value={overallRating}  size="lg" colorPalette="orange">
                         <RatingGroup.HiddenInput />
                         <RatingGroup.Control>
-                            {rating.items.map((index) => (
-                            <RatingGroup.Item key={index} index={index}>
+                            {Array.from({ length: 5 }).map((_, index) => (
+                            <RatingGroup.Item key={index} index={index + 1}>
                                 <RatingGroup.ItemIndicator />
                             </RatingGroup.Item>
                             ))}
                         </RatingGroup.Control>
-                </RatingGroup.RootProvider>
-            </HStack>
-            <HStack mt={4} position="relative" alignItems="start" className='mb-4'>
-                <Field.Root 
-                    invalid={isError}
-                >
-                    <Input
-                        placeholder="Write a review..."
-                        value={review}
-                        onChange={(e) => setReview(e.target.value)}
-                        isDisabled={isPostingReview}
-                        errorText={isError ? message : ""}
-                        
-                    />
-                    <Field.ErrorText>{message}</Field.ErrorText>
-                </Field.Root>
-                <IconButton
-                        className='t-0'
-                        onClick={handleAddReview}
-                        aria-label="Add Review"
-                        text="Add Review"
-                        isLoading={isPostingReview}
-                    >
-                        <FaPlusCircle />
-                    </IconButton>
-            </HStack>
-
-            <Heading as="h2" size="md" mt={5} mb={3}>Reviews</Heading>
-            <VStack spacing={3} align="stretch">
-                {reviews.length > 0 ? (
-                   reviews.map((r, index) => (
-                        <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                            <Text fontWeight="bold">{r.author}</Text>
-                            <RatingGroup.Root readOnly count={5} defaultValue={r.rating} size="sm" colorPalette="orange">
-                                <RatingGroup.HiddenInput />
-                                <RatingGroup.Control>
-                                    {Array.from({ length: 5 }).map((_, index) => (
-                                    <RatingGroup.Item key={index} index={index + 1}>
-                                        <RatingGroup.ItemIndicator />
-                                    </RatingGroup.Item>
-                                    ))}
-                                </RatingGroup.Control>
-                            </RatingGroup.Root>
-                            <Text fontSize="sm" color="gray.500">{new Date(r.created_at).toLocaleString()}</Text>
-                            <Text mt={2}>{r.content}</Text>
-                        </Box>
+                    </RatingGroup.Root>
+                
+                
+                </HStack>
+                <VStack spacing={2} align="stretch" mt={4}>
+                    {
+                    allRating.map((rate, index) => (
+                            <Progress.Root variant="outline" colorPalette="orange" size="sm" value={rate} maxW="sm">
+                                <HStack>
+                                    <Progress.Label>{5 - index } Stars</Progress.Label>
+                                    <Progress.Track flex="1">
+                                        <Progress.Range />
+                                    </Progress.Track>
+                                </HStack>
+                            </Progress.Root>
                     ))
-                ) : (
-                    <Text fontStyle="italic" color="gray.500">Be the first to leave a review.</Text>
-                )}
-            </VStack>
-            
-        </Box>
+                    }
+                </VStack>
+                <Box borderBottom="1px solid gray" my={4} />
+
+                {/* Reviews Section */}
+                <Heading as="h2" size="md" mt={5} mb={3}>Leave a Review</Heading>
+                <HStack mt={4}>
+                    <RatingGroup.RootProvider value={rating} colorPalette="orange" size="lg">
+                            <RatingGroup.HiddenInput />
+                            <RatingGroup.Control>
+                                {rating.items.map((index) => (
+                                <RatingGroup.Item key={index} index={index}>
+                                    <RatingGroup.ItemIndicator />
+                                </RatingGroup.Item>
+                                ))}
+                            </RatingGroup.Control>
+                    </RatingGroup.RootProvider>
+                </HStack>
+                <HStack mt={4} position="relative" alignItems="start" className='mb-4'>
+                    <Field.Root 
+                        invalid={isError}
+                    >
+                        <Input
+                            placeholder="Write a review..."
+                            value={review}
+                            onChange={(e) => setReview(e.target.value)}
+                            isDisabled={isPostingReview}
+                            errorText={isError ? message : ""}
+                            
+                        />
+                        <Field.ErrorText>{message}</Field.ErrorText>
+                    </Field.Root>
+                    <IconButton
+                            className='t-0'
+                            onClick={handleAddReview}
+                            aria-label="Add Review"
+                            text="Add Review"
+                            isLoading={isPostingReview}
+                        >
+                            <FaPlusCircle />
+                        </IconButton>
+                </HStack>
+
+                <Heading as="h2" size="md" mt={5} mb={3}>Reviews</Heading>
+                <VStack spacing={3} align="stretch">
+                    {course.reviews.length > 0 ? (
+                    course.reviews.map((r, index) => (
+                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
+                                <Text fontWeight="bold">{r.author}</Text>
+                                <RatingGroup.Root readOnly count={5} defaultValue={r.rating} size="sm" colorPalette="orange">
+                                    <RatingGroup.HiddenInput />
+                                    <RatingGroup.Control>
+                                        {Array.from({ length: 5 }).map((_, index) => (
+                                        <RatingGroup.Item key={index} index={index + 1}>
+                                            <RatingGroup.ItemIndicator />
+                                        </RatingGroup.Item>
+                                        ))}
+                                    </RatingGroup.Control>
+                                </RatingGroup.Root>
+                                <Text fontSize="sm" color="gray.500">{new Date(r.created_at).toLocaleString()}</Text>
+                                <Text mt={2}>{r.content}</Text>
+                            </Box>
+                        ))
+                    ) : (
+                        <Text fontStyle="italic" color="gray.500">Be the first to leave a review.</Text>
+                    )}
+                </VStack>
+                
+            </Box> )}
+            </div>
     );
 };
 

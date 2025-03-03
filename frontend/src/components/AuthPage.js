@@ -22,6 +22,7 @@ import EmailInput from "./EmailInput";
 import VerifyCode from "./VerifyCode";
 import PasswordSetup from "./PasswordSetup";
 
+
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -35,13 +36,22 @@ function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect logged-in users to dashboard
   useEffect(() => {
-    if (isLoggedIn()) {
-      console.log("User is already logged in. Redirecting to dashboard...");
-      navigate("/home"); // Redirect to dashboard if logged in
-    }
+    const checkAuthStatus = async () => {
+      try {
+        const loggedIn = await isLoggedIn();
+        if (loggedIn) {
+          console.log("User is already logged in. Redirecting to dashboard...");
+          navigate("/home"); // Redirect to dashboard if logged in
+        }
+      } catch (error) {
+        console.error("Error checking login status:", error);
+      }
+    };
+  
+    setTimeout(checkAuthStatus, 500); // Delay to ensure cookies are set
   }, [navigate]);
+  
 
   useEffect(() => {
     if (location.state?.isLogin !== undefined) {
@@ -55,17 +65,41 @@ function AuthPage() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", {
-        identifier: email,
-        password: password
-      });
-      localStorage.setItem("user", JSON.stringify(response.data));
-      navigate("/home");
+        const response = await fetch("http://127.0.0.1:8000/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                identifier: email,
+                password: password,
+            }),
+            credentials: "include",  // Ensures cookies are sent & stored
+        });
+
+        const data = await response.json();
+        console.log("🔹 Login Response:", data);
+
+        if (response.ok) {
+            console.log("Login Successful!");
+            
+            // Manually check authentication after login
+            const loggedIn = await isLoggedIn();
+            if (loggedIn) {
+              navigate("/home"); 
+            }
+        } else {
+            console.error("Login failed:", data.detail);
+            alert("Login failed: " + data.detail);
+        }
     } catch (error) {
-      alert(error.response?.data?.detail || "Login failed");
+        console.error("Error during login:", error);
+        alert("Error logging in");
     }
-  };
+};
+
 
   const handleResetPassword = () => {
     navigate('/reset-password');
