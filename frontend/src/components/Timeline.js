@@ -7,7 +7,16 @@ import { getUser } from './AuthPageUtil';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchUser() {
+      const userData = await getUser();
+      setUser(userData);
+    }
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -102,13 +111,13 @@ const Timeline = () => {
   const handleLike = async (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
     e.stopPropagation(); // Stop event propagation
+
+
     
-    const user = getUser();
     if (!user || !user.id) {
       console.error("You must be logged in to like a post.");
-      return;
+        return;
     }
-    
     try {
       // Find the post
       const post = posts.find(p => p._id === postId);
@@ -116,7 +125,7 @@ const Timeline = () => {
       
       if (hasLiked) {
         // Unlike the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/unlike?user_id=${user.id}`);
+        await axios.post(`http://localhost:8000/api/posts/${postId}/unlike`, { user_id: user.id });
         
         // Update state
         setPosts(prevPosts => prevPosts.map(p => {
@@ -130,7 +139,7 @@ const Timeline = () => {
         }));
       } else {
         // Like the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/like?user_id=${user.id}`);
+        await axios.post(`http://localhost:8000/api/posts/${postId}/like`, { user_id: user.id });
         
         // Update state
         setPosts(prevPosts => prevPosts.map(p => {
@@ -166,9 +175,9 @@ const Timeline = () => {
   return (
       <Box>
         <Flex justifyContent="space-between" alignItems="center">
-          <Text fontSize="xl" fontWeight="bold" color="primary">
+          {/* <Text fontSize="xl" fontWeight="bold" color="primary">
             Timeline
-          </Text>
+          </Text> */}
         </Flex>
         {posts.map((post) => (
             <Box
@@ -205,8 +214,8 @@ const Timeline = () => {
                 {/* Like button */}
                 <Flex alignItems="center" onClick={(e) => handleLike(e, post._id)}>
                   <Icon 
-                    as={getUser() && post.likes.includes(getUser().id) ? FaHeart : FaRegHeart} 
-                    color={getUser() && post.likes.includes(getUser().id) ? "red.500" : "gray.500"} 
+                    as={user && post.likes.includes(user.id) ? FaHeart : FaRegHeart} 
+                    color={user && post.likes.includes(user.id) ? "red.500" : "gray.500"} 
                     cursor="pointer" 
                     mr={1}
                   />

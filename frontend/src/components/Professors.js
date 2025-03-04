@@ -110,10 +110,11 @@ const Professors = () => {
               {professors.map((professor) => (
                 <Link 
                   as={RouterLink} 
-                  to={`/professors/${professor.id}`} 
+                  to={`/professors/${professor._id}`} 
                   key={professor.id}
                 >
                   <Box 
+                    width="100%"
                     p={4} 
                     border="1px" 
                     borderColor="gray.300" 

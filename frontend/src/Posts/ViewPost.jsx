@@ -40,7 +40,7 @@ const ViewPost = () => {
                 setLikes(response.data.likes.length);
                 setViews(response.data.views || 0);
 
-                const user = getUser();
+                const user = await getUser();
                 if (user && response.data.likes.includes(user.id)) {
                     setHasLiked(true);
                 }
@@ -82,7 +82,7 @@ const ViewPost = () => {
     }, [id]);
 
     const handleLike = async () => {
-        const user = getUser();
+        const user = await getUser();
         if (!user || !user.id) {
             setMessage("You must be logged in to like a post.");
             setIsError(true);
@@ -111,7 +111,7 @@ const ViewPost = () => {
     };
 
     const handleUnlike = async () => {
-        const user = getUser();
+        const user = await getUser();
         if (!user || !user.id) {
             setMessage("You must be logged in to unlike a post.");
             setIsError(true);
