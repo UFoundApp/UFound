@@ -44,6 +44,7 @@ function App() {
               <Route path="/professors/:professorId" element={<ProfessorPage />} />  {/* ✅ Added Professor Page */}
               <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
               <Route path="/search" element={<SearchResults />} />
+              <Route path="/search" element={<SearchResults />} />
             </Routes>
           </Box>
         </Flex>
