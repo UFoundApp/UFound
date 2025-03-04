@@ -24,6 +24,7 @@ const TopNav = () => {
         navigate('/login');
     };
 
+    const [type, setType] = React.useState('posts')
     const [text, setText] = React.useState('');
     const handleSearch = (e, type) => {
         if (e.key === 'Enter') {
@@ -68,7 +69,9 @@ const TopNav = () => {
                             borderColor="gray.200"
                             onChange={(e) => setText(e.target.value)}
                             value={text}
-                            onKeyDown={(e) => handleSearch(e, "posts")}
+                            onKeyDown={(e) => {
+                                setType("posts");
+                                handleSearch(e, type)}}
                             _hover={{ bg: "gray.100" }}
                             _focus={{ 
                                 bg: "white",
@@ -86,7 +89,9 @@ const TopNav = () => {
                             borderColor="gray.200"
                             onChange={(e) => setText(e.target.value)}
                             value={text}
-                            onKeyDown={(e) => handleSearch(e, "professors")}
+                            onKeyDown={(e) => {
+                                setType("professors");
+                                handleSearch(e, type)}}
                             _hover={{ bg: "gray.100" }}
                             _focus={{ 
                                 bg: "white",
@@ -104,7 +109,9 @@ const TopNav = () => {
                             borderColor="gray.200"
                             onChange={(e) => setText(e.target.value)}
                             value={text}
-                            onKeyDown={(e) => handleSearch(e, "courses")}
+                            onKeyDown={(e) => {
+                                setType("courses");
+                                handleSearch(e, type)}}
                             _hover={{ bg: "gray.100" }}
                             _focus={{ 
                                 bg: "white",
@@ -113,6 +120,25 @@ const TopNav = () => {
                             }}
                         />
                     )}
+                      {(!searchCourses && !searchPosts && !searchProfessors) && (  <Input
+                            placeholder="Search..." 
+                            maxW="400px"
+                            bg="gray.50"
+                            border="1px"
+                            borderColor="gray.200"
+                            onChange={(e) => setText(e.target.value)}
+                            value={text}
+                            onKeyDown={(e) => {
+                                handleSearch(e, type)}}
+                            _hover={{ bg: "gray.100" }}
+                            _focus={{ 
+                                bg: "white",
+                                borderColor: "primary",
+                                boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                            }}
+                        />
+)}
+
                     
                     {/* Navigation Links */}
                     <Flex alignItems="center" gap={4}>
