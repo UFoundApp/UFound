@@ -162,7 +162,14 @@ async def get_current_user(request: Request):
 async def get_user_info(current_user: UserModel = Depends(get_current_user)):
     if current_user is None:
         raise HTTPException(status_code=401, detail="User not authenticated")
-    return {"username": current_user.username, "email": current_user.email}
+    return {
+        "id": str(current_user.id),  # Convert UUID to string for JSON
+        "username": current_user.username,
+        "email": current_user.email,
+        "bio": current_user.bio,
+        "posts": current_user.posts,
+        "comments": [(comment_id) for comment_id in current_user.comments]  # Convert UUIDs to strings
+    }
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
@@ -335,7 +342,7 @@ async def refresh_token(request: Request, response: Response):
         refresh_token = refresh_token.split(" ")[1]
 
     try:
-        payload = jwt.decode(refresh_token.split(" ")[1], REFRESH_SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=["HS256"])
         email = payload.get("sub")
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")

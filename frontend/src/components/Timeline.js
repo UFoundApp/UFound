@@ -13,7 +13,7 @@ const Timeline = () => {
   useEffect(() => {
     async function fetchUser() {
       const userData = await getUser();
-      setUser(userData); // ✅ Fetch once and store in state
+      setUser(userData);
     }
     fetchUser();
   }, []);
@@ -111,21 +111,21 @@ const Timeline = () => {
   const handleLike = async (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
     e.stopPropagation(); // Stop event propagation
-    
-    try {
-      const user = await getUser();
-      if (!user || !user.id) {
-        console.error("You must be logged in to like a post.");
-        return;
-      }
 
+
+    
+    if (!user || !user.id) {
+      console.error("You must be logged in to like a post.");
+        return;
+    }
+    try {
       // Find the post
       const post = posts.find(p => p._id === postId);
       const hasLiked = post.likes.includes(user.id);
       
       if (hasLiked) {
         // Unlike the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/unlike?user_id=${user.id}`);
+        await axios.post(`http://localhost:8000/api/posts/${postId}/unlike`, { user_id: user.id });
         
         // Update state
         setPosts(prevPosts => prevPosts.map(p => {
@@ -139,7 +139,7 @@ const Timeline = () => {
         }));
       } else {
         // Like the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/like?user_id=${user.id}`);
+        await axios.post(`http://localhost:8000/api/posts/${postId}/like`, { user_id: user.id });
         
         // Update state
         setPosts(prevPosts => prevPosts.map(p => {
