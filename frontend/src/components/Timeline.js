@@ -175,9 +175,9 @@ const Timeline = () => {
   return (
       <Box>
         <Flex justifyContent="space-between" alignItems="center">
-          <Text fontSize="xl" fontWeight="bold" color="primary">
+          {/* <Text fontSize="xl" fontWeight="bold" color="primary">
             Timeline
-          </Text>
+          </Text> */}
         </Flex>
         {posts.map((post) => (
             <Box

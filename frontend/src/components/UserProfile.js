@@ -5,6 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, updateStoredUsername } from './AuthPageUtil';
 import axios from 'axios';
 import LeftSidebar from './LeftSidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComments } from '@fortawesome/free-solid-svg-icons';
 
 function UserProfile() {
   const { username } = useParams(); // username from URL
@@ -69,22 +71,24 @@ function UserProfile() {
       {/* Left Sidebar */}
       <Box
         as="aside"
-        width={{ base: '0', md: '20%' }}
+        width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
         bg="gray.50"
         height="calc(100vh - 60px)"
         position="fixed"
         left="0"
       >
-        <LeftSidebar />
+        <Box width="80%" ml="auto">
+          <LeftSidebar />
+        </Box>
       </Box>
 
       {/* Main Content */}
       <Box 
         flex="1"
-        bg="white"
-        ml={{ base: 0, md: '20%' }}
-        mr={{ base: 0, md: '20%' }}
+        bg="gray.50"
+        ml={{ base: 0, md: '25%' }}
+        mr={{ base: 0, md: '25%' }}
         overflowY="scroll"
         minH="calc(100vh - 75px)"
       >
@@ -134,40 +138,67 @@ function UserProfile() {
         </Box>
       </Box>
 
-      {/* Right Sidebar */}
-      <Box
+       {/* Right Sidebar - Fixed */}
+       <Box
         as="aside"
-        width={{ base: '0', md: '20%' }}
+        width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
         bg="gray.50"
         height="calc(100vh - 60px)"
         position="fixed"
         right="0"
       >
-        <Box p={4} width="100%" overflowY="auto">
+        <Box
+          bg="gray.50"
+          p={4}
+          width="100%"
+          overflowY="auto"
+        >
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">
               {profile.username}'s RECENT POSTS
             </Text>
           </Flex>
-          <Box bg="white" borderRadius="xl" boxShadow="sm" p={3} border="1px" borderColor="gray.200">
+
+          <Box
+            bg="white"
+            borderRadius="xl"
+            boxShadow="sm"
+            p={3}
+            border="1px"
+            borderColor="gray.200"
+          >
             <VStack spacing={2} align="stretch">
-              {profile.posts && profile.posts.length > 0 ? (
-                profile.posts.map((post) => (
-                  <Flex 
-                    key={post._id}
-                    _hover={{ bg: 'gray.100' }}
-                    p={2}
-                    borderRadius="md"
-                    cursor="pointer"
-                    onClick={() => navigate(`/view-post/${post._id}`)}
-                  >
+              {profile.posts.map((post) => (
+                <Flex 
+                  key={post._id}
+                  _hover={{ bg: 'gray.100' }}
+                  p={2}
+                  borderRadius="md"
+                  cursor="pointer"
+                  onClick={() => navigate(`/view-post/${post._id}`)}
+                >
+                  <FontAwesomeIcon 
+                    icon={faComments} 
+                    color="gray.600" 
+                    size="lg" 
+                    style={{ marginTop: '4px' }} 
+                  />
+                  <Box ml={3}>
                     <Text color="gray.700" fontSize="sm">
                       {post.title}
                     </Text>
-                  </Flex>
-                ))
-              ) : (
+                    <Text color="gray.600" fontSize="xs" noOfLines={2}>
+                      {post.content}
+                    </Text>
+                    <Text color="gray.500" fontSize="xs" mt={1}>
+                      {post.likes?.length || 0} likes · {post.comments?.length || 0} comments
+                    </Text>
+                  </Box>
+                </Flex>
+              ))}
+
+              {profile.posts.length === 0 && (
                 <Text color="gray.500" fontSize="sm" p={2}>
                   No posts yet
                 </Text>
