@@ -17,14 +17,13 @@ const TopNav = () => {
   // Re-check auth status whenever the route changes
   useEffect(() => {
     const checkAuthStatus = async () => {
-      setLoading(true); // Start loading before checking auth
       const loggedIn = await isLoggedIn();
-      setAuthenticated(loggedIn);
       if (loggedIn) {
         const user = await getUser();
-        setUsername(user?.username || "");
-      } else {
-        setUsername("");
+        if (user) {
+          setUsername(user.username);
+          setAuthenticated(true);
+        }
       }
       setLoading(false); // Finish loading after auth check
     };

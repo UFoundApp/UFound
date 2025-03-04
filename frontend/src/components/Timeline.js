@@ -7,7 +7,16 @@ import { getUser } from './AuthPageUtil';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchUser() {
+      const userData = await getUser();
+      setUser(userData); // ✅ Fetch once and store in state
+    }
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -103,13 +112,13 @@ const Timeline = () => {
     e.preventDefault(); // Prevent navigation to post
     e.stopPropagation(); // Stop event propagation
     
-    const user = getUser();
-    if (!user || !user.id) {
-      console.error("You must be logged in to like a post.");
-      return;
-    }
-    
     try {
+      const user = await getUser();
+      if (!user || !user.id) {
+        console.error("You must be logged in to like a post.");
+        return;
+      }
+
       // Find the post
       const post = posts.find(p => p._id === postId);
       const hasLiked = post.likes.includes(user.id);
@@ -205,8 +214,8 @@ const Timeline = () => {
                 {/* Like button */}
                 <Flex alignItems="center" onClick={(e) => handleLike(e, post._id)}>
                   <Icon 
-                    as={getUser() && post.likes.includes(getUser().id) ? FaHeart : FaRegHeart} 
-                    color={getUser() && post.likes.includes(getUser().id) ? "red.500" : "gray.500"} 
+                    as={user && post.likes.includes(user.id) ? FaHeart : FaRegHeart} 
+                    color={user && post.likes.includes(user.id) ? "red.500" : "gray.500"} 
                     cursor="pointer" 
                     mr={1}
                   />
