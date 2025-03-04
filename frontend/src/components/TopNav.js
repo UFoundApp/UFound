@@ -10,7 +10,8 @@ const TopNav = () => {
     const isAuthPage = location.pathname === '/login';
     const isResetPasswordPage = location.pathname === '/reset-password';
     const searchPosts = location.pathname === '/home';
-    const searchReviews = location.pathname === '/reviews';
+    const searchProfessors = location.pathname === '/professors';
+    const searchCourses = location.pathname === '/courses';
 
     const handleAuth = (type) => {
         if (type === 'signin' || type === 'signup') {
@@ -24,10 +25,9 @@ const TopNav = () => {
     };
 
     const [text, setText] = React.useState('');
-    const handlePostSearch = (e) => {
+    const handleSearch = (e, type) => {
         if (e.key === 'Enter') {
-            console.log('searching for:', text); //debugging
-            navigate(`/search?q=${encodeURIComponent(text)}`);
+            navigate(`/search?q=${encodeURIComponent(text) + "&type=" + type}`);
         }
     }
 
@@ -68,7 +68,7 @@ const TopNav = () => {
                             borderColor="gray.200"
                             onChange={(e) => setText(e.target.value)}
                             value={text}
-                            onKeyDown={handlePostSearch}
+                            onKeyDown={(e) => handleSearch(e, "posts")}
                             _hover={{ bg: "gray.100" }}
                             _focus={{ 
                                 bg: "white",
@@ -77,13 +77,16 @@ const TopNav = () => {
                             }}
                         />
                     )}
-                    {searchReviews && (
+                    {searchProfessors && (
                             <Input
-                            placeholder="Search Reviews" 
+                            placeholder="Search Professors" 
                             maxW="400px"
                             bg="gray.50"
                             border="1px"
                             borderColor="gray.200"
+                            onChange={(e) => setText(e.target.value)}
+                            value={text}
+                            onKeyDown={(e) => handleSearch(e, "professors")}
                             _hover={{ bg: "gray.100" }}
                             _focus={{ 
                                 bg: "white",
@@ -92,6 +95,24 @@ const TopNav = () => {
                             }}
                         />
                         )}
+                        {searchCourses && (
+                            <Input
+                            placeholder="Search Courses" 
+                            maxW="400px"
+                            bg="gray.50"
+                            border="1px"
+                            borderColor="gray.200"
+                            onChange={(e) => setText(e.target.value)}
+                            value={text}
+                            onKeyDown={(e) => handleSearch(e, "courses")}
+                            _hover={{ bg: "gray.100" }}
+                            _focus={{ 
+                                bg: "white",
+                                borderColor: "primary",
+                                boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
+                            }}
+                        />
+                    )}
                     
                     {/* Navigation Links */}
                     <Flex alignItems="center" gap={4}>
