@@ -19,7 +19,7 @@ const MainPage = () => {
                 left="0"
             >
                 {/* Actual Sidebar Content - Moved inward */}
-                <Box width="80%" ml="auto">
+                <Box width="90%" ml="auto">
                     <LeftSidebar />
                 </Box>
             </Box>
