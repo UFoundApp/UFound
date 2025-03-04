@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Flex, Input, Button, Text } from '@chakra-ui/react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { isLoggedIn, logout, getUser } from './AuthPageUtil';
+import React, { useEffect, useState } from "react";
+import { Flex, Input, Button, Text } from "@chakra-ui/react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { isLoggedIn, logout, getUser } from "./AuthPageUtil";
 
 const TopNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login';
-  const isResetPasswordPage = location.pathname === '/reset-password';
+  const isAuthPage = location.pathname === "/login";
+  const isResetPasswordPage = location.pathname === "/reset-password";
+  const searchPosts = location.pathname === "/home";
+  const searchProfessors = location.pathname === "/professors";
+  const searchCourses = location.pathname === "/courses";
 
   // State to store auth status and username
   const [authenticated, setAuthenticated] = useState(false);
@@ -31,12 +34,20 @@ const TopNav = () => {
   }, [location]);
 
   const handleAuth = (type) => {
-    navigate('/login', { state: { isLogin: type === 'signin' } });
+    navigate("/login", { state: { isLogin: type === "signin" } });
+  };
+
+  const [type, setType] = React.useState("posts");
+  const [text, setText] = React.useState("");
+  const handleSearch = (e, type) => {
+    if (e.key === "Enter") {
+      navigate(`/search?q=${encodeURIComponent(text) + "&type=" + type}`);
+    }
   };
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -51,56 +62,141 @@ const TopNav = () => {
       position="relative"
       zIndex={1}
     >
-      {/* Logo */}
+      {/* Logo - always visible */}
       <Text
         fontSize="2xl"
         fontWeight="bold"
         fontFamily="'Poppins', sans-serif"
         color="primary"
         cursor="pointer"
-        onClick={() => navigate('/home')}
+        onClick={() => navigate("/home")}
       >
         UFound
       </Text>
 
-            {/* Only show these elements if NOT on the auth or reset password page */}
-            {!isAuthPage && !isResetPasswordPage && (
-                <>
-                    {/* Search Bar */}
-                    <Input 
-                        placeholder="Search" 
-                        maxW="400px"
-                        bg="gray.50"
-                        border="1px"
-                        borderColor="gray.200"
-                        _hover={{ bg: "gray.100" }}
-                        _focus={{ 
-                            bg: "white",
-                            borderColor: "primary",
-                            boxShadow: "0 0 0 1px var(--chakra-colors-primary)"
-                        }}
-                    />
-                    
-                    {/* Navigation Links */}
-                    <Flex alignItems="center" gap={4}>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/home")}>
-                            Community
-                        </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/courses")}>
-                            Courses
-                        </Button>
-                        <Button variant="ghost" color="gray.600" _hover={{ color: "primary" }} onClick={() => navigate("/professors")}>
-                            Professors
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            color="gray.600" 
-                            _hover={{ color: "primary" }} 
-                            onClick={() => navigate('/create-post')}
-                        >
-                            Write a post
-                        </Button>
-                    </Flex>
+      {/* Only show these elements if NOT on the auth or reset password page */}
+      {!isAuthPage && !isResetPasswordPage && (
+        <>
+          {/* Search Input */}
+          {searchPosts && (
+            <Input
+              placeholder="Search Posts"
+              maxW="400px"
+              bg="gray.50"
+              border="1px"
+              borderColor="gray.200"
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              onKeyDown={(e) => {
+                setType("posts");
+                handleSearch(e, type);
+              }}
+              _hover={{ bg: "gray.100" }}
+              _focus={{
+                bg: "white",
+                borderColor: "primary",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+              }}
+            />
+          )}
+          {searchProfessors && (
+            <Input
+              placeholder="Search Professors"
+              maxW="400px"
+              bg="gray.50"
+              border="1px"
+              borderColor="gray.200"
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              onKeyDown={(e) => {
+                setType("professors");
+                handleSearch(e, type);
+              }}
+              _hover={{ bg: "gray.100" }}
+              _focus={{
+                bg: "white",
+                borderColor: "primary",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+              }}
+            />
+          )}
+          {searchCourses && (
+            <Input
+              placeholder="Search Courses"
+              maxW="400px"
+              bg="gray.50"
+              border="1px"
+              borderColor="gray.200"
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              onKeyDown={(e) => {
+                setType("courses");
+                handleSearch(e, type);
+              }}
+              _hover={{ bg: "gray.100" }}
+              _focus={{
+                bg: "white",
+                borderColor: "primary",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+              }}
+            />
+          )}
+          {!searchCourses && !searchPosts && !searchProfessors && (
+            <Input
+              placeholder="Search..."
+              maxW="400px"
+              bg="gray.50"
+              border="1px"
+              borderColor="gray.200"
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              onKeyDown={(e) => {
+                handleSearch(e, type);
+              }}
+              _hover={{ bg: "gray.100" }}
+              _focus={{
+                bg: "white",
+                borderColor: "primary",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+              }}
+            />
+          )}
+
+          {/* Navigation Links */}
+          <Flex alignItems="center" gap={4}>
+            <Button
+              variant="ghost"
+              color="gray.600"
+              _hover={{ color: "primary" }}
+              onClick={() => navigate("/home")}
+            >
+              Community
+            </Button>
+            <Button
+              variant="ghost"
+              color="gray.600"
+              _hover={{ color: "primary" }}
+              onClick={() => navigate("/courses")}
+            >
+              Courses
+            </Button>
+            <Button
+              variant="ghost"
+              color="gray.600"
+              _hover={{ color: "primary" }}
+              onClick={() => navigate("/professors")}
+            >
+              Professors
+            </Button>
+            <Button
+              variant="ghost"
+              color="gray.600"
+              _hover={{ color: "primary" }}
+              onClick={() => navigate("/create-post")}
+            >
+              Write a post
+            </Button>
+          </Flex>
 
           {/* Auth Buttons */}
           <Flex alignItems="center" gap={3}>
@@ -112,16 +208,12 @@ const TopNav = () => {
                   variant="ghost"
                   color="gray.700"
                   onClick={() =>
-                    navigate(username ? `/profile/${username}` : '/login')
+                    navigate(username ? `/profile/${username}` : "/login")
                   }
                 >
                   {username ? username : "Profile"}
                 </Button>
-                <Button
-                  variant="ghost"
-                  color="gray.700"
-                  onClick={handleLogout}
-                >
+                <Button variant="ghost" color="gray.700" onClick={handleLogout}>
                   Sign out
                 </Button>
               </>
@@ -130,7 +222,7 @@ const TopNav = () => {
                 <Button
                   variant="ghost"
                   color="gray.700"
-                  onClick={() => handleAuth('signin')}
+                  onClick={() => handleAuth("signin")}
                 >
                   Sign in
                 </Button>
@@ -138,7 +230,7 @@ const TopNav = () => {
                   bg="primary"
                   color="white"
                   _hover={{ bg: "primary", opacity: 0.9 }}
-                  onClick={() => handleAuth('signup')}
+                  onClick={() => handleAuth("signup")}
                 >
                   Sign up
                 </Button>
