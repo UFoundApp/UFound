@@ -13,3 +13,5 @@ ujson
 httptools
 watchfiles
 aiostream
+requests
+bs4

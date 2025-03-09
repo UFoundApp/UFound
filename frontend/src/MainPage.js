@@ -1,42 +1,57 @@
 // src/MainPage.js
 import React from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import TopNav from './components/TopNav';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import Timeline from './components/Timeline';
 
 const MainPage = () => {
     return (
-        <Flex direction="column" h="100vh">
-            {/* Main Content */}
-            <Flex as="main" flex="1" overflow="hidden">
-                {/* Left Sidebar */}
-                <Box
-                    as="aside"
-                    width={{ base: '0', md: '20%' }}
-                    display={{ base: 'none', md: 'block' }}
-                    bg="gray.50"
-                >
+        <Flex flex="1" bg="gray.50">
+            {/* Left Sidebar Area - Fixed */}
+            <Box
+                as="aside"
+                width={{ base: '0', md: '25%' }}
+                display={{ base: 'none', md: 'block' }}
+                bg="gray.50"
+                height="calc(100vh - 60px)"
+                position="fixed"
+                left="0"
+            >
+                {/* Actual Sidebar Content - Moved inward */}
+                <Box width="90%" ml="auto">
                     <LeftSidebar />
                 </Box>
+            </Box>
 
-                {/* Timeline */}
-                <Box flex="1" overflowY="auto" p={4} bg="white">
+            {/* Timeline - Center aligned with margins for sidebars */}
+            <Box 
+                flex="1"
+                ml={{ base: 0, md: '25%' }}
+                mr={{ base: 0, md: '25%' }}
+                bg="gray.50"
+                minH="calc(100vh - 60px)"
+            >
+                <Box p={4} maxW="900px" mx="auto" bg="gray.50">
                     <Timeline />
                 </Box>
+            </Box>
 
-                {/* Right Sidebar */}
-                <Box
-                    as="aside"
-                    width={{ base: '0', md: '20%' }}
-                    display={{ base: 'none', md: 'block' }}
-                    bg="gray.50"
-                    p={4}
-                >
+            {/* Right Sidebar Area - Fixed */}
+            <Box
+                as="aside"
+                width={{ base: '0', md: '25%' }}
+                display={{ base: 'none', md: 'block' }}
+                bg="gray.50"
+                height="calc(100vh - 60px)"
+                position="fixed"
+                right="0"
+            >
+                {/* Actual Sidebar Content - Moved inward */}
+                <Box width="80%" mr="auto">
                     <RightSidebar />
                 </Box>
-            </Flex>
+            </Box>
         </Flex>
     );
 };

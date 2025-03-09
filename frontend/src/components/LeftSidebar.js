@@ -2,8 +2,12 @@
 import React from 'react';
 import { Box, Stack, Button, Text } from '@chakra-ui/react';
 import { FaRss, FaBuilding, FaPoll, FaLayerGroup, FaStar, FaChartLine } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
 
 const LeftSidebar = () => {
+    const navigate = useNavigate();
+
     return (
         <Box
             bg="gray.50"  // Very light grey background
@@ -34,6 +38,7 @@ const LeftSidebar = () => {
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => navigate("/home")}
                 >
                     Feed
                 </Button>
