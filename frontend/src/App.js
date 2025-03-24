@@ -14,11 +14,11 @@ import CreatePost from "./components/CreatePost";
 import ReviewsPage from "./components/ReviewPage";
 import CoursePage from "./components/CoursePage";
 import UserProfile from "./components/UserProfile";
-import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
+import ProfessorPage from "./pages/ProfessorPage";
 import Professors from "./components/Professors";
 import SearchResults from './components/SearchResults';
 
-function App() {
+function App() {  
   return (
     <ChakraProvider value={system}>
       <Router>

@@ -16,7 +16,11 @@ from app.routes.auth import router as auth_router  # Import auth routes
 from app.routes.userProfile import router as profile_router
 from app.routes.search import router as search_router
 
+from app.cache import init_redis, close_redis, set_cache, get_cache, invalidate_cache
+import aiohttp
+
 app = FastAPI()
+
 
 origins = [
     "http://localhost:3000",  # Frontend
@@ -45,6 +49,11 @@ async def init_db():
 async def startup():
     await test_connection()
     await init_db()
+    await init_redis()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_redis()
  
 app.include_router(post_router, prefix="/api", tags=["Posts"])
 app.include_router(course_router, prefix="/api", tags=["Courses"])
