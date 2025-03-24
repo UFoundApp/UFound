@@ -215,6 +215,7 @@ async def verify_code(request: VerifyCodeRequest):
     if expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Verification code has expired")
 
+
     # Check if the code matches
     if record["code"] != request.code:
         raise HTTPException(status_code=400, detail="Invalid verification code")
