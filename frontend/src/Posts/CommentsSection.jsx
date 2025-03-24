@@ -52,6 +52,19 @@ const CommentsSection = ({ postId }) => {
         fetchComments();
     }, [postId]);
 
+    //Delete comment
+    const deleteComment = async (commentId) => {
+        try {
+            await axios.delete(`http://localhost:8000/api/posts/${postId}/comments/${commentId}`);
+            setComments((prevComments) => prevComments.filter((c) => c.id !== commentId));
+            setMessage("Comment deleted successfully!");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to delete comment.");
+            setIsError(true);
+        }
+    }
+
     function addReplyToNestedComments(comments, parentId, newReply) {
         return comments.map((comment) => {
             // If this is the parent comment, append the new reply
