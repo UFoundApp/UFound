@@ -14,6 +14,8 @@ import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt, FaEye } from 'react-icons/fa
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
+import { FaFlag } from 'react-icons/fa';
+import ReportDialog from './Reporting.jsx';
 
 const ViewPost = () => {
     const { id } = useParams();
@@ -134,6 +136,23 @@ const ViewPost = () => {
         }
     };
 
+    const handleReport = async () => {
+        const user = await getUser();
+        if (!user || !user.id) {
+            setMessage("You must be logged in to report a post.");
+            setIsError(true);
+            return;
+        }
+        try {
+            await axios.post(`http://localhost:8000/api/posts/${id}/report?user_id=${user.id}`);
+            setMessage("Post reported successfully.");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to report post.");
+            setIsError(true);
+        }
+    };
+
     if (loading) {
         return (
             <Flex justify="center" align="center" height="100vh">
@@ -161,6 +180,12 @@ const ViewPost = () => {
             )}
 
             <HStack spacing={4} mb={6}>
+            <ReportDialog
+                postId={id}
+                post={post}
+                setMessage={setMessage}
+                setIsError={setIsError}
+                />
                 <Button
                     leftIcon={hasLiked ? <FaThumbsDown /> : <FaRegThumbsUp />}
                     onClick={handleLike}

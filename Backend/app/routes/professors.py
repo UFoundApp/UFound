@@ -7,8 +7,30 @@ from pydantic import BaseModel
 from uuid import UUID
 
 router = APIRouter()
+REPORT_THRESHOLD = 3
 
-# ✅ Fetch detailed professor page
+class ReportRequest(BaseModel):
+    user_id: UUID
+    reason: str
+
+@router.post("/professors/reviews/{review_id}/report")
+async def report_professor_review(review_id: str, report: ReportRequest):
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if any(r.user_id == report.user_id for r in review.reports):
+        raise HTTPException(status_code=400, detail="You have already reported this review")
+
+    review.reports.append(user_id=report.user_id, reason=report.reason)
+
+    if len(review.reports) >= REPORT_THRESHOLD:
+        review.flagged = True   # Flag review if threshold met
+
+    await review.save()
+    return {"message": "Review reported successfully", "reports": len(review.reports)}
+
+# Fetch detailed professor page
 @router.get("/professors/{professor_id}/page")
 async def get_professor_page(professor_id: UUID):
     professor = await ProfessorModel.get(professor_id)

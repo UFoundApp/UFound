@@ -10,7 +10,7 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 router = APIRouter()
-
+REPORT_THRESHOLD = 3
 
 class CommentRequest(BaseModel):
     author_id: UUID
@@ -19,6 +19,29 @@ class CommentRequest(BaseModel):
 
 class LikeRequest(BaseModel):
     user_id: UUID
+
+class ReportRequest(BaseModel):
+    user_id: UUID
+    reason: str 
+
+@router.post("/posts/{post_id}/report")
+async def report_post(post_id: PydanticObjectId, report: ReportRequest):
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Optional: prevent duplicate reports by same user
+    if any(r.user_id == report.user_id for r in post.reports):
+        raise HTTPException(status_code=400, detail="You have already reported this post")
+
+    post.reports.append({"user_id": report.user_id, "reason": report.reason})
+
+    # Example threshold logic (optional)
+    if len(post.reports) >= REPORT_THRESHOLD:
+        post.flagged = True
+
+    await post.save()
+    return {"message": "Post reported", "reports": len(post.reports)}
 
 # Create a new post
 @router.post("/posts", response_model=PostModel)

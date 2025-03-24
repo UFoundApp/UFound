@@ -17,6 +17,10 @@ class CommentModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+class ReportDetail(BaseModel):
+    user_id: UUID
+    reason: str
+
 class PostModel(Document):
     title: str
     content: str
@@ -25,6 +29,8 @@ class PostModel(Document):
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
     author_id: Optional[UUID] = None  # Add author_id field
     views: int = Field(default=0)  # Add views counter
+    reports: List[ReportDetail] = Field(default_factory=list)  # Add reports field
+    flagged: bool = Field(default=False)  # stays False until report threshold met
 
     class Settings:
         collection = "posts"

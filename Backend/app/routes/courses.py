@@ -3,10 +3,39 @@ from app.models.courses import CourseModel, ReviewModel, OverallRatingModel
 from app.courseScrape import scrape_all_pages
 from beanie import PydanticObjectId
 from pydantic import BaseModel
+from uuid import UUID
 import math 
 
+REPORT_THRESHOLD = 3
 
 router = APIRouter()
+
+class ReportRequest(BaseModel):
+    user_id: UUID
+    reason: str
+
+@router.post("/courses/reviews/{course_id}/{review_idx}/report")
+async def report_course_review(course_id: PydanticObjectId, review_idx: int, report: ReportRequest):
+    course = await CourseModel.get(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    try:
+        review = course.reviews[review_idx]
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if any(r.user_id == report.user_id for r in review.reports):
+        raise HTTPException(status_code=400, detail="You have already reported this review")
+
+    review.reports.append(user_id=report.user_id, reason=report.reason)
+
+    if len(review.reports) >= REPORT_THRESHOLD:
+        review.flagged = True  # Flag review if threshold met
+
+    await course.save()
+    return {"message": "Review reported", "reports": len(review.reports)}
+
 
 @router.post("/scrape-courses")
 async def scrape_courses():

@@ -205,8 +205,14 @@ async def verify_code(request: VerifyCodeRequest):
     if not record:
         raise HTTPException(status_code=400, detail="No verification code found for this email")
 
+    expires_at = record["expires_at"]
+
+    #  Normalize to UTC if tzinfo is missing
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
     # Check if the code has expired
-    if record["expires_at"] < datetime.now(timezone.utc):
+    if expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Verification code has expired")
 
     # Check if the code matches
@@ -368,4 +374,3 @@ async def refresh_token(request: Request, response: Response):
         raise Response(status_code=401)
     except jwt.PyJWTError:
         raise Response(status_code=401)
-
