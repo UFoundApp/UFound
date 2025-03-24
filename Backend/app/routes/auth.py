@@ -8,6 +8,7 @@ from app.models.user import UserModel
 from dotenv import load_dotenv
 import os
 import jwt
+#temp
 
 load_dotenv()
 
@@ -174,8 +175,8 @@ async def get_user_info(current_user: UserModel = Depends(get_current_user)):
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
     # Validate email domain
-    if not request.email.endswith("@mail.utoronto.ca"):
-        raise HTTPException(status_code=400, detail="Only @mail.utoronto.ca emails are allowed")
+    # if not request.email.endswith("@mail.utoronto.ca"):
+    #     raise HTTPException(status_code=400, detail="Only @mail.utoronto.ca emails are allowed")
 
     # Generate a 6-digit verification code
     verification_code = generate_verification_code()
