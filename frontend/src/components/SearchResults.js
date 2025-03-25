@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text, Flex } from '@chakra-ui/react';
+import { Box, Text, Flex, Spinner, VStack } from '@chakra-ui/react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import LeftSidebar from './LeftSidebar';  // ✅ Import Sidebar
@@ -9,9 +9,11 @@ const SearchResults = () => {
     const query = searchParams.get('q');
     const type = searchParams.get('type');
     const [posts, setPosts] = useState({ posts: [] });
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (query) {
+            setLoading(true);
             async function fetchResults() {
                 try {
                     let response;
@@ -25,6 +27,8 @@ const SearchResults = () => {
                     setPosts(response?.data || {});
                 } catch (error) {
                     console.error('Error fetching search results:', error);
+                } finally {
+                    setLoading(false);
                 }
             }
             fetchResults();
@@ -57,7 +61,22 @@ const SearchResults = () => {
                 minH="calc(100vh - 60px)"
             >
                 <Box p={4} maxW="900px" mx="auto" bg="gray.50">
-                    <Text fontSize="xl" fontWeight="bold">Search Results:</Text>
+                    {loading ? (
+                        <Flex justify="center" align="center" minH="200px">
+                            <VStack spacing={4}>
+                                <Spinner
+                                    thickness="4px"
+                                    speed="0.65s"
+                                    emptyColor="gray.200"
+                                    color="blue.500"
+                                    size="xl"
+                                />
+                                <Text color="gray.500">Searching for "{query}"...</Text>
+                            </VStack>
+                        </Flex>
+                    ) : (
+                        <Text fontSize="xl" fontWeight="bold">Search Results:</Text>
+                    )}
 
                     {type === "posts" && posts.posts?.map((post) => (
                         <Link key={post._id} to={`/view-post/${post._id}`}>
@@ -90,6 +109,21 @@ const SearchResults = () => {
                             </Box>
                         </Link>
                     ))}
+                </Box>
+            </Box>
+
+            {/* Right Sidebar Area - Fixed */}
+            <Box
+                as="aside"
+                width={{ base: '0', md: '25%' }}
+                display={{ base: 'none', md: 'block' }}
+                bg="gray.50"
+                height="calc(100vh - 60px)"
+                position="fixed"
+                right="0"
+            >
+                <Box width="80%" mr="auto">
+                    {/* Right sidebar content */}
                 </Box>
             </Box>
         </Flex>
