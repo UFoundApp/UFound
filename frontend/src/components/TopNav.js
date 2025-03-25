@@ -48,6 +48,12 @@ const TopNav = () => {
     }
   }, [location.pathname]); // Only trigger when pathname changes
 
+  // Add useEffect to clear suggestions when search type changes
+  useEffect(() => {
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, [searchPosts, searchProfessors, searchCourses]);
+
   const handleAuth = (type) => {
     navigate("/login", { state: { isLogin: type === "signin" } });
   };
@@ -83,7 +89,15 @@ const TopNav = () => {
     }
   };
 
-  const handleSuggestionSelect = (suggestion) => {
+  const handleSuggestionSelect = (suggestion, isSearchAction = false) => {
+    if (isSearchAction) {
+      // Handle "Search..." action
+      navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${type}`);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Handle regular suggestion selection (existing logic)
     if (type === 'posts') {
       navigate(`/view-post/${suggestion._id}`);
     } else if (type === 'courses') {
@@ -134,9 +148,10 @@ const TopNav = () => {
                 onChange={(e) => {
                   setText(e.target.value);
                   setType("posts");
+                  // Don't hide suggestions while fetching new ones
                   fetchSuggestions(e.target.value, "posts");
-                  setShowSuggestions(true);
                 }}
+                onFocus={() => setShowSuggestions(true)}
                 value={text}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -158,6 +173,7 @@ const TopNav = () => {
                   suggestions={suggestions}
                   onSelect={handleSuggestionSelect}
                   type="posts"
+                  query={text}
                 />
               )}
             </Box>
@@ -173,9 +189,10 @@ const TopNav = () => {
                 onChange={(e) => {
                   setText(e.target.value);
                   setType("professors");
+                  // Don't hide suggestions while fetching new ones
                   fetchSuggestions(e.target.value, "professors");
-                  setShowSuggestions(true);
                 }}
+                onFocus={() => setShowSuggestions(true)}
                 value={text}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -197,6 +214,7 @@ const TopNav = () => {
                   suggestions={suggestions}
                   onSelect={handleSuggestionSelect}
                   type="professors"
+                  query={text}
                 />
               )}
             </Box>
@@ -212,9 +230,10 @@ const TopNav = () => {
                 onChange={(e) => {
                   setText(e.target.value);
                   setType("courses");
+                  // Don't hide suggestions while fetching new ones
                   fetchSuggestions(e.target.value, "courses");
-                  setShowSuggestions(true);
                 }}
+                onFocus={() => setShowSuggestions(true)}
                 value={text}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -236,6 +255,7 @@ const TopNav = () => {
                   suggestions={suggestions}
                   onSelect={handleSuggestionSelect}
                   type="courses"
+                  query={text}
                 />
               )}
             </Box>
