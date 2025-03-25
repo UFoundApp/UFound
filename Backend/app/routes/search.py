@@ -46,3 +46,27 @@ async def searchPosts(query: str):
     return {
         "courses": courseList
     }
+
+@router.get("/search/suggestions")
+async def get_search_suggestions(query: str, type: str):
+    query = query.lower()
+    
+    if type == "posts":
+        posts = await PostModel.find({
+            "title": {"$regex": query, "$options": "i"}
+        }).limit(5).to_list()
+        return posts
+        
+    elif type == "courses":
+        courses = await CourseModel.find({
+            "title": {"$regex": f"^{query}", "$options": "i"}
+        }).limit(5).to_list()
+        return courses
+        
+    elif type == "professors":
+        professors = await ProfessorModel.find({
+            "name": {"$regex": query, "$options": "i"}
+        }).limit(5).to_list()
+        return professors
+        
+    return []

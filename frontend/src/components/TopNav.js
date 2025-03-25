@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Flex, Input, Button, Text } from "@chakra-ui/react";
+import { Flex, Input, Button, Text, Box } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isLoggedIn, logout, getUser } from "./AuthPageUtil";
+import SearchSuggestions from "./SearchSuggestions";
+import axios from 'axios';
 
 const TopNav = () => {
   const navigate = useNavigate();
@@ -16,6 +18,10 @@ const TopNav = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true); // Add loading state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [type, setType] = React.useState("posts");
+  const [text, setText] = React.useState("");
 
   // Re-check auth status whenever the route changes
   useEffect(() => {
@@ -33,12 +39,19 @@ const TopNav = () => {
     checkAuthStatus();
   }, [location]);
 
+  // Add useEffect to watch for route changes
+  useEffect(() => {
+    // Clear search text when route changes (except for search results page)
+    if (!location.pathname.includes('/search')) {
+      setText('');
+      setShowSuggestions(false);
+    }
+  }, [location.pathname]); // Only trigger when pathname changes
+
   const handleAuth = (type) => {
     navigate("/login", { state: { isLogin: type === "signin" } });
   };
 
-  const [type, setType] = React.useState("posts");
-  const [text, setText] = React.useState("");
   const handleSearch = (e, type) => {
     if (e.key === "Enter") {
       navigate(`/search?q=${encodeURIComponent(text) + "&type=" + type}`);
@@ -48,6 +61,38 @@ const TopNav = () => {
   const handleLogout = async () => {
     await logout();
     navigate("/login");
+  };
+
+  const fetchSuggestions = async (searchText, type) => {
+    if (!searchText.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/search/suggestions`, {
+        params: { 
+          query: searchText,
+          type: type
+        }
+      });
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionSelect = (suggestion) => {
+    if (type === 'posts') {
+      navigate(`/view-post/${suggestion._id}`);
+    } else if (type === 'courses') {
+      navigate(`/course/${suggestion._id}`);
+    } else if (type === 'professors') {
+      navigate(`/professors/${suggestion._id}`);
+    }
+    setShowSuggestions(false);
+    setText('');
   };
 
   return (
@@ -79,67 +124,121 @@ const TopNav = () => {
         <>
           {/* Search Input */}
           {searchPosts && (
-            <Input
-              placeholder="Search Posts"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("posts");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Posts"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setType("posts");
+                  fetchSuggestions(e.target.value, "posts");
+                  setShowSuggestions(true);
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="posts"
+                />
+              )}
+            </Box>
           )}
           {searchProfessors && (
-            <Input
-              placeholder="Search Professors"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("professors");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Professors"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setType("professors");
+                  fetchSuggestions(e.target.value, "professors");
+                  setShowSuggestions(true);
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="professors"
+                />
+              )}
+            </Box>
           )}
           {searchCourses && (
-            <Input
-              placeholder="Search Courses"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("courses");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Courses"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setType("courses");
+                  fetchSuggestions(e.target.value, "courses");
+                  setShowSuggestions(true);
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="courses"
+                />
+              )}
+            </Box>
           )}
           {!searchCourses && !searchPosts && !searchProfessors && (
             <Input
@@ -155,9 +254,10 @@ const TopNav = () => {
               }}
               _hover={{ bg: "gray.100" }}
               _focus={{
-                bg: "white",
+                bg: "gray.50",
                 borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+                boxShadow: "none",
+                outline: "none"
               }}
             />
           )}
