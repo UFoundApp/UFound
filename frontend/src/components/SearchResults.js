@@ -7,9 +7,14 @@ import LeftSidebar from './LeftSidebar';  // ✅ Import Sidebar
 const SearchResults = () => {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q');
-    const type = searchParams.get('type');
+    const type = searchParams.get('type') || 'posts';  // Default to posts if no type
     const [posts, setPosts] = useState({ posts: [] });
     const [loading, setLoading] = useState(false);
+    const [searchType, setSearchType] = useState(type);
+
+    useEffect(() => {
+        setSearchType(type);
+    }, [type]);
 
     useEffect(() => {
         if (query) {
@@ -17,11 +22,11 @@ const SearchResults = () => {
             async function fetchResults() {
                 try {
                     let response;
-                    if (type === "posts") {
+                    if (searchType === "posts") {
                         response = await axios.get(`http://127.0.0.1:8000/api/search/posts`, { params: { query } });
-                    } else if (type === "professors") {
+                    } else if (searchType === "professors") {
                         response = await axios.get(`http://127.0.0.1:8000/api/search/professors`, { params: { query } });
-                    } else if (type === "courses") {
+                    } else if (searchType === "courses") {
                         response = await axios.get(`http://127.0.0.1:8000/api/search/courses`, { params: { query } });
                     }
                     setPosts(response?.data || {});
@@ -33,7 +38,7 @@ const SearchResults = () => {
             }
             fetchResults();
         }
-    }, [query, type]);
+    }, [query, searchType]);
 
     return (
         <Flex flex="1" bg="gray.50">
@@ -78,7 +83,7 @@ const SearchResults = () => {
                         <Text fontSize="xl" fontWeight="bold">Search Results:</Text>
                     )}
 
-                    {type === "posts" && posts.posts?.map((post) => (
+                    {searchType === "posts" && posts.posts?.map((post) => (
                         <Link key={post._id} to={`/view-post/${post._id}`}>
                             <Box border="1px solid" bg='white' borderColor="gray.200" p={4} mt={4} borderRadius="md" _hover={{ cursor: 'pointer', backgroundColor: 'gray.100' }}>
                                 <Text fontWeight="bold">{post.title}</Text>
@@ -88,7 +93,7 @@ const SearchResults = () => {
                         </Link>
                     ))}
 
-                    {type === "professors" && posts.professors?.map((professor) => (
+                    {searchType === "professors" && posts.professors?.map((professor) => (
                         <Link key={professor._id} to={`/professors/${professor._id}`}>
                             <Box border="1px solid" bg='white' borderColor="gray.200" p={4} mt={4} borderRadius="md" _hover={{ cursor: 'pointer', backgroundColor: 'gray.100' }}>
                                 <Text fontWeight="bold">{professor.name}</Text>
@@ -99,7 +104,7 @@ const SearchResults = () => {
                         </Link>
                     ))}
 
-                    {type === "courses" && posts.courses?.map((course) => (
+                    {searchType === "courses" && posts.courses?.map((course) => (
                         <Link key={course._id} to={`/course/${course._id}`}>
                             <Box border="1px solid" bg='white' borderColor="gray.200" p={4} mt={4} borderRadius="md" _hover={{ cursor: 'pointer', backgroundColor: 'gray.100' }}>
                                 <Text fontWeight="bold">{course.title}</Text>
