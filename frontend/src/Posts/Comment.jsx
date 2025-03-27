@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, HStack, Input, Button, Text, Flex, VStack } from "@chakra-ui/react";
 import { FaReply, FaHeart, FaRegHeart } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
+import { Link } from 'react-router-dom';
 import ReportDialog from "./Reporting.jsx";
 
 const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth }) => {
@@ -32,7 +33,11 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
             {/* Comment Header */}
             <Flex align="center" mb={2} justify="space-between">
                 <Flex align="center">
-                    <Text fontSize="sm" fontWeight="bold">{comment.author_name}</Text>
+                <Link to={`/profile/${comment.author_name}`}>
+                    <Text fontSize="sm" fontWeight="bold" _hover={{ textDecoration: "underline", color: "blue.500" }}>
+                        {comment.author_name}
+                    </Text>
+                    </Link>
                     <Text fontSize="xs" color="gray.500" ml={2}>
                         {new Date(comment.created_at).toLocaleDateString()}
                     </Text>

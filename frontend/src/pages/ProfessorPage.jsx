@@ -12,6 +12,7 @@ import axios from "axios";
 import { FaHeart, FaRegHeart } from "react-icons/fa"; // Import heart icons
 import ReportDialog from "../Posts/Reporting";  
 
+
 const ProfessorPage = () => {
     const { professorId } = useParams();
     const [professor, setProfessor] = useState(null);
@@ -415,7 +416,15 @@ const ProfessorPage = () => {
                                     )}
                                     {review.course_id && <Text fontSize="sm" color="gray.500">Course: {review.course_id}</Text>}
                                     <Text mt={2}>{review.content}</Text>
-                                    <Text fontSize="sm" color="gray.500" mt={2}>By {review.author} | {new Date(review.created_at).toLocaleDateString()}</Text>
+                                    <Text fontSize="sm" color="gray.500" mt={2}>
+                                    By{" "}
+                                    <Link to={`/profile/${review.author}`}>
+                                        <Text as="span" fontWeight="medium" color="blue.500" _hover={{ textDecoration: "underline" }}>
+                                        {review.author}
+                                        </Text>
+                                    </Link>{" "}
+                                    | {new Date(review.created_at).toLocaleDateString()}
+                                    </Text>
                                     <Separator my={2} />
                                     <Text fontSize="sm">Strictness: {review.strictness}/10</Text>
                                     <Text fontSize="sm">Clarity: {review.clarity}/10</Text>

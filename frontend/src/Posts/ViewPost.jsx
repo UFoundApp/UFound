@@ -16,6 +16,8 @@ import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
 import { FaFlag } from 'react-icons/fa';
 import ReportDialog from './Reporting.jsx';
+import { Link } from 'react-router-dom';
+
 
 const ViewPost = () => {
     const { id } = useParams();

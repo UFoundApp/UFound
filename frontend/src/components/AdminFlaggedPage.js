@@ -16,6 +16,7 @@ import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import { LuFolder, LuSquareCheck, LuUser } from "react-icons/lu";
 import { Button } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 
 const AdminFlaggedPage = () => {
   const [flaggedPosts, setFlaggedPosts] = useState([]);
@@ -111,7 +112,9 @@ const AdminFlaggedPage = () => {
                         <Text fontWeight="semibold" mb={2}>Reports:</Text>
                         {post.reports.map((report, idx) => (
                         <Box key={idx} mb={2}>
-                            <Text fontSize="sm" color="gray.600">Reported by: {report.user_name}</Text>
+                            <Text fontSize="sm" color="gray.500" mt={2}>
+                          Reported by: <Link to={`/profile/${report.user_name}`} style={{ color: "#3182ce" }}>{report.user_name}</Link> 
+                          </Text>
                             <Text fontSize="sm" color="red.500">Reason: {report.reason}</Text>
                         </Box>
                         ))}
@@ -132,15 +135,25 @@ const AdminFlaggedPage = () => {
                   <Text>{comment.content}</Text>
                   <Button size="sm" colorScheme="red" mr={2} onClick={() => axios.post(`http://localhost:8000/api/admin/posts/${post_id}/comments/${comment.id}/delete`).then(() => window.location.reload())}>Delete</Button>
                   <Button size="sm" colorScheme="blue" onClick={() => axios.post(`http://localhost:8000/api/admin/posts/${post_id}/comments/${comment.id}/unflag`).then(() => window.location.reload())}>Unflag</Button>
-                  <Text fontSize="sm" color="gray.500" mt={2}>
-                    Author: {comment.author_name} · {new Date(comment.created_at).toLocaleDateString()}
+
+                  {comment.author_name.toLowerCase() === "anonymous" ? (
+                      <Text fontSize="sm" color="gray.500" mt={1}>
+                      Author: {comment.author_name} · {new Date(comment.created_at).toLocaleDateString()}
+                      </Text>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                    Author: <Link to={`/profile/${comment.author_name}`} style={{ color: "#3182ce" }}>{comment.author_name}</Link> · {new Date(comment.created_at).toLocaleDateString()}
                   </Text>
+                  )}
+
                   {comment.reports && comment.reports.length > 0 && (
                     <Box mt={4} borderTop="1px solid #e2e8f0" pt={2}>
                       <Text fontWeight="semibold" mb={2}>Reports:</Text>
                       {comment.reports.map((report, rIdx) => (
                         <Box key={rIdx} mb={2}>
-                          <Text fontSize="sm" color="gray.600">Reported by: {report.user_name}</Text>
+                          <Text fontSize="sm" color="gray.500" mt={2}>
+                          Reported by: <Link to={`/profile/${report.user_name}`} style={{ color: "#3182ce" }}>{report.user_name}</Link> 
+                          </Text>
                           <Text fontSize="sm" color="red.500">Reason: {report.reason}</Text>
                         </Box>
                       ))}
@@ -164,16 +177,25 @@ const AdminFlaggedPage = () => {
                     <Text>{review.content}</Text>
                     <Button size="sm" colorScheme="red" mr={2} onClick={() => axios.delete(`http://localhost:8000/api/admin/courses/${review.course_id}/reviews/${review.review_index}`).then(() => window.location.reload())}>Delete</Button>
                     <Button size="sm" colorScheme="blue" onClick={() => axios.post(`http://localhost:8000/api/admin/courses/${review.course_id}/reviews/${review.review_index}/unflag`).then(() => window.location.reload())}>Unflag</Button>
-                    <Text fontSize="sm" color="gray.500" mt={1}>
-                    Author: {review.author} · {new Date(review.created_at).toLocaleDateString()}
-                    </Text>
+                   
+                    {review.author.toLowerCase() === "anonymous" ? (
+                      <Text fontSize="sm" color="gray.500" mt={1}>
+                      Author: {review.author} · {new Date(review.created_at).toLocaleDateString()}
+                      </Text>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                    Author: <Link to={`/profile/${review.author}`} style={{ color: "#3182ce" }}>{review.author}</Link> · {new Date(review.created_at).toLocaleDateString()}
+                  </Text>
+                  )}
 
                     {review.reports && review.reports.length > 0 && (
                     <Box mt={4} borderTop="1px solid #e2e8f0" pt={2}>
                         <Text fontWeight="semibold" mb={2}>Reports:</Text>
                         {review.reports.map((r, idx) => (
                         <Box key={idx} mb={2}>
-                            <Text fontSize="sm" color="gray.600">Reported by: {r.user_name}</Text>
+                            <Text fontSize="sm" color="gray.500" mt={2}>
+                          Reported by: <Link to={`/profile/${r.user_name}`} style={{ color: "#3182ce" }}>{r.user_name}</Link> 
+                          </Text>
                             <Text fontSize="sm" color="red.500">Reason: {r.reason}</Text>
                         </Box>
                         ))}
@@ -195,16 +217,25 @@ const AdminFlaggedPage = () => {
                     <Text>{review.content}</Text>
                     <Button size="sm" colorScheme="red" mr={2} onClick={() => axios.delete(`http://localhost:8000/api/admin/professors/reviews/${review._id}`).then(() => window.location.reload())}>Delete</Button>
                     <Button size="sm" colorScheme="blue" onClick={() => axios.post(`http://localhost:8000/api/admin/professors/reviews/${review._id}/unflag`).then(() => window.location.reload())}>Unflag</Button>
-                    <Text fontSize="sm" color="gray.500" mt={1}>
-                    Author: {review.author} · {new Date(review.created_at).toLocaleDateString()}
-                    </Text>
+
+                    {review.author.toLowerCase() === "anonymous" ? (
+                      <Text fontSize="sm" color="gray.500" mt={1}>
+                      Author: {review.author} · {new Date(review.created_at).toLocaleDateString()}
+                      </Text>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                    Author: <Link to={`/profile/${review.author}`} style={{ color: "#3182ce" }}>{review.author}</Link> · {new Date(review.created_at).toLocaleDateString()}
+                  </Text>
+                  )}
 
                     {review.reports && review.reports.length > 0 && (
                     <Box mt={4} borderTop="1px solid #e2e8f0" pt={2}>
                         <Text fontWeight="semibold" mb={2}>Reports:</Text>
                         {review.reports.map((report, idx) => (
                         <Box key={idx} mb={2}>
-                            <Text fontSize="sm" color="gray.600">Reported by: {report.user_name}</Text>
+                            <Text fontSize="sm" color="gray.500" mt={2}>
+                          Reported by: <Link to={`/profile/${report.user_name}`} style={{ color: "#3182ce" }}>{report.user_name}</Link> 
+                          </Text>
                             <Text fontSize="sm" color="red.500">Reason: {report.reason}</Text>
                         </Box>
                         ))}
