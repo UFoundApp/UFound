@@ -162,7 +162,10 @@ const ViewPost = () => {
     }
 
     return (
-        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
+        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8} position="relative" >
+            <Box position="absolute" top="16px" right="16px">
+                <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
+            </Box>
             <Text fontSize="sm" color="gray.500" mb={2}>
                 {post.author} • {new Date(post.created_at).toLocaleDateString()}
             </Text>
@@ -180,12 +183,6 @@ const ViewPost = () => {
             )}
 
             <HStack spacing={4} mb={6}>
-            <ReportDialog
-                postId={id}
-                post={post}
-                setMessage={setMessage}
-                setIsError={setIsError}
-                />
                 <Button
                     leftIcon={hasLiked ? <FaThumbsDown /> : <FaRegThumbsUp />}
                     onClick={handleLike}

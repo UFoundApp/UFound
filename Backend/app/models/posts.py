@@ -4,6 +4,11 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
+class ReportDetail(BaseModel):
+    user_id: UUID
+    user_name: str
+    reason: str
+
 class CommentModel(BaseModel):
     id: UUID = Field(default_factory=uuid4)  # Unique ID for comment
     content: str
@@ -13,13 +18,11 @@ class CommentModel(BaseModel):
     parent_id: Optional[UUID] = None  # Changed to UUID
     replies: Optional[List["CommentModel"]] = Field(default_factory=list) 
     likes: List[UUID] = Field(default_factory=list)  # ✅ Added likes field
+    reports: List[ReportDetail] = Field(default_factory=list)  # ✅ Added reports field
+    flagged: bool = Field(default=False)  # stays False until report threshold met
 
     class Config:
         arbitrary_types_allowed = True
-
-class ReportDetail(BaseModel):
-    user_id: UUID
-    reason: str
 
 class PostModel(Document):
     title: str

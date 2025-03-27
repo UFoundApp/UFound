@@ -17,6 +17,7 @@ import UserProfile from "./components/UserProfile";
 import ProfessorPage from "./pages/ProfessorPage"; // ✅ Import Professor Page
 import Professors from "./components/Professors";
 import SearchResults from './components/SearchResults';
+import AdminFlaggedPage from './components/AdminFlaggedPage'; // ✅ Import Admin Flagged Page
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
               <Route path="/profile/:username" element={<UserProfile />} />  {/* ✅ Added User Profile Page */}
               <Route path="/search" element={<SearchResults />} />
               <Route path="/search" element={<SearchResults />} />
+              <Route path="/admin" element={<AdminFlaggedPage />} />
             </Routes>
           </Box>
         </Flex>

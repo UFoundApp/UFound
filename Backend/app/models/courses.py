@@ -11,6 +11,7 @@ class OverallRatingModel(BaseModel):
 
 class ReportDetail(BaseModel):
     user_id: UUID
+    user_name: str
     reason: str
 
 class ReviewModel(BaseModel):

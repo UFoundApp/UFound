@@ -23,6 +23,7 @@ import  RatingInput  from './RatingInput';
 import { FaPlusCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
+import ReportDialog from '../Posts/Reporting.jsx';
 import dayjs from 'dayjs';
 
 const CoursePage = () => {
@@ -315,7 +316,10 @@ const CoursePage = () => {
                 <VStack spacing={3} align="stretch">
                     {course.reviews.length > 0 ? (
                     course.reviews.map((r, index) => (
-                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.100">
+                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.100" position="relative">
+                                <Box position="absolute" top="8px" right="8px">
+                                <ReportDialog endpoint={`http://localhost:8000/api/courses/reviews/${courseId}/${index}/report`} />
+                                </Box>
                                 <Text fontWeight="bold">{r.author}</Text>
                                 <RatingGroup.Root readOnly count={5} value={Math.floor((r.ratingE + r.ratingMD + r.ratingAD ) / 3) } size="sm" >
                                     <RatingGroup.HiddenInput />

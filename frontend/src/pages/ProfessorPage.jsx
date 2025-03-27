@@ -10,6 +10,7 @@ import LeftSidebar from "../components/LeftSidebar";
 import { getUser } from "../components/AuthPageUtil";
 import axios from "axios";
 import { FaHeart, FaRegHeart } from "react-icons/fa"; // Import heart icons
+import ReportDialog from "../Posts/Reporting";  
 
 const ProfessorPage = () => {
     const { professorId } = useParams();
@@ -110,7 +111,8 @@ const ProfessorPage = () => {
     };
 
     const handleLikeReview = async (reviewId) => {
-        const user = getUser();
+    const user = await getUser();
+
         if (!user) {
             // User must be logged in to like a review
             setReviewMessage("You must be logged in to like a review.");
@@ -378,24 +380,32 @@ const ProfessorPage = () => {
                     {professor.reviews.length > 0 ? (
                         <VStack spacing={4} align="stretch">
                             {professor.reviews.map((review, index) => (
-                                <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white">
+                                <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white" position="relative">
                                     <Flex justify="space-between" align="center">
                                         <Text fontSize="md" fontWeight="bold">⭐ {review.overall_rating}/5</Text>
                                         <HStack spacing={2}>
-                                            {/* Heart icon with count */}
                                             {review.likes.includes(getUser()?.id) ? (
-                                                <FaHeart 
-                                                    color="red" 
-                                                    cursor="pointer" 
-                                                    onClick={() => handleLikeReview(review._id)}
-                                                />
+                                            <FaHeart 
+                                                color="red" 
+                                                cursor="pointer" 
+                                                onClick={() => handleLikeReview(review._id)}
+                                            />
                                             ) : (
-                                                <FaRegHeart 
-                                                    cursor="pointer" 
-                                                    onClick={() => handleLikeReview(review._id)}
-                                                />
+                                            <FaRegHeart 
+                                                cursor="pointer" 
+                                                onClick={() => handleLikeReview(review._id)}
+                                            />
                                             )}
                                             <Text>{review.likes.length}</Text>
+
+                                            {/* Add the ReportDialog button */}
+                                            <ReportDialog 
+                                            endpoint={`http://localhost:8000/api/professors/reviews/${review._id}/report`}
+                                            postId={review._id}
+                                            type="professor"
+                                            setMessage={setReviewMessage}
+                                            setIsError={() => {}} // optional, you can modify this to match your error handling
+                                            />
                                         </HStack>
                                     </Flex>
                                     {likeMessages && likeMessages[review._id] && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, HStack, Input, Button, Text, Flex, VStack } from "@chakra-ui/react";
 import { FaReply, FaHeart, FaRegHeart } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
+import ReportDialog from "./Reporting.jsx";
 
 const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth }) => {
     const [replyText, setReplyText] = useState("");
@@ -26,6 +27,7 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
             borderColor="gray.200"
             bg={depth % 2 === 0 ? "gray.50" : "gray.100"} // Alternate background for nesting
             ml={depth > 0 ? 4 : 0} // Indent replies
+            position="relative"
         >
             {/* Comment Header */}
             <Flex align="center" mb={2} justify="space-between">
@@ -37,14 +39,18 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
                 </Flex>
 
                 {/* Like Button */}
-                <HStack spacing={2} fontSize="sm" color="gray.500">
-                    {hasLiked ? (
-                        <FaHeart color="red" cursor="pointer" onClick={() => handleUnlike(comment.id)} />
-                    ) : (
-                        <FaRegHeart cursor="pointer" onClick={() => handleLike(comment.id)} />
-                    )}
-                    <Text>{(comment.likes ?? []).length}</Text>
-                </HStack>
+                <HStack position="absolute" top="8px" right="8px" spacing={3}>
+  {/* ❤️ Like icon */}
+  {hasLiked ? (
+    <FaHeart color="red" cursor="pointer" onClick={() => handleUnlike(comment.id)} />
+  ) : (
+    <FaRegHeart cursor="pointer" onClick={() => handleLike(comment.id)} />
+  )}
+  <Text fontSize="xs">{(comment.likes ?? []).length}</Text>
+
+  {/* 🏴 Report button */}
+  <ReportDialog endpoint={`http://localhost:8000/api/posts/${postId}/comments/${comment.index}/report`} />
+</HStack>
             </Flex>
 
             {/* Comment Content */}

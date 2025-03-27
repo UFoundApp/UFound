@@ -2,8 +2,9 @@ import { Button, CloseButton, Dialog, Portal, Text, Textarea } from "@chakra-ui/
 import { useState } from "react";
 import { getUser } from "../components/AuthPageUtil";
 import axios from "axios";
+import { FiFlag } from "react-icons/fi"; // <-- Clean outline-style flag icon
 
-const ReportDialog = ({ postId }) => {
+const ReportDialog = ({ endpoint }) => {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ msg: "", isError: false });
@@ -32,18 +33,18 @@ const ReportDialog = ({ postId }) => {
 
     try {
       setIsSubmitting(true);
-      await axios.post(`http://localhost:8000/api/posts/${postId}/report`, {
+      await axios.post(endpoint, {
         user_id: user.id,
         reason: reason,
       });
-      setFeedback({ msg: "Post reported successfully.", isError: false });
-      setIsOpen(false); // Auto-close on success
+      setFeedback({ msg: "Reported successfully.", isError: false });
+      setIsOpen(false);
       resetForm();
     } catch (err) {
       if (err.response?.status === 400 && err.response?.data?.detail) {
         setFeedback({ msg: err.response.data.detail, isError: true });
       } else {
-        setFeedback({ msg: "Failed to report post.", isError: true });
+        setFeedback({ msg: "Failed to report.", isError: true });
       }
     } finally {
       setIsSubmitting(false);
@@ -53,30 +54,38 @@ const ReportDialog = ({ postId }) => {
   return (
     <>
       <Button
-        colorScheme="red"
+        variant="ghost"
         size="sm"
-        leftIcon={<CloseButton size="xs" />}
+        p={1}
+        _hover={{ bg: "gray.100" }}
+        _active={{ bg: "gray.200" }}
+        aria-label="Report"
         onClick={handleOpen}
       >
-        Report
+        <FiFlag size={20} />
       </Button>
+
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
             <Dialog.Content>
               <Dialog.Header>
-                <Dialog.Title>Report this Post</Dialog.Title>
+                <Dialog.Title>Report</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
                 <Textarea
-                  placeholder="Why are you reporting this post?"
+                  placeholder="Why are you reporting this?"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   disabled={isSubmitting}
                 />
                 {feedback.msg && (
-                  <Text color={feedback.isError ? "red.500" : "green.500"} mt={2} fontSize="sm">
+                  <Text
+                    color={feedback.isError ? "red.500" : "green.500"}
+                    mt={2}
+                    fontSize="sm"
+                  >
                     {feedback.msg}
                   </Text>
                 )}

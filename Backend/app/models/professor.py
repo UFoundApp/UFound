@@ -19,6 +19,7 @@ class ProfessorModel(Document):
 
 class ReportDetail(BaseModel):
     user_id: UUID
+    user_name: str
     reason: str
 
 class ProfessorReviewModel(Document):
