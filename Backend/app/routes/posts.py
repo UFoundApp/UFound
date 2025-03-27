@@ -26,6 +26,16 @@ class ReportRequest(BaseModel):
     user_id: UUID
     reason: str 
 
+def find_comment_and_apply_action(comments, comment_id, action):
+    for comment in comments:
+        if str(comment.id) == str(comment_id):
+            return action(comment)
+        if comment.replies:
+            result = find_comment_and_apply_action(comment.replies, comment_id, action)
+            if result:
+                return result
+    return None
+
 @router.delete("/admin/posts/{post_id}")
 async def delete_post(post_id: str):
     post = await PostModel.get(post_id)
@@ -45,55 +55,75 @@ async def unflag_post(post_id: str):
     return {"message": "Post unflagged"}
 
 @router.post("/admin/posts/{post_id}/comments/{comment_id}/delete")
-async def delete_comment(post_id: str, comment_id: str):
-    post = await PostModel.get(PydanticObjectId(post_id))
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-
-    original_length = len(post.comments)
-    post.comments = [comment for comment in post.comments if str(comment.id) != comment_id]
-
-    if len(post.comments) == original_length:
-        raise HTTPException(status_code=404, detail="Comment not found")
-
-    await post.save()
-    return {"message": "Comment permanently deleted"}
-
-
-@router.post("/admin/posts/{post_id}/comments/{comment_id}/unflag")
-async def unflag_comment(post_id: str, comment_id: str):
+async def delete_nested_comment(post_id: str, comment_id: str):
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    updated = False
-    for comment in post.comments:
-        if str(comment.id) == comment_id:  # ensure proper comparison
-            comment.flagged = False
-            comment.reports = []
-            updated = True
-            break
+    def remove_comment(comments):
+        for i, c in enumerate(comments):
+            if str(c.id) == comment_id:
+                comments.pop(i)
+                return True
+            if remove_comment(c.replies):
+                return True
+        return False
+
+    deleted = remove_comment(post.comments)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    await post.save()
+    return {"message": "Nested comment deleted"}
+
+
+
+
+@router.post("/admin/posts/{post_id}/comments/{comment_id}/unflag")
+async def unflag_nested_comment(post_id: str, comment_id: str):
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    def unflag_comment(comments):
+        for c in comments:
+            if str(c.id) == comment_id:
+                c.flagged = False
+                c.reports = []
+                return True
+            if unflag_comment(c.replies):
+                return True
+        return False
+
+    updated = unflag_comment(post.comments)
 
     if not updated:
         raise HTTPException(status_code=404, detail="Comment not found")
 
     await post.save()
-    return {"message": "Comment unflagged"}
+    return {"message": "Nested comment unflagged"}
 
+
+
+def extract_flagged_comments(comments, post_id, results):
+    for comment in comments:
+        if comment.flagged:
+            results.append({
+                "post_id": str(post_id),
+                "comment": comment.dict()
+            })
+        if comment.replies:
+            extract_flagged_comments(comment.replies, post_id, results)
 
 @router.get("/admin/flagged/comments")
 async def get_flagged_comments():
-    posts = await PostModel.find().to_list()
-    flagged_comments = []
+    posts = await PostModel.find_all().to_list()
+    results = []
     for post in posts:
-        for i, comment in enumerate(post.comments):
-            if comment.flagged:
-                flagged_comments.append({
-                    "post_id": str(post.id),
-                    "comment_index": i,
-                    "comment": comment
-                })
-    return flagged_comments
+        extract_flagged_comments(post.comments, post.id, results)
+    return results
+
 
 
 @router.get("/admin/flagged/posts")
@@ -127,30 +157,29 @@ async def get_flagged_comments():
     return flagged_comments
 
 
-@router.post("/posts/{post_id}/comments/{comment_idx}/report")
-async def report_comment(post_id: PydanticObjectId, comment_idx: int, report: ReportRequest):
+@router.post("/posts/{post_id}/comments/{comment_id}/report")
+async def report_comment(post_id: PydanticObjectId, comment_id: str, report: ReportRequest):
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-
-    try:
-        comment = post.comments[comment_idx]
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Comment not found")
-
-    if any(r.user_id == report.user_id for r in comment.reports):
-        raise HTTPException(status_code=400, detail="You have already reported this comment")
-
+    
     user = await UserModel.get(report.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    comment.reports.append(ReportDetail(user_id=report.user_id, reason=report.reason, user_name=user.username))
     
-    if len(comment.reports) >= 1:
+    def apply_report(comment):
+        if any(r.user_id == report.user_id for r in comment.reports):
+            raise HTTPException(status_code=400, detail="You already reported this comment")
+        comment.reports.append(ReportDetail(user_id=report.user_id, reason=report.reason, user_name=user.username))
         comment.flagged = True
-
+        return True
+    
+    if not find_comment_and_apply_action(post.comments, comment_id, apply_report):
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
     await post.save()
-    return {"message": "Comment reported", "reports": len(comment.reports)}
+    return {"message": "Comment reported"}
+
 
 @router.post("/posts/{post_id}/report")
 async def report_post(post_id: PydanticObjectId, report: ReportRequest):

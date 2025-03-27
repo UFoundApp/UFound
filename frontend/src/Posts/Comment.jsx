@@ -49,7 +49,7 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
   <Text fontSize="xs">{(comment.likes ?? []).length}</Text>
 
   {/* 🏴 Report button */}
-  <ReportDialog endpoint={`http://localhost:8000/api/posts/${postId}/comments/${comment.index}/report`} />
+  <ReportDialog endpoint={`http://localhost:8000/api/posts/${postId}/comments/${comment.id}/report`} />
 </HStack>
             </Flex>
 
