@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from app.models.courses import CourseModel, ReviewModel
+from app.models.courses import CourseModel, ReviewModel, OverallRatingModel
 from app.courseScrape import scrape_all_pages
 from beanie import PydanticObjectId
 from pydantic import BaseModel
+import math 
 
 
 router = APIRouter()
@@ -29,46 +30,32 @@ async def get_courses(page: int = 0, limit: int = 20):
 async def get_course(course_id: PydanticObjectId):
     """Fetch a single course by ID, including its reviews"""
     course = await CourseModel.get(course_id)
+
     if not course:
-        raise HTTPException
+        raise HTTPException(status_code=404, detail="Course not found")
+
     return course
 
-@router.get("/courses/get_overall_rating/{course_id}")
-async def get_overall_rating(course_id: PydanticObjectId):
-    course = await CourseModel.get(course_id)
-    if not course:
-        raise HTTPException
-    
-    total = 0
-    n = 0
-    # Calculate the average rating
-    for review_id in course.reviews:
-        review = await ReviewModel.get(review_id)
-        total += review.rating
-        n += 1
-    
-    if total == 0:
-        return {"average_rating": 0}
-    else:
-        return {"average_rating": total / n}
 
-@router.get("/courses/get_post/{review_id}")
-async def get_review(review_id: PydanticObjectId):
-    review = await ReviewModel.get(review_id)
-    if not review:
-        raise HTTPException
-    return review
-    
+  
 @router.post("/courses/{course_id}/review")
 async def create_course_review(course_id: PydanticObjectId, review: ReviewModel):
     course = await CourseModel.get(course_id)
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-    
-    await review.insert()
+        raise HTTPException(status_code=404, detail="Course not found")   
+
+    #update the ratings for all fields
+    course.ratings.average_rating_E = math.floor((course.ratings.average_rating_E + review.ratingE) / 2)
+    course.ratings.average_rating_MD = math.floor((course.ratings.average_rating_MD + review.ratingMD) / 2)
+    course.ratings.average_rating_AD = math.floor((course.ratings.average_rating_AD + review.ratingAD) / 2)
+
+    # get overal average 
+
+    overall = (course.ratings.average_rating_E + course.ratings.average_rating_MD + course.ratings.average_rating_AD) / 3
+    course.rating = math.floor(overall)
     
     # Update the course's reviews array
-    course.reviews.append(review.id)
+    course.reviews.append(review)
     await course.save()
     
     return review

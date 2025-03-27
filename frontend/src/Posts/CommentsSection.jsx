@@ -22,7 +22,16 @@ const CommentsSection = ({ postId }) => {
     const [isCommenting, setIsCommenting] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
-    const user = getUser();
+
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        async function fetchUser() {
+            const userData = await getUser();
+            setUser(userData);
+        }
+        fetchUser();
+    }, []);
 
     useEffect(() => {
         if (!postId) return;
@@ -45,21 +54,21 @@ const CommentsSection = ({ postId }) => {
 
     function addReplyToNestedComments(comments, parentId, newReply) {
         return comments.map((comment) => {
-          // If this is the parent comment, append the new reply
-          if (comment.id === parentId) {
+            // If this is the parent comment, append the new reply
+            if (comment.id === parentId) {
+                return {
+                    ...comment,
+                    replies: [...comment.replies, newReply],
+                };
+            }
+            // Otherwise, recursively look in its replies
             return {
-              ...comment,
-              replies: [...comment.replies, newReply],
+                ...comment,
+                replies: addReplyToNestedComments(comment.replies, parentId, newReply),
             };
-          }
-          // Otherwise, recursively look in its replies
-          return {
-            ...comment,
-            replies: addReplyToNestedComments(comment.replies, parentId, newReply),
-          };
         });
-      }
-      
+    }
+
 
     const handleComment = async (parentId = null, replyText = null) => {
         const commentText = parentId ? replyText : comment;
@@ -85,12 +94,12 @@ const CommentsSection = ({ postId }) => {
 
             if (parentId) {
                 setComments((prevComments) =>
-                  addReplyToNestedComments(prevComments, parentId, response.data.comment)
+                    addReplyToNestedComments(prevComments, parentId, response.data.comment)
                 );
-              } else {
+            } else {
                 setComments((prevComments) => [response.data.comment, ...prevComments]);
-              }
-              
+            }
+
             setComment("");
             setMessage("Your comment was posted successfully!");
             setIsError(false);
@@ -105,30 +114,30 @@ const CommentsSection = ({ postId }) => {
 
     function updateCommentLikes(comments, commentId, userId, action) {
         return comments.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              likes: action === "like"
-                ? [...comment.likes, userId]
-                : comment.likes.filter(id => id !== userId),
-            };
-          }
-          return { ...comment, replies: updateCommentLikes(comment.replies, commentId, userId, action) };
+            if (comment.id === commentId) {
+                return {
+                    ...comment,
+                    likes: action === "like"
+                        ? [...comment.likes, userId]
+                        : comment.likes.filter(id => id !== userId),
+                };
+            }
+            return { ...comment, replies: updateCommentLikes(comment.replies, commentId, userId, action) };
         });
-      }
+    }
 
-      const handleLike = async (commentId) => {
+    const handleLike = async (commentId) => {
         if (!user || !user.id) {
             setMessage("You must be logged in to like a comment.");
             setIsError(true);
             return;
         }
-    
+
         try {
             await axios.post(`http://localhost:8000/api/posts/${postId}/comments/${commentId}/like`, {
                 user_id: user.id
             });
-    
+
             // Update state
             setComments(prevComments => updateCommentLikes(prevComments, commentId, user.id, "like"));
         } catch (error) {
@@ -136,19 +145,19 @@ const CommentsSection = ({ postId }) => {
             setIsError(true);
         }
     };
-    
+
     const handleUnlike = async (commentId) => {
         if (!user || !user.id) {
             setMessage("You must be logged in to unlike a comment.");
             setIsError(true);
             return;
         }
-    
+
         try {
             await axios.post(`http://localhost:8000/api/posts/${postId}/comments/${commentId}/unlike`, {
                 user_id: user.id
             });
-    
+
             // Update state
             setComments(prevComments => updateCommentLikes(prevComments, commentId, user.id, "unlike"));
         } catch (error) {
@@ -156,8 +165,8 @@ const CommentsSection = ({ postId }) => {
             setIsError(true);
         }
     };
-    
-      
+
+
 
     return (
         <Box mt={6}>
@@ -175,19 +184,19 @@ const CommentsSection = ({ postId }) => {
                 <Spinner size="md" />
             ) : (
                 <VStack align="stretch" spacing={3}>
-                {comments.map((c) => (
-                    <Comment 
-                        key={c.id} 
-                        comment={c} 
-                        postId={postId} 
-                        handleReply={handleComment} 
-                        handleLike={handleLike} 
-                        handleUnlike={handleUnlike}
-                        depth={0} 
-                    />
-                ))}
-            </VStack>
-            
+                    {comments.map((c) => (
+                        <Comment
+                            key={c.id}
+                            comment={c}
+                            postId={postId}
+                            handleReply={handleComment}
+                            handleLike={handleLike}
+                            handleUnlike={handleUnlike}
+                            depth={0}
+                        />
+                    ))}
+                </VStack>
+
             )}
 
             <HStack mt={4}>

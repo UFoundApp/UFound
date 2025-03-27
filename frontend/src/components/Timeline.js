@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, Flex, HStack, Icon, IconButton, Spacer } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHeart, FaRegHeart, FaComment, FaEye, FaShare } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaComment, FaEye, FaShareAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { getUser } from './AuthPageUtil';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchUser() {
+      const userData = await getUser();
+      setUser(userData);
+    }
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -102,49 +111,43 @@ const Timeline = () => {
   const handleLike = async (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
     e.stopPropagation(); // Stop event propagation
-    
-    const user = getUser();
+
     if (!user || !user.id) {
-      console.error("You must be logged in to like a post.");
-      return;
+        console.error("You must be logged in to like a post.");
+        return;
     }
-    
+
     try {
-      // Find the post
-      const post = posts.find(p => p._id === postId);
-      const hasLiked = post.likes.includes(user.id);
-      
-      if (hasLiked) {
-        // Unlike the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/unlike?user_id=${user.id}`);
-        
-        // Update state
-        setPosts(prevPosts => prevPosts.map(p => {
-          if (p._id === postId) {
-            return {
-              ...p,
-              likes: p.likes.filter(id => id !== user.id)
-            };
-          }
-          return p;
-        }));
-      } else {
-        // Like the post
-        await axios.post(`http://localhost:8000/api/posts/${postId}/like?user_id=${user.id}`);
-        
-        // Update state
-        setPosts(prevPosts => prevPosts.map(p => {
-          if (p._id === postId) {
-            return {
-              ...p,
-              likes: [...p.likes, user.id]
-            };
-          }
-          return p;
-        }));
-      }
+        const post = posts.find(p => p._id === postId);
+        const hasLiked = post.likes.includes(user.id);
+
+        if (hasLiked) {
+            // Unlike
+            await axios.post(`http://localhost:8000/api/posts/${postId}/unlike?user_id=${user.id}`);
+            setPosts(prevPosts => prevPosts.map(p => {
+                if (p._id === postId) {
+                    return {
+                        ...p,
+                        likes: p.likes.filter(id => id !== user.id)
+                    };
+                }
+                return p;
+            }));
+        } else {
+            // Like
+            await axios.post(`http://localhost:8000/api/posts/${postId}/like?user_id=${user.id}`);
+            setPosts(prevPosts => prevPosts.map(p => {
+                if (p._id === postId) {
+                    return {
+                        ...p,
+                        likes: [...p.likes, user.id]
+                    };
+                }
+                return p;
+            }));
+        }
     } catch (error) {
-      console.error("Error updating like:", error);
+        console.error("Error updating like:", error);
     }
   };
 
@@ -166,9 +169,9 @@ const Timeline = () => {
   return (
       <Box>
         <Flex justifyContent="space-between" alignItems="center">
-          <Text fontSize="xl" fontWeight="bold" color="primary">
+          {/* <Text fontSize="xl" fontWeight="bold" color="primary">
             Timeline
-          </Text>
+          </Text> */}
         </Flex>
         {posts.map((post) => (
             <Box
@@ -205,8 +208,8 @@ const Timeline = () => {
                 {/* Like button */}
                 <Flex alignItems="center" onClick={(e) => handleLike(e, post._id)}>
                   <Icon 
-                    as={getUser() && post.likes.includes(getUser().id) ? FaHeart : FaRegHeart} 
-                    color={getUser() && post.likes.includes(getUser().id) ? "red.500" : "gray.500"} 
+                    as={user && post.likes.includes(user.id) ? FaHeart : FaRegHeart} 
+                    color={user && post.likes.includes(user.id) ? "red.500" : "gray.500"} 
                     cursor="pointer" 
                     mr={1}
                   />
@@ -232,14 +235,10 @@ const Timeline = () => {
                 <Spacer />
                 
                 {/* Share button */}
-                <IconButton
-                  icon={<FaShare />}
-                  aria-label="Share post"
-                  size="sm"
-                  variant="ghost"
-                  color="gray.500"
-                  onClick={(e) => handleShare(e, post._id)}
-                />
+                <Flex alignItems="center" ml={4} onClick={(e) => handleShare(e, post._id)} cursor="pointer">
+                    <Icon as={FaShareAlt} color="gray.500" mr={1} />
+                    <Text fontSize="sm" color="gray.600">Share</Text>
+                </Flex>
               </Flex>
             </Box>
         ))}

@@ -97,7 +97,7 @@ const ReviewPage = () => {
       >
         <Box p={4} maxW="900px" mx="auto" bg="gray.50">
           <Heading as="h1" size="xl" mb={6}>
-            Course Reviews {courses.length > 0 && `(${courses.length} loaded)`}
+            Courses
           </Heading>
           
           {courses.length === 0 ? (
@@ -124,9 +124,13 @@ const ReviewPage = () => {
                   >
                     <Text fontWeight="bold" fontSize="lg">{course.title}</Text>
                     <Text fontSize="md" color="gray.600">{course.description}</Text>
-                    {course.rating && (
+                    {course.rating ? (
                       <Text fontSize="sm" color="gray.500">
                         Rating: ⭐ {course.rating.toFixed(1)}/5
+                      </Text>
+                    ) : (
+                      <Text fontSize="sm" color="gray.500">
+                        Rating: ---
                       </Text>
                     )}
                   </Box>
@@ -141,22 +145,6 @@ const ReviewPage = () => {
               )}
             </VStack>
           )}
-        </Box>
-      </Box>
-
-      {/* Right Sidebar Area - Fixed */}
-      <Box
-        as="aside"
-        width={{ base: '0', md: '25%' }}
-        display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
-        height="calc(100vh - 60px)"
-        position="fixed"
-        right="0"
-      >
-        {/* Actual Sidebar Content - Moved inward */}
-        <Box width="80%" mr="auto">
-          <RightSidebar />
         </Box>
       </Box>
     </Flex>

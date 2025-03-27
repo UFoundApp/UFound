@@ -110,10 +110,11 @@ const Professors = () => {
               {professors.map((professor) => (
                 <Link 
                   as={RouterLink} 
-                  to={`/professors/${professor.id}`} 
+                  to={`/professors/${professor._id}`} 
                   key={professor.id}
                 >
                   <Box 
+                    width="100%"
                     p={4} 
                     border="1px" 
                     borderColor="gray.300" 
@@ -145,22 +146,6 @@ const Professors = () => {
               )}
             </VStack>
           )}
-        </Box>
-      </Box>
-
-      {/* Right Sidebar Area - Fixed */}
-      <Box
-        as="aside"
-        width={{ base: '0', md: '25%' }}
-        display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
-        height="calc(100vh - 60px)"
-        position="fixed"
-        right="0"
-      >
-        {/* Actual Sidebar Content - Moved inward */}
-        <Box width="80%" mr="auto">
-          <RightSidebar />
         </Box>
       </Box>
     </Flex>

@@ -1,15 +1,6 @@
 // src/components/UserProfile.js
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Heading, 
-  VStack, 
-  Input,
-  Textarea,
-  Button,
-  Text,
-  Flex,
-} from '@chakra-ui/react';
+import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, updateStoredUsername } from './AuthPageUtil';
 import axios from 'axios';
@@ -18,15 +9,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 
 function UserProfile() {
-  const { username } = useParams();
+  const { username } = useParams(); // username from URL
   const navigate = useNavigate();
-  const currentUser = getUser();
-  const [message, setMessage] = useState('');
+  
+  // State for current signed-in user
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // State for profile data (for the profile being viewed)
   const [profile, setProfile] = useState({
     username: '',
     bio: '',
     posts: []
   });
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const user = await getUser();
+      setCurrentUser(user);
+    };
+    fetchCurrentUser();
+  }, [username, navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -45,12 +48,14 @@ function UserProfile() {
     fetchProfile();
   }, [username]);
 
+  // Handle saving profile changes (only for own profile)
   const handleSave = async () => {
     try {
       await axios.put(`http://localhost:8000/api/profile/${username}`, profile);
       setMessage('Profile updated successfully');
       
-      if (profile.username !== username && isOwnProfile) {
+      // If the username was changed, update stored username and navigate to the new URL
+      if (profile.username !== username) {
         updateStoredUsername(profile.username);
         navigate(`/profile/${profile.username}`);
       }
@@ -63,44 +68,34 @@ function UserProfile() {
 
   return (
     <Flex flex="1">
-      {/* Left Sidebar - Fixed */}
+      {/* Left Sidebar */}
       <Box
         as="aside"
-        width={{ base: '0', md: '20%' }}
+        width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
         bg="gray.50"
         height="calc(100vh - 60px)"
         position="fixed"
         left="0"
       >
-        <LeftSidebar />
+        <Box width="80%" ml="auto">
+          <LeftSidebar />
+        </Box>
       </Box>
 
-      {/* Main Content - Center aligned with margins for sidebars */}
+      {/* Main Content */}
       <Box 
         flex="1"
-        bg="white"
-        ml={{ base: 0, md: '20%' }}
-        mr={{ base: 0, md: '20%' }}
+        bg="gray.50"
+        ml={{ base: 0, md: '25%' }}
+        mr={{ base: 0, md: '25%' }}
         overflowY="scroll"
         minH="calc(100vh - 75px)"
-        css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.200',
-            borderRadius: '24px',
-          },
-        }}
       >
         <Box p={4} maxW="800px" mx="auto">
           <VStack spacing={4} align="stretch">
             {isOwnProfile ? (
-              // Show editable profile for own profile
+              // Editable profile for the current user
               <>
                 <Heading size="lg" mb={2}>Your Profile</Heading>
                 {message && (
@@ -126,7 +121,7 @@ function UserProfile() {
                 </Button>
               </>
             ) : (
-              // Show read-only profile for other users
+              // Read-only view
               <>
                 <Heading mb={4}>{profile.username}'s Profile</Heading>
                 <Box p={6} borderWidth="1px" borderRadius="lg" bg="gray.50">
@@ -143,10 +138,10 @@ function UserProfile() {
         </Box>
       </Box>
 
-      {/* Right Sidebar - Fixed */}
-      <Box
+       {/* Right Sidebar - Fixed */}
+       <Box
         as="aside"
-        width={{ base: '0', md: '20%' }}
+        width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
         bg="gray.50"
         height="calc(100vh - 60px)"
@@ -155,9 +150,22 @@ function UserProfile() {
       >
         <Box
           bg="gray.50"
+          height="85vh"
           p={4}
           width="100%"
           overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'gray.200',
+              borderRadius: '24px',
+            },
+          }}
         >
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">

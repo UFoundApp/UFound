@@ -58,7 +58,7 @@ function PasswordSetup({ email, onSuccess, resetPasswordState }) {
           confirm_password: confirmPassword
         });
 
-        if (response.data.message === "User registered successfully") {
+        if (response.data.message === "User registered and logged in successfully") {
           setMessage("🎉 Registration successful! Redirecting...");
           setTimeout(() => onSuccess(), 1000);
         } else {

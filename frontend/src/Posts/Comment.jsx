@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, HStack, Input, Button, Text, Flex, VStack } from "@chakra-ui/react";
 import { FaReply, FaHeart, FaRegHeart } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
@@ -6,7 +6,16 @@ import { getUser } from "../components/AuthPageUtil";
 const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth }) => {
     const [replyText, setReplyText] = useState("");
     const [showReplyInput, setShowReplyInput] = useState(false);
-    const user = getUser();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        async function fetchUser() {
+            const userData = await getUser();
+            setUser(userData);
+        }
+        fetchUser();
+    }, []);
+
     const hasLiked = (comment.likes ?? []).includes(user?.id);
 
     return (
@@ -34,8 +43,8 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
                     ) : (
                         <FaRegHeart cursor="pointer" onClick={() => handleLike(comment.id)} />
                     )}
-            <Text>{(comment.likes ?? []).length}</Text>
-</HStack>
+                    <Text>{(comment.likes ?? []).length}</Text>
+                </HStack>
             </Flex>
 
             {/* Comment Content */}

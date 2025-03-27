@@ -37,7 +37,6 @@ async def init_db():
         PostModel, 
         UserModel, 
         CourseModel, 
-        ReviewModel, 
         ProfessorModel, 
         ProfessorReviewModel
     ])
