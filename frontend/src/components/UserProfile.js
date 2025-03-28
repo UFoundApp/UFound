@@ -11,10 +11,10 @@ import { faComments } from '@fortawesome/free-solid-svg-icons';
 function UserProfile() {
   const { username } = useParams(); // username from URL
   const navigate = useNavigate();
-  
+
   // State for current signed-in user
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   // State for profile data (for the profile being viewed)
   const [profile, setProfile] = useState({
     username: '',
@@ -48,12 +48,33 @@ function UserProfile() {
     fetchProfile();
   }, [username]);
 
+  const isOwnProfile = currentUser?.username === username;
+
+  // 🔵 Function to check if username is available
+  const checkUsernameAvailability = async (newUsername) => {
+    try {
+      const res = await axios.get(`http://localhost:8000/api/profile/${newUsername}`);
+      return false; // Exists
+    } catch (error) {
+      return error.response?.status === 404; // 404 means available
+    }
+  };
+
   // Handle saving profile changes (only for own profile)
   const handleSave = async () => {
+    // check uniqueness of username
+    if (profile.username !== username) {
+      const available = await checkUsernameAvailability(profile.username);
+      if (!available) {
+        setMessage("Username is already taken.");
+        return;
+      }
+    }
+
     try {
       await axios.put(`http://localhost:8000/api/profile/${username}`, profile);
       setMessage('Profile updated successfully');
-      
+
       // If the username was changed, update stored username and navigate to the new URL
       if (profile.username !== username) {
         updateStoredUsername(profile.username);
@@ -63,8 +84,6 @@ function UserProfile() {
       setMessage(error.response?.data?.detail || 'Error updating profile');
     }
   };
-
-  const isOwnProfile = currentUser?.username === username;
 
   return (
     <Flex flex="1">
@@ -84,7 +103,7 @@ function UserProfile() {
       </Box>
 
       {/* Main Content */}
-      <Box 
+      <Box
         flex="1"
         bg="gray.50"
         ml={{ base: 0, md: '25%' }}
@@ -99,8 +118,11 @@ function UserProfile() {
               <>
                 <Heading size="lg" mb={2}>Your Profile</Heading>
                 {message && (
-                  <Text color={message.includes('Error') ? 'red.500' : 'green.500'}>
-                    {message}
+                  <Text color={
+                    message.includes('Error') || message.includes('taken')
+                      ? 'red.500'
+                      : 'green.500'
+                  }>                    {message}
                   </Text>
                 )}
                 <Text mb={2}>Username</Text>
@@ -138,8 +160,8 @@ function UserProfile() {
         </Box>
       </Box>
 
-       {/* Right Sidebar - Fixed */}
-       <Box
+      {/* Right Sidebar - Fixed */}
+      <Box
         as="aside"
         width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
@@ -150,9 +172,22 @@ function UserProfile() {
       >
         <Box
           bg="gray.50"
+          height="85vh"
           p={4}
           width="100%"
           overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'gray.200',
+              borderRadius: '24px',
+            },
+          }}
         >
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">
@@ -170,7 +205,7 @@ function UserProfile() {
           >
             <VStack spacing={2} align="stretch">
               {profile.posts.map((post) => (
-                <Flex 
+                <Flex
                   key={post._id}
                   _hover={{ bg: 'gray.100' }}
                   p={2}
@@ -178,11 +213,11 @@ function UserProfile() {
                   cursor="pointer"
                   onClick={() => navigate(`/view-post/${post._id}`)}
                 >
-                  <FontAwesomeIcon 
-                    icon={faComments} 
-                    color="gray.600" 
-                    size="lg" 
-                    style={{ marginTop: '4px' }} 
+                  <FontAwesomeIcon
+                    icon={faComments}
+                    color="gray.600"
+                    size="lg"
+                    style={{ marginTop: '4px' }}
                   />
                   <Box ml={3}>
                     <Text color="gray.700" fontSize="sm">

@@ -1,21 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { Flex, Input, Button, Text } from "@chakra-ui/react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { Flex, Input, Button, Text, Box } from "@chakra-ui/react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { isLoggedIn, logout, getUser } from "./AuthPageUtil";
+import SearchSuggestions from "./SearchSuggestions";
+import axios from 'axios';
+import { debounce } from 'lodash';
 
 const TopNav = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const isAuthPage = location.pathname === "/login";
-  const isResetPasswordPage = location.pathname === "/reset-password";
-  const searchPosts = location.pathname === "/home";
-  const searchProfessors = location.pathname === "/professors";
-  const searchCourses = location.pathname === "/courses";
+  const [searchParams] = useSearchParams();
+  const currentType = searchParams.get('type');
+  const navigate = useNavigate();
+  
+  // Update search type conditions
+  const searchPosts = (location.pathname === "/search" && currentType === "posts") || 
+                     location.pathname === "/home" || 
+                     location.pathname.includes("/view-post/");
+                     
+  const searchProfessors = (location.pathname === "/search" && currentType === "professors") || 
+                          location.pathname === "/professors" || 
+                          location.pathname.includes("/professors/");
+                          
+  const searchCourses = (location.pathname === "/search" && currentType === "courses") || 
+                       location.pathname === "/courses" || 
+                       location.pathname.includes("/course/");
 
   // State to store auth status and username
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true); // Add loading state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [type, setType] = React.useState("posts");
+  const [text, setText] = React.useState("");
 
   // Re-check auth status whenever the route changes
   useEffect(() => {
@@ -33,15 +50,29 @@ const TopNav = () => {
     checkAuthStatus();
   }, [location]);
 
+  // Add useEffect to watch for route changes
+  useEffect(() => {
+    // Clear search text when route changes (except for search results page)
+    if (!location.pathname.includes('/search')) {
+      setText('');
+      setShowSuggestions(false);
+    }
+  }, [location.pathname]); // Only trigger when pathname changes
+
+  // Add useEffect to clear suggestions when search type changes
+  useEffect(() => {
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, [searchPosts, searchProfessors, searchCourses]);
+
   const handleAuth = (type) => {
     navigate("/login", { state: { isLogin: type === "signin" } });
   };
 
-  const [type, setType] = React.useState("posts");
-  const [text, setText] = React.useState("");
   const handleSearch = (e, type) => {
     if (e.key === "Enter") {
-      navigate(`/search?q=${encodeURIComponent(text) + "&type=" + type}`);
+      setShowSuggestions(false);
+      navigate(`/search?q=${encodeURIComponent(text)}&type=${type}`);
     }
   };
 
@@ -50,13 +81,77 @@ const TopNav = () => {
     navigate("/login");
   };
 
+  const handleSuggestionSelect = (suggestion, isSearchAction = false) => {
+    if (isSearchAction) {
+      navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${type}`);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setShowSuggestions(false);
+    setText('');
+    
+    // Handle regular suggestion selection
+    if (type === 'posts') {
+      navigate(`/view-post/${suggestion._id}`);
+    } else if (type === 'courses') {
+      navigate(`/course/${suggestion._id}`);
+    } else if (type === 'professors') {
+      navigate(`/professors/${suggestion._id}`);
+    }
+  };
+
+  // Debounce the fetchSuggestions function
+  const debouncedFetchSuggestions = useCallback(
+    debounce((searchText, type) => {
+      if (!searchText.trim()) {
+        setSuggestions([]);
+        return;
+      }
+
+      axios.get(`http://127.0.0.1:8000/api/search/suggestions`, {
+        params: { 
+          query: searchText,
+          type: type
+        }
+      })
+      .then(response => {
+        setSuggestions(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching suggestions:', error);
+        setSuggestions([]);
+      });
+    }, 300),
+    []
+  );
+
+  // Use the debounced function
+  const fetchSuggestions = (searchText, type) => {
+    debouncedFetchSuggestions(searchText, type);
+  };
+
+  // Update onChange handlers for each search input
+  const handleSearchChange = (e, searchType) => {
+    const value = e.target.value;
+    setText(value);
+    setType(searchType);
+    if (value.trim()) {
+      setShowSuggestions(true);
+      fetchSuggestions(value, searchType);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
   return (
     <Flex
       bg="white"
       boxShadow="0 2px 4px rgba(0,0,0,0.2)"
       p={4}
       alignItems="center"
-      justifyContent={isResetPasswordPage ? "flex-start" : "space-between"}
+      justifyContent={location.pathname === "/login" || location.pathname === "/reset-password" ? "flex-start" : "space-between"}
       borderBottom="1px"
       borderColor="gray.200"
       position="relative"
@@ -75,71 +170,131 @@ const TopNav = () => {
       </Text>
 
       {/* Only show these elements if NOT on the auth or reset password page */}
-      {!isAuthPage && !isResetPasswordPage && (
+      {!location.pathname.includes('/login') && !location.pathname.includes('/reset-password') && (
         <>
           {/* Search Input */}
           {searchPosts && (
-            <Input
-              placeholder="Search Posts"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("posts");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Posts"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => handleSearchChange(e, "posts")}
+                onFocus={() => {
+                  if (text.trim()) {
+                    setShowSuggestions(true);
+                    fetchSuggestions(text, "posts");
+                  }
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="posts"
+                  query={text}
+                />
+              )}
+            </Box>
           )}
           {searchProfessors && (
-            <Input
-              placeholder="Search Professors"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("professors");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Professors"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => handleSearchChange(e, "professors")}
+                onFocus={() => {
+                  if (text.trim()) {
+                    setShowSuggestions(true);
+                    fetchSuggestions(text, "professors");
+                  }
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="professors"
+                  query={text}
+                />
+              )}
+            </Box>
           )}
           {searchCourses && (
-            <Input
-              placeholder="Search Courses"
-              maxW="400px"
-              bg="gray.50"
-              border="1px"
-              borderColor="gray.200"
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-              onKeyDown={(e) => {
-                setType("courses");
-                handleSearch(e, type);
-              }}
-              _hover={{ bg: "gray.100" }}
-              _focus={{
-                bg: "white",
-                borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
-              }}
-            />
+            <Box position="relative" width="400px">
+              <Input
+                placeholder="Search Courses"
+                width="100%"
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                onChange={(e) => handleSearchChange(e, "courses")}
+                onFocus={() => {
+                  if (text.trim()) {
+                    setShowSuggestions(true);
+                    fetchSuggestions(text, "courses");
+                  }
+                }}
+                value={text}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e, type);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                _hover={{ bg: "gray.100" }}
+                _focus={{
+                  bg: "gray.50",
+                  borderColor: "primary",
+                  boxShadow: "none",
+                  outline: "none"
+                }}
+              />
+              {showSuggestions && (
+                <SearchSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSuggestionSelect}
+                  type="courses"
+                  query={text}
+                />
+              )}
+            </Box>
           )}
           {!searchCourses && !searchPosts && !searchProfessors && (
             <Input
@@ -155,9 +310,10 @@ const TopNav = () => {
               }}
               _hover={{ bg: "gray.100" }}
               _focus={{
-                bg: "white",
+                bg: "gray.50",
                 borderColor: "primary",
-                boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
+                boxShadow: "none",
+                outline: "none"
               }}
             />
           )}

@@ -148,22 +148,6 @@ const Professors = () => {
           )}
         </Box>
       </Box>
-
-      {/* Right Sidebar Area - Fixed */}
-      <Box
-        as="aside"
-        width={{ base: '0', md: '25%' }}
-        display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
-        height="calc(100vh - 60px)"
-        position="fixed"
-        right="0"
-      >
-        {/* Actual Sidebar Content - Moved inward */}
-        <Box width="80%" mr="auto">
-          <RightSidebar />
-        </Box>
-      </Box>
     </Flex>
   );
 };

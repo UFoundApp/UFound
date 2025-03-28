@@ -41,7 +41,39 @@ const CoursePage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
+
     const { showAlert } = useContext(AlertContext);
+
+    const formatDate = (dateString) => {
+        const postDate = new Date(dateString + 'Z'); // Ensure UTC parsing
+        const estDate = new Date(
+          postDate.toLocaleString("en-US", { timeZone: "America/Toronto" })
+        );
+      
+        const now = new Date(
+          new Date().toLocaleString("en-US", { timeZone: "America/Toronto" })
+        );
+      
+        const diffInMs = now - estDate;
+      
+        const diffInMinutes = Math.floor(diffInMs / (60 * 1000));
+        if (diffInMinutes < 1) return "just now";
+        if (diffInMinutes < 60) return `${diffInMinutes}m`;
+      
+        const diffInHours = Math.floor(diffInMs / (60 * 60 * 1000));
+        if (diffInHours < 24) return `${diffInHours}h`;
+      
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays === 1) return "yesterday";
+        if (diffInDays <= 6) return `${diffInDays} days`;
+      
+        return estDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: now.getFullYear() !== estDate.getFullYear() ? "numeric" : undefined,
+        });
+      };      
+
 
      const fetchCourse = useCallback(async () => {
         try {
@@ -338,7 +370,7 @@ const CoursePage = () => {
                                         ))}
                                     </RatingGroup.Control>
                                 </RatingGroup.Root>
-                                <Text fontSize="sm" color="gray.500">{new Date(r.created_at).toLocaleString()}</Text>
+                                <Text fontSize="sm" color="gray.500">{formatDate(r.created_at)}</Text>
                                 <Text mt={2}>{r.content}</Text>
                             </Box>
                         ))
