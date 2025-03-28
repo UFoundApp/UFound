@@ -13,3 +13,4 @@ class UserModel(Document):
     comments: List[UUID] = Field(default_factory=list)  # Only store Comment IDs
     bio: Optional[str] = Field(default=None)
     posts: List[str] = Field(default_factory=list)  # Store post IDs, defaults to empty list
+    is_uoft: bool = Field(default=False)

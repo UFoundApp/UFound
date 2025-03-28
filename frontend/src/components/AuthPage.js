@@ -110,10 +110,10 @@ function AuthPage() {
 
     if (isSending) return; // Prevent multiple requests
 
-    if (!email.endsWith("@mail.utoronto.ca")) {
-      alert("Only @mail.utoronto.ca emails are allowed.");
-      return;
-    }
+    // if (!email.endsWith("@mail.utoronto.ca")) {
+    //   alert("Only @mail.utoronto.ca emails are allowed.");
+    //   return;
+    // }
     
     setIsSending(true); // Disable button & show loading state
     

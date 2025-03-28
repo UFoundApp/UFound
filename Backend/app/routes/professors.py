@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Request
 from app.models.professor import ProfessorModel, ProfessorReviewModel
 from beanie import PydanticObjectId  # Needed for MongoDB ObjectId
 from typing import List, Optional, Union
 from app.models.courses import CourseModel
+from app.models.user import UserModel 
+from app.routes.auth import get_current_user
 from pydantic import BaseModel
 from uuid import UUID
 
@@ -74,7 +76,17 @@ async def get_professor_reviews(professor_id: UUID):
 
 # ✅ Add a review for a professor
 @router.post("/professors/{professor_id}/reviews", response_model=ProfessorReviewModel)
-async def add_professor_review(professor_id: UUID, review: ProfessorReviewCreate):
+async def add_professor_review(professor_id: UUID, review: ProfessorReviewCreate, request: Request):
+    current_user = await get_current_user(request)
+    print("Current user:", current_user)  # Print current user to the console
+
+    # If current_user is None or doesn't have the `is_uoft` attribute
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="User is not authenticated") 
+           
+    if not current_user.is_uoft:
+        raise HTTPException(status_code=403, detail="Only UofT-verified users can submit reviews")
+   
     review_data = ProfessorReviewModel(professor_id=professor_id, **review.dict())
     await review_data.insert()
     return review_data

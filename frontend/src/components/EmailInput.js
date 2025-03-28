@@ -16,10 +16,10 @@ function EmailInput({ onSuccess, resetPasswordState }) {
     e.preventDefault();
     setMessage("");
 
-    if (!email.endsWith("@mail.utoronto.ca")) {
-      setMessage("Only @mail.utoronto.ca emails are allowed.");
-      return;
-    }
+    // if (!email.endsWith("@mail.utoronto.ca")) {
+    //   setMessage("Only @mail.utoronto.ca emails are allowed.");
+    //   return;
+    // }
 
     setLoading(true);
     try {

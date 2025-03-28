@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VStack, Input, Textarea, Button, Box, Text } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -10,22 +10,30 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const user = getUser();
+  const [user, setUser] = useState(null);
 
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const u = await getUser();
+      setUser(u);
+    };
+    loadUser();
+  }, []);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
+    
     try {
-      const response = await axios.post("http://localhost:8000/api/posts", {
+      const response = await axios.post("http://127.0.01:8000/api/posts", {
         title,
         content,
-        created_at: new Date(),
-        likes: [],
-        comments: [],
-        author_id: user.id,
-      });
+      }, {
+        withCredentials: true,
+      }
+    );
       if (response.data) {
         setMessage("Post created successfully!");
         setTimeout(() => navigate("/"), 1500);
@@ -44,7 +52,11 @@ function CreatePost() {
           <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <Textarea placeholder="What's on your mind?" value={content} onChange={(e) => setContent(e.target.value)} required />
           <Button type="submit" colorScheme="blue" isLoading={loading}>Post</Button>
-          {message && <Text color="green.500">{message}</Text>}
+          {message && (
+            <Text color={message.includes("Failed") ? "red.500" : "green.500"}>
+              {message}
+            </Text>
+)}
         </VStack>
       </form>
     </Box>

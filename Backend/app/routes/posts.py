@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Request
 from app.models.posts import PostModel, CommentModel
 from app.models.user import UserModel
 from beanie import PydanticObjectId  # Needed for MongoDB ObjectId
 from uuid import UUID, uuid4
 from bson import ObjectId
 from app.models.user import UserModel
+from app.routes.auth import get_current_user
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel
@@ -13,29 +14,41 @@ router = APIRouter()
 
 
 class CommentRequest(BaseModel):
-    author_id: UUID
     content: str
     parent_id: Optional[UUID] = None
 
 class LikeRequest(BaseModel):
     user_id: UUID
 
+class PostCreateRequest(BaseModel):
+    title: str
+    content: str
+
 # Create a new post
 @router.post("/posts", response_model=PostModel)
-async def create_post(post: PostModel):
-    # Initialize views to 0 if not provided
-    if not hasattr(post, 'views') or post.views is None:
-        post.views = 0
-        
-    # First, create the post
+async def create_post(request: Request, post_data: PostCreateRequest = Body(...)):
+    current_user = await get_current_user(request)
+    print("Current user:", current_user)
+    
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    post = PostModel(
+        title=post_data.title,
+        content=post_data.content,
+        created_at=datetime.now(timezone.utc),
+        author_id=current_user.id,
+        likes=[],
+        comments=[],
+        views=0
+    )
     await post.insert()
     
     # Get the user and update their posts array
-    if hasattr(post, 'author_id'):
-        user = await UserModel.find_one(UserModel.id == post.author_id)
-        if user:
-            user.posts.append(str(post.id))  # Add the post ID to user's posts array
-            await user.save()
+    user = await UserModel.find_one(UserModel.id == current_user.id)
+    if user:
+        user.posts.append(str(post.id))
+        await user.save()
     
     return post
 
@@ -54,7 +67,13 @@ async def get_post(post_id: PydanticObjectId):
     return post
 
 @router.post("/posts/{post_id}/like")
-async def like_post(post_id: PydanticObjectId, user_id: UUID):
+async def like_post(post_id: PydanticObjectId, request: Request):
+
+    current_user = await get_current_user(request)
+    user_id = current_user.id
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -67,7 +86,12 @@ async def like_post(post_id: PydanticObjectId, user_id: UUID):
     return {"message": "Post liked", "likes_count": len(post.likes)}
 
 @router.post("/posts/{post_id}/unlike")
-async def unlike_post(post_id: PydanticObjectId, user_id: UUID):
+async def unlike_post(post_id: PydanticObjectId, request: Request):
+    current_user = await get_current_user(request)
+    user_id = current_user.id
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -88,28 +112,27 @@ def find_comment_by_id(comments: List[CommentModel], comment_id: UUID) -> Option
             return found
     return None
 
-@router.post("/posts/{post_id}/comment")
-async def add_comment(post_id: PydanticObjectId, request: CommentRequest = Body(...)):
+async def add_comment(post_id: PydanticObjectId, request: Request, comment_data: CommentRequest = Body(...)):
+    current_user = await get_current_user(request)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated") 
+
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    user = await UserModel.find_one(UserModel.id == request.author_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     new_comment = CommentModel(
         id=uuid4(),
-        content=request.content,
-        author_id=request.author_id,
-        author_name=user.username,
+        content=comment_data.content,
+        author_id=current_user.id,
+        author_name=current_user.username,
         created_at=datetime.now(timezone.utc),
-        parent_id=request.parent_id,
+        parent_id=comment_data.parent_id,
         replies=[]
     )
 
-    if request.parent_id:
-        parent_comment = find_comment_by_id(post.comments, request.parent_id)
+    if comment_data.parent_id:
+        parent_comment = find_comment_by_id(post.comments, comment_data.parent_id)
         if not parent_comment:
             raise HTTPException(status_code=404, detail="Parent comment not found")
         parent_comment.replies.append(new_comment)
