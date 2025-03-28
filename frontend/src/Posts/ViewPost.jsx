@@ -25,7 +25,6 @@ const ViewPost = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [views, setViews] = useState(0);
-    const [authorName, setAuthorName] = useState("Anonymous");
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
@@ -147,7 +146,7 @@ const ViewPost = () => {
     return (
         <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
             <Text fontSize="sm" color="gray.500" mb={2}>
-                {post.author} • {new Date(post.created_at).toLocaleDateString()}
+                {post.author ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
             </Text>
             <Heading as="h1" size="lg" mb={3}>
                 {post.title}

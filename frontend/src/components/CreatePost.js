@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VStack, Input, Textarea, Button, Box, Text } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +12,7 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const user = getUser();
+
   const [anon, setAnon] = useState(false);
   const [author, setAuthor] = useState("")
 
@@ -28,9 +28,10 @@ function CreatePost() {
         created_at: new Date(),
         likes: [],
         comments: [],
-        author_id: user.id,
+        author_id: author.id,
+        author: anon ? "Anonymous" : author.username
       });
-      console.log("USERNAME: ", user.username)
+      
       if (response.data) {
         setMessage("Post created successfully!");
         setTimeout(() => navigate("/"), 1500);
@@ -41,6 +42,13 @@ function CreatePost() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const fetchedUser = await getUser();
+      setAuthor(fetchedUser);
+    };
+    fetchUser();
+  }, []);
 
   return (
     <Box maxW="600px" mx="auto" mt={10} p={6} bg="white" borderRadius="lg" boxShadow="lg">

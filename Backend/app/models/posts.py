@@ -25,6 +25,7 @@ class PostModel(Document):
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
     author_id: Optional[UUID] = None  # Add author_id field
     views: int = Field(default=0)  # Add views counter
+    author: Optional[str] = ""
 
     class Settings:
         collection = "posts"
