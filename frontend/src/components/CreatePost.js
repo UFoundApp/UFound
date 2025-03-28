@@ -3,6 +3,8 @@ import { VStack, Input, Textarea, Button, Box, Text } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getUser } from './AuthPageUtil';
+import { For, HStack, Switch } from "@chakra-ui/react"
+
 
 function CreatePost() {
   const [title, setTitle] = useState("");
@@ -11,6 +13,8 @@ function CreatePost() {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
   const user = getUser();
+  const [anon, setAnon] = useState(false);
+  const [author, setAuthor] = useState("")
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +30,7 @@ function CreatePost() {
         comments: [],
         author_id: user.id,
       });
+      console.log("USERNAME: ", user.username)
       if (response.data) {
         setMessage("Post created successfully!");
         setTimeout(() => navigate("/"), 1500);
@@ -36,9 +41,30 @@ function CreatePost() {
     setLoading(false);
   };
 
+
   return (
     <Box maxW="600px" mx="auto" mt={10} p={6} bg="white" borderRadius="lg" boxShadow="lg">
-      <Text fontSize="2xl" mb={4}>Create a Post</Text>
+      <Box position={"relative"} mb={8}>
+        <Text fontSize="2xl" mb={4}>Create a Post</Text>
+        <HStack gap="8">
+
+            <Switch.Root 
+            key={"lg"} size={"lg"}
+            checked={anon}
+            onCheckedChange={(e) => setAnon(e.checked)}
+            >
+              <Switch.HiddenInput />
+
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+              <Switch.Label>Post Anonymously</Switch.Label>
+              
+            </Switch.Root>
+      </HStack>
+
+
+    </Box>
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
           <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -52,3 +78,4 @@ function CreatePost() {
 }
 
 export default CreatePost;
+

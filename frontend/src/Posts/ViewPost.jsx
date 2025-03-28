@@ -25,6 +25,7 @@ const ViewPost = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [views, setViews] = useState(0);
+    const [authorName, setAuthorName] = useState("Anonymous");
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
@@ -37,6 +38,7 @@ const ViewPost = () => {
                 if (!isMounted) return; // Don't update state if component unmounted
                 
                 setPost(response.data);
+                console.log("RESPONSE: ", response.data);
                 setLikes(response.data.likes.length);
                 setViews(response.data.views || 0);
 
