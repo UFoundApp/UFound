@@ -207,11 +207,11 @@ const CommentsSection = ({ postId }) => {
                     isDisabled={isCommenting}
                 />
                 <IconButton
-                    icon={<FaCommentAlt />}
                     onClick={() => handleComment()}
                     aria-label="Add Comment"
                     isLoading={isCommenting}
-                />
+                > <FaCommentAlt color="rgb(255, 255, 255)"  />
+                </IconButton>
             </HStack>
         </Box>
     );

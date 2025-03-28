@@ -7,10 +7,15 @@ import {
   Text,
 } from '@chakra-ui/react';
 
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
 function EmailInput({ onSuccess, resetPasswordState }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const { showAlert } = useContext(AlertContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +23,7 @@ function EmailInput({ onSuccess, resetPasswordState }) {
 
     if (!email.endsWith("@mail.utoronto.ca")) {
       setMessage("Only @mail.utoronto.ca emails are allowed.");
+      showAlert("error", "surface", "Email Error", "Only @mail.utoronto.ca emails are allowed.");
       return;
     }
 
@@ -30,6 +36,7 @@ function EmailInput({ onSuccess, resetPasswordState }) {
           setMessage("");
         } else {
           setMessage("This email is not registered.");
+          showAlert("error", "surface", "Email Error", "This email is not registered" );
           setLoading(false);
           return;
         }
@@ -41,13 +48,16 @@ function EmailInput({ onSuccess, resetPasswordState }) {
       
       if (response.data.message === "Verification code sent") {
         setMessage("Verification code sent! Please check your email.");
+        showAlert("success", "surface", "Email Sent", "Verification code sent! Please check your email.");
         onSuccess(email);
       } else {
         setMessage("Failed to send verification code. Please try again.");
+        showAlert("error", "surface", "Email Error", "Failed to send verification code. Please try again.");
       }
     } catch (error) {
       console.error("Error in email verification:", error);
       setMessage(error.response?.data?.detail || "Failed to send verification email.");
+      showAlert("error", "surface", "Email Error", error.response?.data?.detail || "Failed to send verification email.");
     }
     setLoading(false);
   };

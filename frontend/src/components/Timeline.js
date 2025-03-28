@@ -5,10 +5,15 @@ import { FaHeart, FaRegHeart, FaComment, FaEye, FaShareAlt } from 'react-icons/f
 import axios from 'axios';
 import { getUser } from './AuthPageUtil';
 
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const { showAlert } = useContext(AlertContext);
 
   useEffect(() => {
     async function fetchUser() {
@@ -23,6 +28,7 @@ const Timeline = () => {
       try {
         const response = await fetch('http://localhost:8000/api/posts'); // Adjust URL as needed
         if (!response.ok) {
+          showAlert("error", "surface", "Error", "Failed to fetch posts");
           throw new Error('Failed to fetch posts');
         }
         const data = await response.json();
@@ -39,6 +45,7 @@ const Timeline = () => {
         
         setPosts(postsWithViews);
       } catch (error) {
+        showAlert("error", "surface", "Error", "Failed to fetch posts");
         console.error('Error fetching posts:', error);
       }
     }
@@ -161,9 +168,10 @@ const Timeline = () => {
     const postUrl = `${window.location.origin}/view-post/${postId}`;
     navigator.clipboard.writeText(postUrl)
       .then(() => {
-        alert("Post link copied to clipboard!");
+        showAlert("success", "surface", "Success", "Link copied to clipboard");
       })
       .catch(err => {
+        showAlert("error", "surface", "Error", "Failed to copy link");
         console.error("Failed to copy link:", err);
       });
   };

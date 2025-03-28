@@ -23,7 +23,10 @@ import  RatingInput  from './RatingInput';
 import { FaPlusCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
-import dayjs from 'dayjs';
+
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
 
 const CoursePage = () => {
     const { courseId } = useParams();
@@ -37,6 +40,9 @@ const CoursePage = () => {
     const [isPostingReview, setIsPostingReview] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+
+
+    const { showAlert } = useContext(AlertContext);
 
     const formatDate = (dateString) => {
         const postDate = new Date(dateString + 'Z'); // Ensure UTC parsing
@@ -68,6 +74,7 @@ const CoursePage = () => {
         });
       };      
 
+
      const fetchCourse = useCallback(async () => {
         try {
             const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
@@ -77,6 +84,7 @@ const CoursePage = () => {
         } catch (error) {
             setMessage("Failed to load course.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "An error occurred while loading course");
         } finally {
             setLoading(false);
         }
@@ -95,6 +103,7 @@ const CoursePage = () => {
         } catch (error) {
             setMessage("Failed to post review.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "An error occurred while posting review");
         } finally {
             setIsPostingReview(false);
             setTimeout(() => setMessage(""), 3000);
@@ -113,6 +122,7 @@ const CoursePage = () => {
             //console.log("Review is empty.");
             setMessage("Review cannot be empty.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "Review cannot be empty.");
             return;
         }
 
@@ -120,6 +130,7 @@ const CoursePage = () => {
             //console.log("Rating is empty.");
             setMessage("Rating cannot be empty.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "Rating cannot be empty.");
             return;
         }
 
@@ -128,6 +139,7 @@ const CoursePage = () => {
             //console.log("User not logged in.");
             setMessage("You must be logged in to add a review.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "You must be logged in to add a review.");
             return;
         }
 
