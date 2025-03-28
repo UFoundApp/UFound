@@ -1,12 +1,19 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
 from app.cache import set_cache, get_cache, invalidate_cache
 
-router = APIRouter(prefix="/api/cache", tags=["cache"])
+router = APIRouter()
+
+# Define a Pydantic model for the request body
+class CacheUpdateRequest(BaseModel):
+    key: str
+    value: dict
+    expiration: int = 3600  # Optional, defaults to 3600
 
 @router.post("/update")
-async def update_cache(key: str, value: dict, expiration: int = 3600):
-    success = await set_cache(key, value, expiration)
-    return {"success": success, "key": key, "message": "Cache updated" if success else "Cache update failed"}
+async def update_cache(request: CacheUpdateRequest):
+    success = await set_cache(request.key, request.value, request.expiration)
+    return {"success": success, "key": request.key, "message": "Cache updated" if success else "Cache update failed"}
 
 @router.delete("/invalidate")
 async def invalidate_cache_endpoint(key: str):
