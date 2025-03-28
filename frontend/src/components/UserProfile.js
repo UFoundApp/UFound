@@ -150,9 +150,22 @@ function UserProfile() {
       >
         <Box
           bg="gray.50"
+          height="85vh"
           p={4}
           width="100%"
           overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'gray.200',
+              borderRadius: '24px',
+            },
+          }}
         >
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">
