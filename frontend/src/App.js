@@ -52,7 +52,7 @@ function App() {
                 <Route path="/professors/:professorId" element={<PageTransition><ProfessorPage /></PageTransition>} />
                 <Route path="/profile/:username" element={<PageTransition><UserProfile /></PageTransition>} />
                 <Route path="/search" element={<PageTransition><SearchResults /></PageTransition>} />
-                <Route path="/admin" element={<AdminFlaggedPage><AdminFlaggedPage /></PageTransition>} />                         
+                <Route path="/admin" element={<PageTransition><AdminFlaggedPage /></PageTransition>} />                         
                                          
               </Routes>
             </AnimatePresence>
