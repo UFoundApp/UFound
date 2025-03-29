@@ -5,10 +5,15 @@ import { FaHeart, FaRegHeart, FaComment, FaEye, FaShareAlt } from 'react-icons/f
 import axios from 'axios';
 import { getUser } from './AuthPageUtil';
 
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const { showAlert } = useContext(AlertContext);
 
   useEffect(() => {
     async function fetchUser() {
@@ -23,6 +28,7 @@ const Timeline = () => {
       try {
         const response = await fetch('http://localhost:8000/api/posts'); // Adjust URL as needed
         if (!response.ok) {
+          showAlert("error", "surface", "Error", "Failed to fetch posts");
           throw new Error('Failed to fetch posts');
         }
         const data = await response.json();
@@ -39,6 +45,7 @@ const Timeline = () => {
         
         setPosts(postsWithViews);
       } catch (error) {
+        showAlert("error", "surface", "Error", "Failed to fetch posts");
         console.error('Error fetching posts:', error);
       }
     }
@@ -47,48 +54,50 @@ const Timeline = () => {
 
   // Format date according to requirements
   const formatDate = (dateString) => {
-    // Convert the post date to Eastern Time
+    // Parse UTC date from backend and force UTC interpretation
+    const postDate = new Date(dateString + 'Z'); 
+  
+    // Convert the post date to Eastern Time (America/Toronto)
     const postDateEastern = new Date(
-      new Date(dateString).toLocaleString("en-US", { timeZone: "America/Toronto" })
+      postDate.toLocaleString("en-US", { timeZone: "America/Toronto" })
     );
-    
+  
     // Get the current time in Eastern Time
     const nowEastern = new Date(
       new Date().toLocaleString("en-US", { timeZone: "America/Toronto" })
     );
-    
+  
     const diffInMs = nowEastern - postDateEastern;
-    
+  
     // Less than 1 minute => "just now"
     // if (diffInMs < 60 * 1000) {
     //   return "just now";
     // }
-    
+  
     // Less than 1 hour => "Xm"
     const diffInMinutes = Math.floor(diffInMs / (60 * 1000));
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m`;
-    }
-    
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+
     // Less than 24 hours => "Xh"
     const diffInHours = Math.floor(diffInMs / (60 * 60 * 1000));
     if (diffInHours < 24) {
       return `${diffInHours}h`;
     }
-    
+  
     // Calculate days
     const diffInDays = Math.floor(diffInHours / 24);
-    
+  
     // 1 day => "yesterday"
     if (diffInDays === 1) {
       return "yesterday";
     }
-    
+  
     // 2-6 days => "X days"
     if (diffInDays >= 2 && diffInDays <= 6) {
       return `${diffInDays} days`;
     }
-    
+  
     // Same year => "MonthName Day"
     if (postDateEastern.getFullYear() === nowEastern.getFullYear()) {
       return postDateEastern.toLocaleDateString("en-US", {
@@ -96,7 +105,7 @@ const Timeline = () => {
         day: "numeric",
       });
     }
-    
+  
     // Different year => "MonthName Day, Year"
     return postDateEastern.toLocaleDateString("en-US", {
       month: "short",
@@ -159,9 +168,10 @@ const Timeline = () => {
     const postUrl = `${window.location.origin}/view-post/${postId}`;
     navigator.clipboard.writeText(postUrl)
       .then(() => {
-        alert("Post link copied to clipboard!");
+        showAlert("success", "surface", "Success", "Link copied to clipboard");
       })
       .catch(err => {
+        showAlert("error", "surface", "Error", "Failed to copy link");
         console.error("Failed to copy link:", err);
       });
   };

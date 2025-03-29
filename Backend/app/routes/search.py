@@ -2,6 +2,9 @@ from fastapi import APIRouter
 from app.models.posts import PostModel
 from app.models.professor import ProfessorModel
 from app.models.courses import CourseModel
+from fuzzywuzzy import fuzz
+from typing import List, Dict
+import re
 
 router = APIRouter(prefix="/api") 
 
@@ -46,3 +49,61 @@ async def searchPosts(query: str):
     return {
         "courses": courseList
     }
+
+def fuzzy_match(query: str, text: str, threshold: int = 60) -> bool:
+    # Direct match check
+    if query.lower() in text.lower():
+        return True
+    
+    # Fuzzy match check
+    ratio = fuzz.partial_ratio(query.lower(), text.lower())
+    return ratio >= threshold
+
+@router.get("/search/suggestions")
+async def get_search_suggestions(query: str, type: str):
+    if not query:
+        return []
+        
+    query = query.lower()
+    results = []
+    
+    try:
+        if type == "posts":
+            # Keep fuzzy matching for posts
+            posts = await PostModel.find_all().to_list()
+            matched_posts = []
+            
+            for post in posts:
+                title_ratio = fuzz.partial_ratio(query, post.title.lower())
+                content_ratio = fuzz.partial_ratio(query, post.content.lower())
+                max_ratio = max(title_ratio, content_ratio)
+                
+                if max_ratio > 60:  # Threshold for fuzzy matching
+                    matched_posts.append({
+                        'post': post,
+                        'ratio': max_ratio
+                    })
+            
+            # Sort by relevance and get top 5
+            matched_posts.sort(key=lambda x: x['ratio'], reverse=True)
+            results = [p['post'] for p in matched_posts[:5]]
+            
+        elif type == "courses":
+            # Simple prefix matching for courses
+            courses = await CourseModel.find({
+                "title": {"$regex": f"^{query}", "$options": "i"}
+            }).limit(5).to_list()
+            results = courses
+            
+        elif type == "professors":
+            # Simple prefix matching for professors
+            professors = await ProfessorModel.find({
+                "name": {"$regex": f"^{query}", "$options": "i"}
+            }).limit(5).to_list()
+            results = professors
+            
+        return results[:5]  # Limit to 5 suggestions
+        
+    except Exception as e:
+        print(f"Error in search suggestions: {e}")
+        return []

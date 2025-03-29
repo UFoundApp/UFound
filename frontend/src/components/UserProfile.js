@@ -15,8 +15,16 @@ function UserProfile() {
   const [code, setCode] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
   const [emailUpdated, setEmailUpdated] = useState(false);
+
+  // State for current signed-in user
   const [currentUser, setCurrentUser] = useState(null);
-  const [profile, setProfile] = useState({ username: '', bio: '', posts: [] });
+
+  // State for profile data (for the profile being viewed)
+  const [profile, setProfile] = useState({
+    username: '',
+    bio: '',
+    posts: []
+  });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -44,10 +52,34 @@ function UserProfile() {
     fetchProfile();
   }, [username]);
 
+  const isOwnProfile = currentUser?.username === username;
+
+  // Function to check if username is available
+  const checkUsernameAvailability = async (newUsername) => {
+    try {
+      const res = await axios.get(`http://localhost:8000/api/profile/${newUsername}`);
+      return false; // Exists
+    } catch (error) {
+      return error.response?.status === 404; // 404 means available
+    }
+  };
+
+  // Handle saving profile changes (only for own profile)
   const handleSave = async () => {
+    // check uniqueness of username
+    if (profile.username !== username) {
+      const available = await checkUsernameAvailability(profile.username);
+      if (!available) {
+        setMessage("Username is already taken.");
+        return;
+      }
+    }
+
     try {
       await axios.put(`http://localhost:8000/api/profile/${username}`, profile);
       setMessage('Profile updated successfully');
+
+      // If the username was changed, update stored username and navigate to the new URL
       if (profile.username !== username) {
         updateStoredUsername(profile.username);
         navigate(`/profile/${profile.username}`);
@@ -57,23 +89,32 @@ function UserProfile() {
     }
   };
 
-  const isOwnProfile = currentUser?.username === username;
-
   return (
     <Flex flex="1">
       <Box as="aside" width={{ base: '0', md: '25%' }} display={{ base: 'none', md: 'block' }} bg="gray.50" height="calc(100vh - 60px)" position="fixed" left="0">
         <Box width="80%" ml="auto"><LeftSidebar /></Box>
       </Box>
 
-      <Box flex="1" bg="gray.50" ml={{ base: 0, md: '25%' }} mr={{ base: 0, md: '25%' }} overflowY="scroll" minH="calc(100vh - 75px)">
+      {/* Main Content */}
+      <Box
+        flex="1"
+        bg="gray.50"
+        ml={{ base: 0, md: '25%' }}
+        mr={{ base: 0, md: '25%' }}
+        overflowY="scroll"
+        minH="calc(100vh - 75px)"
+      >
         <Box p={4} maxW="800px" mx="auto">
           <VStack spacing={4} align="stretch">
             {isOwnProfile ? (
               <>
                 <Heading size="lg" mb={2}>Your Profile</Heading>
                 {message && (
-                  <Text color={message.includes('Error') ? 'red.500' : 'green.500'}>
-                    {message}
+                  <Text color={
+                    message.includes('Error') || message.includes('taken')
+                      ? 'red.500'
+                      : 'green.500'
+                  }>                    {message}
                   </Text>
                 )}
                 <Text mb={2}>Username</Text>
@@ -168,8 +209,35 @@ function UserProfile() {
         </Box>
       </Box>
 
-      <Box as="aside" width={{ base: '0', md: '25%' }} display={{ base: 'none', md: 'block' }} bg="gray.50" height="calc(100vh - 60px)" position="fixed" right="0">
-        <Box bg="gray.50" p={4} width="100%" overflowY="auto">
+      {/* Right Sidebar - Fixed */}
+      <Box
+        as="aside"
+        width={{ base: '0', md: '25%' }}
+        display={{ base: 'none', md: 'block' }}
+        bg="gray.50"
+        height="calc(100vh - 60px)"
+        position="fixed"
+        right="0"
+      >
+        <Box
+          bg="gray.50"
+          height="85vh"
+          p={4}
+          width="100%"
+          overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'gray.200',
+              borderRadius: '24px',
+            },
+          }}
+        >
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontWeight="bold" color="gray.700">{profile.username}'s RECENT POSTS</Text>
           </Flex>
@@ -177,7 +245,7 @@ function UserProfile() {
           <Box bg="white" borderRadius="xl" boxShadow="sm" p={3} border="1px" borderColor="gray.200">
             <VStack spacing={2} align="stretch">
               {profile.posts.map((post) => (
-                <Flex 
+                <Flex
                   key={post._id}
                   _hover={{ bg: 'gray.100' }}
                   p={2}
@@ -185,7 +253,12 @@ function UserProfile() {
                   cursor="pointer"
                   onClick={() => navigate(`/view-post/${post._id}`)}
                 >
-                  <FontAwesomeIcon icon={faComments} color="gray.600" size="lg" style={{ marginTop: '4px' }} />
+                  <FontAwesomeIcon
+                    icon={faComments}
+                    color="gray.600"
+                    size="lg"
+                    style={{ marginTop: '4px' }}
+                  />
                   <Box ml={3}>
                     <Text color="gray.700" fontSize="sm">{post.title}</Text>
                     <Text color="gray.600" fontSize="xs" noOfLines={2}>{post.content}</Text>

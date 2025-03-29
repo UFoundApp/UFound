@@ -4,6 +4,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getUser } from './AuthPageUtil';
 
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
 function CreatePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -21,6 +24,8 @@ function CreatePost() {
     loadUser();
   }, []);
   
+  const { showAlert } = useContext(AlertContext);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -36,10 +41,12 @@ function CreatePost() {
     );
       if (response.data) {
         setMessage("Post created successfully!");
+        showAlert("success", "surface", "Post Created", "Post created successfully!");
         setTimeout(() => navigate("/"), 1500);
       }
     } catch (error) {
       setMessage("Failed to create post.");
+      showAlert("error", "surface", "Failed to create post", "Failed to create post.");
     }
     setLoading(false);
   };

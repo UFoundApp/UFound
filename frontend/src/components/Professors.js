@@ -126,10 +126,10 @@ const Professors = () => {
                   >
                     <Text fontWeight="bold" fontSize="lg">{professor.name}</Text>
                     <Text fontSize="md" color="gray.600">{professor.department}</Text>
-                    {professor.ratings && (
-                      <Text fontSize="sm" color="gray.500">
-                        Rating: ⭐ {professor.ratings.toFixed(1)}/5
-                      </Text>
+                    {professor.ratings && typeof professor.ratings.overall === "number" && (
+                        <Text fontSize="sm" color="gray.500">
+                          Rating: ⭐ {professor.ratings.overall.toFixed(1)}/5
+                        </Text>
                     )}
                     <Text fontSize="sm" color="gray.500">
                       Current Courses: {professor.current_courses.length}
@@ -146,22 +146,6 @@ const Professors = () => {
               )}
             </VStack>
           )}
-        </Box>
-      </Box>
-
-      {/* Right Sidebar Area - Fixed */}
-      <Box
-        as="aside"
-        width={{ base: '0', md: '25%' }}
-        display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
-        height="calc(100vh - 60px)"
-        position="fixed"
-        right="0"
-      >
-        {/* Actual Sidebar Content - Moved inward */}
-        <Box width="80%" mr="auto">
-          <RightSidebar />
         </Box>
       </Box>
     </Flex>

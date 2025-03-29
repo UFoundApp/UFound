@@ -7,7 +7,7 @@ import Timeline from './components/Timeline';
 
 const MainPage = () => {
     return (
-        <Flex flex="1" bg="gray.50">
+        <Flex flex="1" bg="gray.50" >
             {/* Left Sidebar Area - Fixed */}
             <Box
                 as="aside"
@@ -19,7 +19,7 @@ const MainPage = () => {
                 left="0"
             >
                 {/* Actual Sidebar Content - Moved inward */}
-                <Box width="90%" ml="auto">
+                <Box width="80%" ml="auto">
                     <LeftSidebar />
                 </Box>
             </Box>

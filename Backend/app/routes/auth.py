@@ -219,7 +219,7 @@ async def verify_code(request: VerifyCodeRequest):
 
     expires_at = record["expires_at"]
 
-    # 🔵 Fix: Normalize to UTC if tzinfo is missing
+    #  Normalize to UTC if tzinfo is missing
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
 
@@ -416,4 +416,3 @@ async def refresh_token(request: Request, response: Response):
         raise Response(status_code=401)
     except jwt.PyJWTError:
         raise Response(status_code=401)
-

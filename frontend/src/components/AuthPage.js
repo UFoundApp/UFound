@@ -23,6 +23,10 @@ import VerifyCode from "./VerifyCode";
 import PasswordSetup from "./PasswordSetup";
 
 
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
+
+
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -32,6 +36,7 @@ function AuthPage() {
   const [showVerification, setShowVerification] = useState(false);
   const [isSending, setIsSending] = useState(false);  // Track loading state
 
+  const { showAlert } = useContext(AlertContext);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,9 +47,11 @@ function AuthPage() {
         const loggedIn = await isLoggedIn();
         if (loggedIn) {
           console.log("User is already logged in. Redirecting to dashboard...");
-          navigate("/home"); // Redirect to dashboard if logged in
+          showAlert("info", "surface", "Already Logged In", "Redirecting to dashboard...");
+          setTimeout(() => navigate("/home"), 1000); // Redirect to dashboard
         }
       } catch (error) {
+        showAlert("error", "surface", "Error", "An error occurred while checking login status");
         console.error("Error checking login status:", error);
       }
     };
@@ -88,15 +95,16 @@ function AuthPage() {
             // Manually check authentication after login
             const loggedIn = await isLoggedIn();
             if (loggedIn) {
-              navigate("/home"); 
+              showAlert("success", "surface", "Login Successful", "Redirecting to dashboard...");
+              setTimeout(() => navigate("/home"), 2000); // Redirect to dashboard 
             }
         } else {
             console.error("Login failed:", data.detail);
-            alert("Login failed: " + data.detail);
+            showAlert("error", "surface", "Login Failed", data.detail);
         }
     } catch (error) {
         console.error("Error during login:", error);
-        alert("Error logging in");
+        showAlert("error", "surface", "Login Failed", "An error occurred");
     }
 };
 
@@ -110,26 +118,24 @@ function AuthPage() {
 
     if (isSending) return; // Prevent multiple requests
 
-    // if (!email.endsWith("@mail.utoronto.ca")) {
-    //   alert("Only @mail.utoronto.ca emails are allowed.");
-    //   return;
-    // }
     
     setIsSending(true); // Disable button & show loading state
     
     try {
       const response = await axios.post("http://127.0.0.1:8000/auth/send-verification-code", { email });
       if (response.data.message === "Verification code sent") {
+        showAlert("success", "surface", "Verification Code Sent", "Please check your email for the verification code");
         setShowVerification(true); // Show verification code input after successful send
       }
     } catch (error) {
-      alert(error.response?.data?.detail || "Failed to send verification code");
+      showAlert("error", "surface", "Error", "An error occurred while sending the verification code");
     }
     setTimeout(() => setIsSending(false), 5000); // 🔹 Ensure cooldown before enabling
   };
 
   return (
-    <Box minH="100vh" bg="gray.50" py={20} px={4}>
+    <Box minH="100vh" bg="gray.50" py={20} px={4}>     
+        
       <Container maxW="lg">
         <VStack spacing={8} bg="white" rounded="lg" boxShadow="lg" p={10}>
           <Heading size="lg">
