@@ -20,14 +20,18 @@ import SearchResults from './components/SearchResults';
 import AdminFlaggedPage from './components/AdminFlaggedPage'; 
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
+import { AlertProvider } from './components/UI/AlertContext';
+import AlertComponent from './components/UI/Alert';
 function App() {
   return (
     <ChakraProvider value={system}>
+      <AlertProvider>
       <Router>
         <Flex direction="column" minH="100vh">
           {/* Fixed TopNav */}
           <Box position="fixed" top="0" left="0" right="0" zIndex="1000">
             <TopNav />
+            <AlertComponent />
           </Box>
 
           {/* Main content with top padding to account for fixed TopNav */}
@@ -55,6 +59,7 @@ function App() {
           </Box>
         </Flex>
       </Router>
+      </AlertProvider>
     </ChakraProvider>
   );
 }

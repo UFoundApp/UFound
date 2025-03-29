@@ -145,9 +145,34 @@ async def get_professor_reviews(professor_id: UUID):
 # ✅ Add a review for a professor
 @router.post("/professors/{professor_id}/reviews", response_model=ProfessorReviewModel)
 async def add_professor_review(professor_id: UUID, review: ProfessorReviewCreate):
+    # Step 1: Save the review
     review_data = ProfessorReviewModel(professor_id=professor_id, **review.dict())
     await review_data.insert()
+
+    # Step 2: Fetch the professor
+    professor = await ProfessorModel.get(professor_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor not found")
+
+    # Step 3: Calculate updated ratings
+    ratings = professor.ratings
+    total = ratings.total_reviews + 1
+
+    def safe(val):  # fallback for optional fields
+        return val if val is not None else 0
+
+    ratings.overall = ((ratings.overall * ratings.total_reviews) + review.overall_rating) / total
+    ratings.clarity = ((ratings.clarity * ratings.total_reviews) + safe(review.clarity)) / total
+    ratings.engagement = ((ratings.engagement * ratings.total_reviews) + safe(review.engagement)) / total
+    ratings.strictness = ((ratings.strictness * ratings.total_reviews) + safe(review.strictness)) / total
+    ratings.total_reviews = total
+
+    # Step 4: Save professor
+    professor.ratings = ratings
+    await professor.save()
+
     return review_data
+
 
 # Define a request schema for liking a review
 class LikeReviewRequest(BaseModel):

@@ -26,6 +26,8 @@ import { getUser } from '../components/AuthPageUtil';
 import ReportDialog from '../Posts/Reporting.jsx';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import { AlertContext } from './UI/AlertContext';
 
 const CoursePage = () => {
     const { courseId } = useParams();
@@ -40,6 +42,40 @@ const CoursePage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
+
+    const { showAlert } = useContext(AlertContext);
+
+    const formatDate = (dateString) => {
+        const postDate = new Date(dateString + 'Z'); // Ensure UTC parsing
+        const estDate = new Date(
+          postDate.toLocaleString("en-US", { timeZone: "America/Toronto" })
+        );
+      
+        const now = new Date(
+          new Date().toLocaleString("en-US", { timeZone: "America/Toronto" })
+        );
+      
+        const diffInMs = now - estDate;
+      
+        const diffInMinutes = Math.floor(diffInMs / (60 * 1000));
+        if (diffInMinutes < 1) return "just now";
+        if (diffInMinutes < 60) return `${diffInMinutes}m`;
+      
+        const diffInHours = Math.floor(diffInMs / (60 * 60 * 1000));
+        if (diffInHours < 24) return `${diffInHours}h`;
+      
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays === 1) return "yesterday";
+        if (diffInDays <= 6) return `${diffInDays} days`;
+      
+        return estDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: now.getFullYear() !== estDate.getFullYear() ? "numeric" : undefined,
+        });
+      };      
+
+
      const fetchCourse = useCallback(async () => {
         try {
             const response = await axios.get(`http://localhost:8000/api/courses/${courseId}`);
@@ -49,6 +85,7 @@ const CoursePage = () => {
         } catch (error) {
             setMessage("Failed to load course.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "An error occurred while loading course");
         } finally {
             setLoading(false);
         }
@@ -67,6 +104,7 @@ const CoursePage = () => {
         } catch (error) {
             setMessage("Failed to post review.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "An error occurred while posting review");
         } finally {
             setIsPostingReview(false);
             setTimeout(() => setMessage(""), 3000);
@@ -85,6 +123,7 @@ const CoursePage = () => {
             //console.log("Review is empty.");
             setMessage("Review cannot be empty.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "Review cannot be empty.");
             return;
         }
 
@@ -92,6 +131,7 @@ const CoursePage = () => {
             //console.log("Rating is empty.");
             setMessage("Rating cannot be empty.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "Rating cannot be empty.");
             return;
         }
 
@@ -100,6 +140,7 @@ const CoursePage = () => {
             //console.log("User not logged in.");
             setMessage("You must be logged in to add a review.");
             setIsError(true);
+            showAlert("error", "surface", "Error", "You must be logged in to add a review.");
             return;
         }
 
@@ -337,7 +378,7 @@ const CoursePage = () => {
                                         ))}
                                     </RatingGroup.Control>
                                 </RatingGroup.Root>
-                                <Text fontSize="sm" color="gray.500">{new Date(r.created_at).toLocaleString()}</Text>
+                                <Text fontSize="sm" color="gray.500">{formatDate(r.created_at)}</Text>
                                 <Text mt={2}>{r.content}</Text>
                             </Box>
                         ))
