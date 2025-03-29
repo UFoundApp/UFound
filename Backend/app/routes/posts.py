@@ -70,9 +70,9 @@ async def get_post(post_id: PydanticObjectId):
 async def like_post(post_id: PydanticObjectId, request: Request):
 
     current_user = await get_current_user(request)
-    user_id = current_user.id
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    user_id = current_user.id
 
     post = await PostModel.get(post_id)
     if not post:
@@ -88,9 +88,9 @@ async def like_post(post_id: PydanticObjectId, request: Request):
 @router.post("/posts/{post_id}/unlike")
 async def unlike_post(post_id: PydanticObjectId, request: Request):
     current_user = await get_current_user(request)
-    user_id = current_user.id
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    user_id = current_user.id
 
     post = await PostModel.get(post_id)
     if not post:
@@ -112,6 +112,7 @@ def find_comment_by_id(comments: List[CommentModel], comment_id: UUID) -> Option
             return found
     return None
 
+@router.post("/posts/{post_id}/comment")
 async def add_comment(post_id: PydanticObjectId, request: Request, comment_data: CommentRequest = Body(...)):
     current_user = await get_current_user(request)
     if not current_user:
