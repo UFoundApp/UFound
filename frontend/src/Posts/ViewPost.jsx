@@ -14,6 +14,10 @@ import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt, FaEye } from 'react-icons/fa
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
+import { FaFlag } from 'react-icons/fa';
+import ReportDialog from './Reporting.jsx';
+import { Link } from 'react-router-dom';
+
 
 const ViewPost = () => {
     const { id } = useParams();
@@ -134,6 +138,23 @@ const ViewPost = () => {
         }
     };
 
+    const handleReport = async () => {
+        const user = await getUser();
+        if (!user || !user.id) {
+            setMessage("You must be logged in to report a post.");
+            setIsError(true);
+            return;
+        }
+        try {
+            await axios.post(`http://localhost:8000/api/posts/${id}/report?user_id=${user.id}`);
+            setMessage("Post reported successfully.");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to report post.");
+            setIsError(true);
+        }
+    };
+
     if (loading) {
         return (
             <Flex justify="center" align="center" height="100vh">
@@ -143,7 +164,10 @@ const ViewPost = () => {
     }
 
     return (
-        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
+        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8} position="relative" >
+            <Box position="absolute" top="16px" right="16px">
+                <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
+            </Box>
             <Text fontSize="sm" color="gray.500" mb={2}>
                 {post.author} • {new Date(post.created_at).toLocaleDateString()}
             </Text>

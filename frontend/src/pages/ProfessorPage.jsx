@@ -23,6 +23,8 @@ import { FiBarChart2 } from "react-icons/fi"; // Example bar-chart icon
 import LeftSidebar from "../components/LeftSidebar";
 import { getUser } from "../components/AuthPageUtil";
 import axios from "axios";
+
+import ReportDialog from "../Posts/Reporting";  
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 // DonutChart: uses the numeric rating (out of 5) for the fill,
@@ -72,6 +74,7 @@ const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
         </Box>
     );
 };
+
 
 const ProfessorPage = () => {
     const { professorId } = useParams();
@@ -175,7 +178,8 @@ const ProfessorPage = () => {
     };
 
     const handleLikeReview = async (reviewId) => {
-        const user = getUser();
+    const user = await getUser();
+
         if (!user) {
             setReviewMessage("You must be logged in to like a review.");
             return;
@@ -553,14 +557,7 @@ const ProfessorPage = () => {
                     {professor.reviews.length > 0 ? (
                         <VStack spacing={4} align="stretch">
                             {professor.reviews.map((review, index) => (
-                                <Box
-                                    key={index}
-                                    p={4}
-                                    border="1px"
-                                    borderColor="gray.200"
-                                    borderRadius="md"
-                                    bg="white"
-                                >
+                                <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white" position="relative">
                                     <Flex justify="space-between" align="center">
                                         <Text fontSize="md" fontWeight="bold">
                                             ⭐ {review.overall_rating}/5
@@ -579,6 +576,15 @@ const ProfessorPage = () => {
                                                 />
                                             )}
                                             <Text>{review.likes.length}</Text>
+
+                                            {/* Add the ReportDialog button */}
+                                            <ReportDialog 
+                                            endpoint={`http://localhost:8000/api/professors/reviews/${review._id}/report`}
+                                            postId={review._id}
+                                            type="professor"
+                                            setMessage={setReviewMessage}
+                                            setIsError={() => {}} // optional, you can modify this to match your error handling
+                                            />
                                         </HStack>
                                     </Flex>
                                     {likeMessages && likeMessages[review._id] && (
@@ -593,7 +599,13 @@ const ProfessorPage = () => {
                                     )}
                                     <Text mt={2}>{review.content}</Text>
                                     <Text fontSize="sm" color="gray.500" mt={2}>
-                                        By {review.author} | {new Date(review.created_at).toLocaleDateString()}
+                                    By{" "}
+                                    <Link to={`/profile/${review.author}`}>
+                                        <Text as="span" fontWeight="medium" color="blue.500" _hover={{ textDecoration: "underline" }}>
+                                        {review.author}
+                                        </Text>
+                                    </Link>{" "}
+                                    | {new Date(review.created_at).toLocaleDateString()}
                                     </Text>
                                     <Separator my={2} />
                                     <Text fontSize="sm">Strictness: {review.strictness}/5</Text>

@@ -184,10 +184,10 @@ const CommentsSection = ({ postId }) => {
                 <Spinner size="md" />
             ) : (
                 <VStack align="stretch" spacing={3}>
-                    {comments.map((c) => (
+                    {comments.map((c, index) => (
                         <Comment
                             key={c.id}
-                            comment={c}
+                            comment={{...c, index}}
                             postId={postId}
                             handleReply={handleComment}
                             handleLike={handleLike}
