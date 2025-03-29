@@ -118,10 +118,6 @@ function AuthPage() {
 
     if (isSending) return; // Prevent multiple requests
 
-    if (!email.endsWith("@mail.utoronto.ca")) {
-      showAlert("error", "surface", "Invalid Email", "Please use your university email address");
-      return;
-    }
     
     setIsSending(true); // Disable button & show loading state
     

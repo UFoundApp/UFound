@@ -32,14 +32,14 @@ const ViewPost = () => {
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
-        
+
         const fetchPost = async () => {
             try {
                 // First, get the post data
                 const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
-                
+
                 if (!isMounted) return; // Don't update state if component unmounted
-                
+
                 setPost(response.data);
                 setLikes(response.data.likes.length);
                 setViews(response.data.views || 0);
@@ -48,19 +48,19 @@ const ViewPost = () => {
                 if (user && response.data.likes.includes(user.id)) {
                     setHasLiked(true);
                 }
-                
+
                 // Increment view count only once per session
                 // Use sessionStorage to track if this post has been viewed in this session
                 const viewedPosts = JSON.parse(sessionStorage.getItem('viewedPosts') || '{}');
-                
+
                 if (!viewedPosts[id]) {
                     // Only increment if not already viewed in this session
                     const viewResponse = await axios.post(`http://localhost:8000/api/posts/${id}/view`);
-                    
+
                     if (!isMounted) return; // Don't update state if component unmounted
-                    
+
                     setViews(viewResponse.data.views);
-                    
+
                     // Mark this post as viewed in this session
                     viewedPosts[id] = true;
                     sessionStorage.setItem('viewedPosts', JSON.stringify(viewedPosts));
@@ -78,7 +78,7 @@ const ViewPost = () => {
         };
 
         fetchPost();
-        
+
         // Cleanup function to set isMounted to false when component unmounts
         return () => {
             isMounted = false;
@@ -100,7 +100,10 @@ const ViewPost = () => {
 
         try {
             setIsProcessing(true);
-            await axios.post(`http://localhost:8000/api/posts/${id}/like?user_id=${user.id}`);
+            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/like?user_id=${user.id}`,
+                {}, {
+                withCredentials: true,
+            });
             setLikes((prev) => prev + 1);
             setHasLiked(true);
             setMessage("You liked this post!");
@@ -124,7 +127,11 @@ const ViewPost = () => {
 
         try {
             setIsProcessing(true);
-            await axios.post(`http://localhost:8000/api/posts/${id}/unlike?user_id=${user.id}`);
+            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/unlike?user_id=${user.id}`,
+                {}, {
+                withCredentials: true,
+            }
+            );
             setLikes((prev) => prev - 1);
             setHasLiked(false);
             setMessage("You unliked this post.");

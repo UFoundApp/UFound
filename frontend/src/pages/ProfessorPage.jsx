@@ -95,8 +95,17 @@ const ProfessorPage = () => {
     const strictnessRatingGroup = useRatingGroup({ count: 5, defaultValue: 3 });
     const [isProcessingLike, setIsProcessingLike] = useState(false);
     const [likeMessages, setLikeMessages] = useState({});
+    const [user, setUser] = useState(null);
+    const isUofT = user?.is_uoft === true;
+    const disableReviewUI = user && !isUofT;    
 
     useEffect(() => {
+        const loadUser = async () => {
+            const u = await getUser();
+            setUser(u);
+        };
+        loadUser();
+        if (!professorId) return; 
         fetch(`http://127.0.0.1:8000/api/professors/${professorId}/page`)
             .then((response) => response.json())
             .then((data) => {
@@ -141,7 +150,6 @@ const ProfessorPage = () => {
                 engagement: engagementRatingGroup.value,
             };
 
-            // Optimistic update
             const updatedProfessor = { ...professor };
             updatedProfessor.reviews.push(reviewData);
             setProfessor(updatedProfessor);
@@ -149,8 +157,9 @@ const ProfessorPage = () => {
             // POST to backend
             await axios.post(
                 `http://127.0.0.1:8000/api/professors/${professorId}/reviews`,
-                reviewData
-            );
+                reviewData, {
+                  withCredentials: true,
+            });
 
             // Re-fetch updated professor info
             const refreshed = await axios.get(
@@ -189,7 +198,9 @@ const ProfessorPage = () => {
         try {
             const response = await axios.post(
                 `http://127.0.0.1:8000/api/professors/reviews/${reviewId}/like`,
-                { user_id: user.id }
+                { user_id: user.id }, {
+                  withCredentials: true,
+                }
             );
 
             // Update local data
@@ -423,7 +434,22 @@ const ProfessorPage = () => {
                     {/* Reviews Header */}
                     <Flex justify="space-between" align="center" mb={4}>
                         <Heading size="md">Student Reviews</Heading>
-                        <Button colorScheme="blue" onClick={() => setShowReviewForm(!showReviewForm)}>
+                        {disableReviewUI && (
+                        <Text fontSize="sm" color="red.500" mt={1}>
+                            Only UofT-verified students can leave reviews.
+                        </Text>
+                        )}
+                        <Button 
+                            colorScheme="blue" 
+                            onClick={() => {
+                                if (!disableReviewUI) {
+                                    setShowReviewForm(!showReviewForm);
+                                }
+                            }}
+                            isDisabled={disableReviewUI}
+                            opacity={disableReviewUI ? 0.6 : 1}
+                            cursor={disableReviewUI ? "not-allowed" : "pointer"}
+                        >
                             {showReviewForm ? "Cancel" : "Leave a Review"}
                         </Button>
                     </Flex>

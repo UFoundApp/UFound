@@ -41,6 +41,9 @@ const CoursePage = () => {
     const [isPostingReview, setIsPostingReview] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+    const [user, setUser] = useState(null);
+    const isUofT = user?.is_uoft === true;
+    const disableReviewUI = user && !isUofT;
 
 
     const { showAlert } = useContext(AlertContext);
@@ -93,7 +96,9 @@ const CoursePage = () => {
 
     const sendReview = async ({newReview}) => {
         try {
-            const response = await axios.post(`http://localhost:8000/api/courses/${courseId}/review`, newReview);
+            const response = await axios.post(`http://localhost:8000/api/courses/${courseId}/review`, newReview, {
+                withCredentials: true,
+            });
             
             ratingE.setValue(0);
             ratingMD.setValue(0);
@@ -115,10 +120,17 @@ const CoursePage = () => {
         if (!courseId) return;
         setLoading(true);
         fetchCourse();
+
+        const loadUser = async () => {
+            const u = await getUser();
+            setUser(u);
+        };
+        loadUser();
     }, [courseId]);
 
 
     const handleAddReview = async () => {
+        if (disableReviewUI) return;
         if (!review.trim()) {
             //console.log("Review is empty.");
             setMessage("Review cannot be empty.");
@@ -296,17 +308,22 @@ const CoursePage = () => {
                 <Box borderBottom="1px solid gray" my={4} />
 
                 {/* Reviews Section */}
-                <Heading as="h2" size="md" mt={5} mb={3}>Leave a Review</Heading>
+                <Heading as="h2" size="md" mt={5} mb={1}>Leave a Review</Heading>
+                {disableReviewUI && (
+                <Text color="red.500" fontSize="sm" mb={2}>
+                    Only UofT-verified users can leave reviews.
+                </Text>
+                )}
                 <VStack mt={4} position="relative" alignItems="start" bg="white" borderColor="gray.100" borderWidth="1px" p={4} borderRadius="md">
 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Engagement:</Heading>
-                    <RatingInput rating={ratingE} size="lg"/>
+                    <RatingInput rating={ratingE} size="lg" isDisabled={disableReviewUI}/>
                                 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Material Difficulty:</Heading>
-                    <RatingInput rating={ratingMD} size="lg"/>
+                    <RatingInput rating={ratingMD} size="lg" isDisabled={disableReviewUI}/>
 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Assessment Difficulty:</Heading>
-                    <RatingInput rating={ratingAD} size="lg"/>
+                    <RatingInput rating={ratingAD} size="lg" isDisabled={disableReviewUI}/>
 
                     <Field.Root 
                         invalid={isError}
@@ -314,8 +331,10 @@ const CoursePage = () => {
                         <Textarea
                             placeholder="Write a review..."
                             value={review}
-                            onChange={(e) => setReview(e.target.value)}
-                            isDisabled={isPostingReview}
+                            onChange={(e) => {
+                                if (!disableReviewUI) setReview(e.target.value);
+                            }}
+                            isDisabled={isPostingReview || disableReviewUI}
                             errorText={isError ? message : ""}
                             
                         />
@@ -342,6 +361,9 @@ const CoursePage = () => {
                         Reset
                     </Button>
                     <Button
+                        isDisabled={disableReviewUI}
+                        opacity={disableReviewUI ? 0.5 : 1}
+                        cursor={disableReviewUI ? "not-allowed" : "pointer"}
                         alignContent={"end"}
                         onClick={handleAddReview}
                         aria-label="Add Review"
