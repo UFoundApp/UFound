@@ -1,8 +1,15 @@
 from beanie import Document
-from pydantic import Field
+from pydantic import Field, BaseModel
 from typing import List, Optional
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
+
+class ProfessorRatings(BaseModel):
+    overall: float = Field(default=0.0, ge=0, le=5)
+    clarity: float = Field(default=0.0, ge=0, le=5)
+    engagement: float = Field(default=0.0, ge=0, le=5)
+    strictness: float = Field(default=0.0, ge=0, le=5)
+    total_reviews: int = Field(default=0, ge=0)
 
 class ProfessorModel(Document):
     id: UUID = Field(default_factory=uuid4)  # Unique professor ID
@@ -11,7 +18,7 @@ class ProfessorModel(Document):
     profile_link: Optional[str] = None  # ✅ New field for university webpage link
     current_courses: List[str] = Field(default_factory=list)
     past_courses: List[str] = Field(default_factory=list)
-    ratings: Optional[float] = None
+    ratings: ProfessorRatings = Field(default_factory=ProfessorRatings)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
@@ -26,9 +33,9 @@ class ProfessorReviewModel(Document):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     likes: List[UUID] = Field(default_factory=list)  # Upvoted user IDs
     overall_rating: float = Field(..., ge=1, le=5)  # ⭐ 1-5 rating
-    strictness: Optional[int] = Field(default=None, ge=1, le=10)  # 1-10
-    clarity: Optional[float] = Field(default=None, ge=1, le=10)  # 1-10
-    engagement: Optional[float] = Field(default=None, ge=1, le=10)  # 1-10
+    strictness: Optional[int] = Field(default=None, ge=1, le=5)  # 1-10
+    clarity: Optional[float] = Field(default=None, ge=1, le=5)  # 1-10
+    engagement: Optional[float] = Field(default=None, ge=1, le=5)  # 1-10
 
 
     class Settings:

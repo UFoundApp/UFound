@@ -126,10 +126,10 @@ const Professors = () => {
                   >
                     <Text fontWeight="bold" fontSize="lg">{professor.name}</Text>
                     <Text fontSize="md" color="gray.600">{professor.department}</Text>
-                    {professor.ratings && (
-                      <Text fontSize="sm" color="gray.500">
-                        Rating: ⭐ {professor.ratings.toFixed(1)}/5
-                      </Text>
+                    {professor.ratings && typeof professor.ratings.overall === "number" && (
+                        <Text fontSize="sm" color="gray.500">
+                          Rating: ⭐ {professor.ratings.overall.toFixed(1)}/5
+                        </Text>
                     )}
                     <Text fontSize="sm" color="gray.500">
                       Current Courses: {professor.current_courses.length}
