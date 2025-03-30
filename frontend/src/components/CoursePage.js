@@ -27,7 +27,7 @@ import ReportDialog from '../Posts/Reporting.jsx';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
-import { AlertContext } from './UI/AlertContext';
+import { AlertContext } from './ui/AlertContext';
 
 const CoursePage = () => {
     const { courseId } = useParams();
