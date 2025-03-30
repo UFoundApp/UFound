@@ -6,37 +6,23 @@ import { getUser } from './AuthPageUtil';
 import { For, HStack, Switch } from "@chakra-ui/react"
 
 
-import { useContext } from 'react';
-import { AlertContext } from './ui/AlertContext';
-
 function CreatePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
   const [anon, setAnon] = useState(false);
   const [author, setAuthor] = useState("")
-  const [user, setUser] = useState(null);
-
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const u = await getUser();
-      setUser(u);
-    };
-    loadUser();
-  }, []);
-  
-  const { showAlert } = useContext(AlertContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-    
+
     try {
-      const response = await axios.post("http://127.0.01:8000/api/posts", {
+      const response = await axios.post("http://localhost:8000/api/posts", {
         title,
         content,
         created_at: new Date(),
@@ -46,18 +32,12 @@ function CreatePost() {
         author: anon ? "Anonymous" : author.username
       });
       
-      }, {
-        withCredentials: true,
-      }
-    );
       if (response.data) {
         setMessage("Post created successfully!");
-        showAlert("success", "surface", "Post Created", "Post created successfully!");
         setTimeout(() => navigate("/"), 1500);
       }
     } catch (error) {
       setMessage("Failed to create post.");
-      showAlert("error", "surface", "Failed to create post", "Failed to create post.");
     }
     setLoading(false);
   };
@@ -98,11 +78,7 @@ function CreatePost() {
           <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <Textarea placeholder="What's on your mind?" value={content} onChange={(e) => setContent(e.target.value)} required />
           <Button type="submit" colorScheme="blue" isLoading={loading}>Post</Button>
-          {message && (
-            <Text color={message.includes("Failed") ? "red.500" : "green.500"}>
-              {message}
-            </Text>
-)}
+          {message && <Text color="green.500">{message}</Text>}
         </VStack>
       </form>
     </Box>
@@ -110,4 +86,3 @@ function CreatePost() {
 }
 
 export default CreatePost;
-

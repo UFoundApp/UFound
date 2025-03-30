@@ -73,7 +73,7 @@ const LeftSidebar = () => {
                     py={6}
                     _hover={{ bg: 'gray.100' }}
                 >
-                    All Channels
+                    Posts
                 </Button>
 
                 <Button
@@ -104,9 +104,9 @@ const LeftSidebar = () => {
                     Reviews
                 </Text>
                 <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Tech</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Healthcare</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Hardware</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2}>Courses</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2}>Health Plan</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2}>Professors</Button>
                     <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
                         Show more
                     </Button>
@@ -114,17 +114,7 @@ const LeftSidebar = () => {
 
                 {/* Job Groups Section */}
                 <Box as="hr" my={4} borderColor="gray.200" />
-                <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
-                    JOB GROUPS
-                </Text>
-                <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Software Engineering</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Product Management</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Finance</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
-                        Show more
-                    </Button>
-                </Stack>
+
             </Stack>
         </Box>
     );
