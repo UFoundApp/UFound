@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { VStack, Input, Textarea, Button, Box, Text } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getUser } from './AuthPageUtil';
+import { For, HStack, Switch } from "@chakra-ui/react"
+
 
 import { useContext } from 'react';
 import { AlertContext } from './ui/AlertContext';
@@ -13,6 +15,8 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const [anon, setAnon] = useState(false);
+  const [author, setAuthor] = useState("")
   const [user, setUser] = useState(null);
 
 
@@ -35,6 +39,13 @@ function CreatePost() {
       const response = await axios.post("http://127.0.01:8000/api/posts", {
         title,
         content,
+        created_at: new Date(),
+        likes: [],
+        comments: [],
+        author_id: author.id,
+        author: anon ? "Anonymous" : author.username
+      });
+      
       }, {
         withCredentials: true,
       }
@@ -51,9 +62,37 @@ function CreatePost() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const fetchedUser = await getUser();
+      setAuthor(fetchedUser);
+    };
+    fetchUser();
+  }, []);
+
   return (
     <Box maxW="600px" mx="auto" mt={10} p={6} bg="white" borderRadius="lg" boxShadow="lg">
-      <Text fontSize="2xl" mb={4}>Create a Post</Text>
+      <Box position={"relative"} mb={8}>
+        <Text fontSize="2xl" mb={4}>Create a Post</Text>
+        <HStack gap="8">
+
+            <Switch.Root 
+            key={"lg"} size={"lg"}
+            checked={anon}
+            onCheckedChange={(e) => setAnon(e.checked)}
+            >
+              <Switch.HiddenInput />
+
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+              <Switch.Label>Post Anonymously</Switch.Label>
+              
+            </Switch.Root>
+      </HStack>
+
+
+    </Box>
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
           <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -71,3 +110,4 @@ function CreatePost() {
 }
 
 export default CreatePost;
+

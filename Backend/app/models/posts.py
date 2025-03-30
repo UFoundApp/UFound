@@ -32,6 +32,7 @@ class PostModel(Document):
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
     author_id: Optional[UUID] = None  # Add author_id field
     views: int = Field(default=0)  # Add views counter
+    author: Optional[str] = ""
     reports: List[ReportDetail] = Field(default_factory=list)  # Add reports field
     flagged: bool = Field(default=False)  # stays False until report threshold met
 
