@@ -24,7 +24,7 @@ import PasswordSetup from "./PasswordSetup";
 
 
 import { useContext } from 'react';
-import { AlertContext } from './UI/AlertContext';
+import { AlertContext } from './ui/AlertContext';
 
 
 function AuthPage() {
@@ -118,10 +118,6 @@ function AuthPage() {
 
     if (isSending) return; // Prevent multiple requests
 
-    if (!email.endsWith("@mail.utoronto.ca")) {
-      showAlert("error", "surface", "Invalid Email", "Please use your university email address");
-      return;
-    }
     
     setIsSending(true); // Disable button & show loading state
     

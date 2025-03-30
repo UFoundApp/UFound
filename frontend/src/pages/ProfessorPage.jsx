@@ -23,6 +23,8 @@ import { FiBarChart2 } from "react-icons/fi"; // Example bar-chart icon
 import LeftSidebar from "../components/LeftSidebar";
 import { getUser } from "../components/AuthPageUtil";
 import axios from "axios";
+
+import ReportDialog from "../Posts/Reporting";  
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -75,6 +77,7 @@ const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
     );
 };
 
+
 const ProfessorPage = () => {
     const { professorId } = useParams();
     const [professor, setProfessor] = useState(null);
@@ -94,8 +97,17 @@ const ProfessorPage = () => {
     const strictnessRatingGroup = useRatingGroup({ count: 5, defaultValue: 3 });
     const [isProcessingLike, setIsProcessingLike] = useState(false);
     const [likeMessages, setLikeMessages] = useState({});
+    const [user, setUser] = useState(null);
+    const isUofT = user?.is_uoft === true;
+    const disableReviewUI = user && !isUofT;    
 
     useEffect(() => {
+        const loadUser = async () => {
+            const u = await getUser();
+            setUser(u);
+        };
+        loadUser();
+        if (!professorId) return; 
         fetch(`http://127.0.0.1:8000/api/professors/${professorId}/page`)
             .then((response) => response.json())
             .then((data) => {
@@ -140,7 +152,6 @@ const ProfessorPage = () => {
                 engagement: engagementRatingGroup.value,
             };
 
-            // Optimistic update
             const updatedProfessor = { ...professor };
             updatedProfessor.reviews.push(reviewData);
             setProfessor(updatedProfessor);
@@ -148,8 +159,9 @@ const ProfessorPage = () => {
             // POST to backend
             await axios.post(
                 `http://127.0.0.1:8000/api/professors/${professorId}/reviews`,
-                reviewData
-            );
+                reviewData, {
+                  withCredentials: true,
+            });
 
             // Re-fetch updated professor info
             const refreshed = await axios.get(
@@ -177,7 +189,8 @@ const ProfessorPage = () => {
     };
 
     const handleLikeReview = async (reviewId) => {
-        const user = getUser();
+    const user = await getUser();
+
         if (!user) {
             setReviewMessage("You must be logged in to like a review.");
             return;
@@ -187,7 +200,9 @@ const ProfessorPage = () => {
         try {
             const response = await axios.post(
                 `http://127.0.0.1:8000/api/professors/reviews/${reviewId}/like`,
-                { user_id: user.id }
+                { user_id: user.id }, {
+                  withCredentials: true,
+                }
             );
 
             // Update local data
@@ -425,7 +440,22 @@ const ProfessorPage = () => {
                     {/* Reviews Header */}
                     <Flex justify="space-between" align="center" mb={4}>
                         <Heading size="md">Student Reviews</Heading>
-                        <Button colorScheme="blue" onClick={() => setShowReviewForm(!showReviewForm)}>
+                        {disableReviewUI && (
+                        <Text fontSize="sm" color="red.500" mt={1}>
+                            Only UofT-verified students can leave reviews.
+                        </Text>
+                        )}
+                        <Button 
+                            colorScheme="blue" 
+                            onClick={() => {
+                                if (!disableReviewUI) {
+                                    setShowReviewForm(!showReviewForm);
+                                }
+                            }}
+                            isDisabled={disableReviewUI}
+                            opacity={disableReviewUI ? 0.6 : 1}
+                            cursor={disableReviewUI ? "not-allowed" : "pointer"}
+                        >
                             {showReviewForm ? "Cancel" : "Leave a Review"}
                         </Button>
                     </Flex>
@@ -559,14 +589,7 @@ const ProfessorPage = () => {
                     {professor?.reviews?.length > 0 ? (
                         <VStack spacing={4} align="stretch">
                             {professor.reviews.map((review, index) => (
-                                <Box
-                                    key={index}
-                                    p={4}
-                                    border="1px"
-                                    borderColor="gray.200"
-                                    borderRadius="md"
-                                    bg="white"
-                                >
+                                <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white" position="relative">
                                     <Flex justify="space-between" align="center">
                                         <Text fontSize="md" fontWeight="bold">
                                             ⭐ {review.overall_rating}/5
@@ -585,6 +608,15 @@ const ProfessorPage = () => {
                                                 />
                                             )}
                                             <Text>{review.likes.length}</Text>
+
+                                            {/* Add the ReportDialog button */}
+                                            <ReportDialog 
+                                            endpoint={`http://localhost:8000/api/professors/reviews/${review._id}/report`}
+                                            postId={review._id}
+                                            type="professor"
+                                            setMessage={setReviewMessage}
+                                            setIsError={() => {}} // optional, you can modify this to match your error handling
+                                            />
                                         </HStack>
                                     </Flex>
                                     {likeMessages && likeMessages[review._id] && (
@@ -599,7 +631,13 @@ const ProfessorPage = () => {
                                     )}
                                     <Text mt={2}>{review.content}</Text>
                                     <Text fontSize="sm" color="gray.500" mt={2}>
-                                        By {review.author} | {new Date(review.created_at).toLocaleDateString()}
+                                    By{" "}
+                                    <Link to={`/profile/${review.author}`}>
+                                        <Text as="span" fontWeight="medium" color="blue.500" _hover={{ textDecoration: "underline" }}>
+                                        {review.author}
+                                        </Text>
+                                    </Link>{" "}
+                                    | {new Date(review.created_at).toLocaleDateString()}
                                     </Text>
                                     <Separator my={2} />
                                     <Text fontSize="sm">Strictness: {review.strictness}/5</Text>

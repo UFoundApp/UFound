@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 
 import { useContext } from 'react';
-import { AlertContext } from './UI/AlertContext';
+import { AlertContext } from './ui/AlertContext';
 
 function EmailInput({ onSuccess, resetPasswordState }) {
   const [email, setEmail] = useState("");
@@ -21,11 +21,6 @@ function EmailInput({ onSuccess, resetPasswordState }) {
     e.preventDefault();
     setMessage("");
 
-    if (!email.endsWith("@mail.utoronto.ca")) {
-      setMessage("Only @mail.utoronto.ca emails are allowed.");
-      showAlert("error", "surface", "Email Error", "Only @mail.utoronto.ca emails are allowed.");
-      return;
-    }
 
     setLoading(true);
     try {

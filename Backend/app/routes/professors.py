@@ -1,18 +1,90 @@
-from fastapi import APIRouter, HTTPException, Body
-from app.models.professor import ProfessorModel, ProfessorReviewModel
+from fastapi import APIRouter, HTTPException, Body, Request
+from app.models.professor import ProfessorModel, ProfessorReviewModel, ReportDetail
 from beanie import PydanticObjectId  # Needed for MongoDB ObjectId
 from typing import List, Optional, Union
 from app.models.courses import CourseModel
+from app.models.user import UserModel 
+from app.routes.auth import get_current_user
 from pydantic import BaseModel
 from uuid import UUID
 from bson import ObjectId
 
 from app.courseScraper import get_courses_by_professor
 
+from app.models.user import UserModel
+from beanie.operators import In
 
 router = APIRouter()
+REPORT_THRESHOLD = 3
 
-# ✅ Fetch detailed professor page
+class ReportRequest(BaseModel):
+    user_id: UUID
+    reason: str
+
+@router.delete("/admin/professors/reviews/{review_id}")
+async def delete_professor_review(review_id: str):
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    await review.delete()
+    return {"message": "Professor review deleted"}
+
+@router.post("/admin/professors/reviews/{review_id}/unflag")
+async def unflag_professor_review(review_id: str):
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.flagged = False
+    review.reports = []
+    await review.save()
+    return {"message": "Professor review unflagged"}
+
+
+@router.get("/admin/flagged/professor-reviews")
+async def get_flagged_professor_reviews():
+    # Fetch all professors whose reviews were flagged
+    flagged_reviews = await ProfessorReviewModel.find(ProfessorReviewModel.flagged == True).to_list()
+    professor_ids = {review.professor_id for review in flagged_reviews}
+
+    professors = await ProfessorModel.find(In(ProfessorModel.id, list(professor_ids))).to_list()
+    professor_map = {str(prof.id): prof.name for prof in professors}
+
+    response = []
+    for review in flagged_reviews:
+        response.append({
+            "_id": str(review.id),
+            "professor_id": str(review.professor_id),
+            "professor_name": professor_map.get(str(review.professor_id), "Unknown"),
+            "content": review.content,
+            "author": review.author,
+            "created_at": review.created_at,
+            "reports": [r.dict() for r in review.reports] if review.reports else []
+        })
+
+    return response
+
+@router.post("/professors/reviews/{review_id}/report")
+async def report_professor_review(review_id: str, report: ReportRequest):
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if any(r.user_id == report.user_id for r in review.reports):
+        raise HTTPException(status_code=400, detail="You have already reported this review")
+    user = await UserModel.get(report.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    review.reports.append(ReportDetail(user_id=report.user_id, reason=report.reason, user_name=user.username))
+
+    if len(review.reports) >= 1:
+        review.flagged = True   # Flag review if threshold met
+
+    await review.save()
+    return {"message": "Review reported", "reports": len(review.reports)}
+
+# Fetch detailed professor page
 @router.get("/professors/{professor_id}/page")
 async def get_professor_page(professor_id: UUID):
     professor = await ProfessorModel.get(professor_id)
@@ -93,7 +165,16 @@ async def get_professor_reviews(professor_id: UUID):
 
 # ✅ Add a review for a professor
 @router.post("/professors/{professor_id}/reviews", response_model=ProfessorReviewModel)
-async def add_professor_review(professor_id: UUID, review: ProfessorReviewCreate):
+async def add_professor_review(professor_id: UUID, review: ProfessorReviewCreate, request: Request):
+    current_user = await get_current_user(request)
+
+    # If current_user is None or doesn't have the `is_uoft` attribute
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="User is not authenticated") 
+           
+    if not current_user.is_uoft:
+        raise HTTPException(status_code=403, detail="Only UofT-verified users can submit reviews")
+   
     # Step 1: Save the review
     review_data = ProfessorReviewModel(professor_id=professor_id, **review.dict())
     await review_data.insert()

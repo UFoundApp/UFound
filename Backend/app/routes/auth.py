@@ -8,6 +8,7 @@ from app.models.user import UserModel
 from dotenv import load_dotenv
 import os
 import jwt
+#temp
 
 load_dotenv()
 
@@ -46,6 +47,10 @@ class PasswordCheckRequest(BaseModel):
 class LoginRequest(BaseModel):
     identifier: str  # Can be either email or username
     password: str
+
+class EmailUpdateAfterVerification(BaseModel):
+    current_email: EmailStr
+    new_email: EmailStr
 
 async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -126,13 +131,15 @@ async def logout(response: Response):
 
 
 async def get_current_user(request: Request):
+    # Get the token from the cookies
     token = request.cookies.get("access_token")
-    
+
     if not token:
-        return None  
+        print("No access token found")  # Debugging line
+        return None
 
     if not token.startswith("Bearer "):
-        print("Invalid token format:", token) 
+        print("Invalid token format:", token)  # Debugging line
         return None
 
     try:
@@ -141,19 +148,23 @@ async def get_current_user(request: Request):
         email = payload.get("sub")
 
         if not email:
-            return None 
+            print("No email found in token")  # Debugging line
+            return None
 
         user = await UserModel.find_one(UserModel.email == email)
         if not user:
+            print(f"No user found for email: {email}")  # Debugging line
             return None
 
         return user
 
     except jwt.ExpiredSignatureError:
-        return None 
-    except jwt.PyJWTError:
-        print("Invalid access token")
+        print("JWT expired")  # Debugging line
         return None
+    except jwt.PyJWTError as e:
+        print(f"Error decoding token: {str(e)}")  # Debugging line
+        return None
+
 
 
 
@@ -168,14 +179,16 @@ async def get_user_info(current_user: UserModel = Depends(get_current_user)):
         "email": current_user.email,
         "bio": current_user.bio,
         "posts": current_user.posts,
-        "comments": [(comment_id) for comment_id in current_user.comments]  # Convert UUIDs to strings
+        "comments": [(comment_id) for comment_id in current_user.comments],  # Convert UUIDs to strings
+        "is_uoft": current_user.is_uoft,
+        "is_admin": current_user.is_admin
     }
 
 @router.post("/send-verification-code")
 async def send_verification(request: EmailRequest):
     # Validate email domain
-    if not request.email.endswith("@mail.utoronto.ca"):
-        raise HTTPException(status_code=400, detail="Only @mail.utoronto.ca emails are allowed")
+    # if not request.email.endswith("@mail.utoronto.ca"):
+    #     raise HTTPException(status_code=400, detail="Only @mail.utoronto.ca emails are allowed")
 
     # Generate a 6-digit verification code
     verification_code = generate_verification_code()
@@ -207,7 +220,7 @@ async def verify_code(request: VerifyCodeRequest):
 
     expires_at = record["expires_at"]
 
-    # 🔵 Fix: Normalize to UTC if tzinfo is missing
+    #  Normalize to UTC if tzinfo is missing
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
 
@@ -256,12 +269,16 @@ async def register_user(request: RegisterUserRequest, response: Response):
     # Hash the password before storing
     hashed_password = hash_password(request.password)
 
+    # Check if email registed is UofT or not
+    is_uoft = request.email.endswith("@mail.utoronto.ca")
+
     # Create and insert new user 
     new_user = UserModel(
         email=request.email,
         username=request.username,
         password=hashed_password,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
+        is_uoft = is_uoft
     )
     await new_user.insert()
 
@@ -285,6 +302,31 @@ async def check_refresh_token(request: Request):
     if not refresh_token:
         return Response(status_code=204)
     return {"message": "Refresh token exists"}
+
+@router.post("/update-email-after-verification")
+async def update_email_after_verification(request: EmailUpdateAfterVerification):
+    user = await UserModel.find_one(UserModel.email == request.current_email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check for latest verified record
+    record = await verification_codes_collection.find_one(
+        {"email": request.new_email, "verified": True},
+        sort=[("_id", -1)]
+    )
+    if not record:
+        raise HTTPException(status_code=400, detail="Email not verified")
+
+    # Prevent duplicate emails
+    existing = await UserModel.find_one(UserModel.email == request.new_email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already in use")
+
+    user.email = request.new_email
+    user.is_uoft = True
+    await user.save()
+
+    return {"message": "Email updated successfully"}
 
 @router.post("/update-password")
 async def update_password(request: UpdatePasswordRequest):
@@ -375,4 +417,3 @@ async def refresh_token(request: Request, response: Response):
         raise Response(status_code=401)
     except jwt.PyJWTError:
         raise Response(status_code=401)
-
