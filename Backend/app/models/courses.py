@@ -9,6 +9,10 @@ class OverallRatingModel(BaseModel):
     average_rating_MD: float =  0.0
     average_rating_AD: float =  0.0
 
+class ReportDetail(BaseModel):
+    user_id: UUID
+    user_name: str
+    reason: str
 
 class ReviewModel(BaseModel):
     content: str
@@ -19,6 +23,8 @@ class ReviewModel(BaseModel):
     ratings: OverallRatingModel = Field(default_factory=OverallRatingModel)
     created_at: datetime = Field(default_factory=datetime.now)
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
+    reports: List[ReportDetail] = Field(default_factory=list)  # Add reports field
+    flagged: bool = Field(default=False)  # stays False until report threshold met
 
 class CourseModel(Document):
     title: str
