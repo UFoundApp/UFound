@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 
 import { useContext } from 'react';
-import { AlertContext } from './ui/AlertContext';
+import { AlertContext } from './UI/AlertContext';
 
 function EmailInput({ onSuccess, resetPasswordState }) {
   const [email, setEmail] = useState("");

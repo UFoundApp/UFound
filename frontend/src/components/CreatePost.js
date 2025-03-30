@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getUser } from './AuthPageUtil';
 
 import { useContext } from 'react';
-import { AlertContext } from './ui/AlertContext';
+import { AlertContext } from './UI/AlertContext';
 
 function CreatePost() {
   const [title, setTitle] = useState("");

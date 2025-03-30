@@ -180,7 +180,8 @@ async def get_user_info(current_user: UserModel = Depends(get_current_user)):
         "bio": current_user.bio,
         "posts": current_user.posts,
         "comments": [(comment_id) for comment_id in current_user.comments],  # Convert UUIDs to strings
-        "is_uoft": current_user.is_uoft
+        "is_uoft": current_user.is_uoft,
+        "is_admin": current_user.is_admin
     }
 
 @router.post("/send-verification-code")

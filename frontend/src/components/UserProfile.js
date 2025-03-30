@@ -53,6 +53,8 @@ function UserProfile() {
   }, [username]);
 
   const isOwnProfile = currentUser?.username === username;
+  const isAdmin = currentUser?.is_admin === true;
+
 
   // Function to check if username is available
   const checkUsernameAvailability = async (newUsername) => {
@@ -120,80 +122,30 @@ function UserProfile() {
                 <Text mb={2}>Username</Text>
                 <Input value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder="Username" />
                 <Text mb={2}>Bio</Text>
-                <Textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell other users about yourself" h="150px" />
-                <Button colorScheme="blue" onClick={handleSave} w="100%">Save</Button>
-
-                {/* UofT Email Upgrade */}
-                {currentUser && !currentUser.is_uoft && (
-                  <Box mt={6} p={4} borderWidth="1px" borderRadius="lg" bg="gray.50">
-                    <Text fontWeight="semibold" mb={2}>Upgrade to UofT Email</Text>
-                    <Text fontSize="sm" color="gray.600" mb={2}>
-                      Your current email: <strong>{currentUser.email}</strong>
-                    </Text>
-
-                    {!verificationSent ? (
-                      <>
-                        <Input
-                          placeholder="Enter your UofT email (e.g. you@mail.utoronto.ca)"
-                          value={newEmail}
-                          onChange={(e) => setNewEmail(e.target.value)}
-                          mb={2}
-                        />
-                        <Button
-                          colorScheme="blue"
-                          onClick={async () => {
-                            try {
-                              const res = await axios.post("http://localhost:8000/auth/send-verification-code", {
-                                email: newEmail,
-                              });
-                              setVerificationSent(true);
-                              setMessage(res.data.message);
-                            } catch (err) {
-                              setMessage(err.response?.data?.detail || "Failed to send verification code");
-                            }
-                          }}
-                          isDisabled={!newEmail.endsWith("@mail.utoronto.ca")}
-                        >
-                          Send Verification Code
-                        </Button>
-                      </>
-                    ) : !emailUpdated ? (
-                      <>
-                        <Input
-                          placeholder="Enter the 6-digit verification code"
-                          value={code}
-                          onChange={(e) => setCode(e.target.value)}
-                          mb={2}
-                        />
-                        <Button
-                          colorScheme="green"
-                          onClick={async () => {
-                            try {
-                              await axios.post("http://localhost:8000/auth/verify-code", {
-                                email: newEmail,
-                                code,
-                              });
-
-                              await axios.post("http://localhost:8000/auth/update-email-after-verification", {
-                                current_email: currentUser.email,
-                                new_email: newEmail,
-                              });
-
-                              setEmailUpdated(true);
-                              setMessage("Email successfully updated!");
-                              setTimeout(() => window.location.reload(), 1500);
-                            } catch (err) {
-                              setMessage(err.response?.data?.detail || "Verification failed");
-                            }
-                          }}
-                        >
-                          Confirm & Update Email
-                        </Button>
-                      </>
-                    ) : (
-                      <Text color="green.600">Your email has been upgraded!</Text>
-                    )}
-                  </Box>
+                <Textarea
+                  value={profile.bio}
+                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  placeholder="Tell other users about yourself"
+                  h="150px"
+                />
+                <Button colorScheme="blue" onClick={handleSave} w="100%">
+                  Save
+                </Button>
+                {isOwnProfile && currentUser?.is_admin && (
+                  <Button
+                    colorScheme="green"
+                    size="lg"
+                    variant="solid"
+                    fontWeight="bold"
+                    fontSize="lg"
+                    boxShadow="md"
+                    _hover={{ bg: "green.600", transform: "scale(1.03)" }}
+                    mt={6}
+                    onClick={() => navigate("/admin")}
+                    w="100%"
+                  >
+                    Go to Admin Panel
+                  </Button>
                 )}
               </>
             ) : (

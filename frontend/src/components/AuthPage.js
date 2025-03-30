@@ -24,7 +24,7 @@ import PasswordSetup from "./PasswordSetup";
 
 
 import { useContext } from 'react';
-import { AlertContext } from './ui/AlertContext';
+import { AlertContext } from './UI/AlertContext';
 
 
 function AuthPage() {

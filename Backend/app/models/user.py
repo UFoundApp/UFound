@@ -14,3 +14,4 @@ class UserModel(Document):
     bio: Optional[str] = Field(default=None)
     posts: List[str] = Field(default_factory=list)  # Store post IDs, defaults to empty list
     is_uoft: bool = Field(default=False)
+    is_admin: bool = Field(default=False)

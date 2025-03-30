@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 
 import { useContext } from 'react';
-import { AlertContext } from './ui/AlertContext';
+import { AlertContext } from './UI/AlertContext';
 
 function VerifyCode({ email, onSuccess }) {
   const [code, setCode] = useState("");

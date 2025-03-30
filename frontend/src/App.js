@@ -20,8 +20,8 @@ import SearchResults from './components/SearchResults';
 import AdminFlaggedPage from './components/AdminFlaggedPage'; 
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
-import { AlertProvider } from './components/ui/AlertContext';
-import AlertComponent from './components/ui/Alert';
+import { AlertProvider } from './components/UI/AlertContext';
+import AlertComponent from './components/UI/Alert';
 function App() {
   return (
     <ChakraProvider value={system}>
