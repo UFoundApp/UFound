@@ -5,6 +5,10 @@ from typing import List, Optional, Union
 from app.models.courses import CourseModel
 from pydantic import BaseModel
 from uuid import UUID
+from bson import ObjectId
+
+from app.courseScraper import get_courses_by_professor
+
 
 router = APIRouter()
 
@@ -15,11 +19,15 @@ async def get_professor_page(professor_id: UUID):
     if not professor:
         raise HTTPException(status_code=404, detail="Professor not found")
 
-    # 🔹 Get courses the professor teaches
-    current_courses = await CourseModel.find({"title": {"$in": professor.current_courses}}).to_list()
-    past_courses = await CourseModel.find({"title": {"$in": professor.past_courses}}).to_list()
+    # ✅ Correct way: lookup by ObjectId
+    current_courses = await CourseModel.find({
+        "_id": {"$in": professor.current_courses}
+    }).to_list()
 
-    # 🔹 Get professor reviews
+    past_courses = await CourseModel.find({
+        "_id": {"$in": professor.past_courses}
+    }).to_list()
+
     reviews = await ProfessorReviewModel.find({"professor_id": professor_id}).to_list()
 
     return {
@@ -50,14 +58,25 @@ async def create_professor(professor: ProfessorModel):
     return professor
 
 # ✅ Get all professors
-@router.get("/professors", response_model=List[ProfessorModel])
+@router.get("/professors")
 async def get_professors(page: int = 0, limit: int = 20):
-    # Calculate skip value based on page and limit
     skip = page * limit
-    
-    # Use skip and limit for pagination
     professors = await ProfessorModel.find_all().skip(skip).limit(limit).to_list()
-    return professors
+
+    return [
+        {
+            "id": str(prof.id),
+            "name": prof.name,
+            "department": prof.department,
+            "profile_link": prof.profile_link,
+            "ratings": prof.ratings,
+            "current_courses": [str(cid) for cid in prof.current_courses],
+            "past_courses": [str(cid) for cid in prof.past_courses],
+            "created_at": prof.created_at,
+        }
+        for prof in professors
+    ]
+
 
 # ✅ Get a single professor by ID
 @router.get("/professors/{professor_id}", response_model=ProfessorModel)
@@ -144,6 +163,88 @@ async def like_professor_review(review_id: str, like_request: LikeReviewRequest 
         return review
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing like: {str(e)}")
+
+class LinkCoursesRequest(BaseModel):
+    course_codes: List[str]
+    current: bool = True
+
+@router.post("/professors/{professor_id}/link-courses")
+async def link_courses_to_professor(
+        professor_id: UUID,
+        body: LinkCoursesRequest
+):
+    professor = await ProfessorModel.get(professor_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor not found")
+
+    # Regex filters on title
+    filters = [{"title": {"$regex": f"^{code}", "$options": "i"}} for code in body.course_codes]
+
+    matched_courses = await CourseModel.find({"$or": filters}).to_list()
+    matched_codes = {c.title.split(" ")[0] for c in matched_courses}
+    matched_ids = [c.id for c in matched_courses]
+
+    if body.current:
+        professor.current_courses = list(set(professor.current_courses + matched_ids))
+    else:
+        professor.past_courses = list(set(professor.past_courses + matched_ids))
+
+    await professor.save()
+
+    # ✅ Also add the professor to each matched course
+    for course in matched_courses:
+        if professor.id not in course.professors:
+            course.professors.append(professor.id)
+            await course.save()
+
+    return {
+        "linked": [f"{c.title}" for c in matched_courses],
+        "skipped": [code for code in body.course_codes if code not in matched_codes]
+    }
+
+@router.post("/professors/link-all-courses")
+async def link_all_professors_to_courses():
+    professors = await ProfessorModel.find_all().to_list()
+    results = []
+
+    for prof in professors:
+        print(f"Linking for: {prof.name}")
+        scraped_courses = get_courses_by_professor(prof.name)
+        if not scraped_courses:
+            continue
+
+        current_ids = []
+        past_ids = []
+
+        for entry in scraped_courses:
+            code = entry["code"]
+            session = entry["session"]
+
+            course = await CourseModel.find_one({"title": {"$regex": f"^{code}", "$options": "i"}})
+            if not course:
+                continue
+
+            # Add prof ID to course
+            course.professors = list(set(course.professors + [prof.id]))
+            await course.save()
+
+            # Link course to professor
+            if session == "20251":  # Winter
+                current_ids.append(course.id)
+            elif session == "20249":  # Fall
+                past_ids.append(course.id)
+
+        prof.current_courses = list(set(prof.current_courses + current_ids))
+        prof.past_courses = list(set(prof.past_courses + past_ids))
+        await prof.save()
+
+        results.append({
+            "professor": prof.name,
+            "linked_current": len(current_ids),
+            "linked_past": len(past_ids)
+        })
+
+    return {"summary": sorted(results, key=lambda x: x["professor"].lower())}
 
 @router.delete("/professors/delete_all")
 async def delete_all_professors():
