@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getUser } from './AuthPageUtil';
 
 import { useContext } from 'react';
-import { AlertContext } from './UI/AlertContext';
+import { AlertContext } from './ui/AlertContext';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
