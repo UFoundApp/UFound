@@ -99,7 +99,15 @@ const ProfessorPage = () => {
     const [likeMessages, setLikeMessages] = useState({});
     const [user, setUser] = useState(null);
     const isUofT = user?.is_uoft === true;
-    const disableReviewUI = user && !isUofT;    
+    const disableReviewUI = user && !isUofT;   
+    
+    useEffect(() => {
+        const loadUser = async () => {
+            const u = await getUser();
+            setUser(u);
+        };
+        loadUser();
+    }, []);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -126,7 +134,6 @@ const ProfessorPage = () => {
     }, [professorId]);
 
     const handleSubmitReview = async () => {
-        const user = getUser();
         if (!user) {
             setReviewMessage("You must be logged in to leave a review.");
             return;

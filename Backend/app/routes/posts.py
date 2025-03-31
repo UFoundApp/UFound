@@ -27,10 +27,15 @@ class LikeRequest(BaseModel):
 class PostCreateRequest(BaseModel):
     title: str
     content: str
+    author:str
       
 class ReportRequest(BaseModel):
     user_id: UUID
     reason: str 
+
+class UsernameUpdateRequest(BaseModel):
+    user_id: UUID
+    new_username: str
 
 def find_comment_and_apply_action(comments, comment_id, action):
     for comment in comments:
@@ -83,7 +88,41 @@ async def delete_nested_comment(post_id: str, comment_id: str):
     await post.save()
     return {"message": "Nested comment deleted"}
 
+@router.post("/posts/update-comments-username")
+async def update_comments_username_endpoint(request_data: UsernameUpdateRequest):
+    # Find all posts that contain comments with the matching author_id.
+    posts = await PostModel.find(PostModel.comments.author_id == request_data.user_id).to_list()
+    
+    # Recursive helper to update username in comments and nested replies.
+    def recursive_update(comments: list) -> bool:
+        updated = False
+        for comment in comments:
+            if comment.author_id == request_data.user_id:
+                comment.author_name = request_data.new_username
+                updated = True
+            if comment.replies:
+                if recursive_update(comment.replies):
+                    updated = True
+        return updated
 
+    # For each post, update its comments if needed.
+    for post in posts:
+        if recursive_update(post.comments):
+            await post.save()
+    
+    return {"message": "Username updated in comments"}
+
+@router.post("/posts/update-author-username")
+async def update_author_username_endpoint(request_data: UsernameUpdateRequest):
+    # Find all posts where the author_id matches the given user_id
+    posts = await PostModel.find(PostModel.author_id == request_data.user_id).to_list()
+    
+    # Update the author field in each post
+    for post in posts:
+        post.author = request_data.new_username
+        await post.save()
+    
+    return {"message": "Username updated in posts"}
 
 
 @router.post("/admin/posts/{post_id}/comments/{comment_id}/unflag")
@@ -222,6 +261,7 @@ async def create_post(request: Request, post_data: PostCreateRequest = Body(...)
         content=post_data.content,
         created_at=datetime.now(timezone.utc),
         author_id=current_user.id,
+        author=post_data.author,
         likes=[],
         comments=[],
         views=0
@@ -248,6 +288,7 @@ async def get_post(post_id: PydanticObjectId):
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    print(post, '----- post details -----')
     return post
 
 @router.post("/posts/{post_id}/like")
