@@ -23,14 +23,22 @@ async def searchPosts(query: str):
     }
 
 @router.get("/search/professors")  
-async def searchPosts(query: str):
+async def searchProfessors(query: str):
     query = query.lower()
     profs = await ProfessorModel.find_all().to_list()
     profList = []
     
     for prof in profs:
-        if query in prof.name.lower() or query in prof.department.lower():
-            profList.append(prof)
+        if query in prof.name.lower():
+            # Convert ObjectIds to strings for JSON serialization
+            prof_dict = {
+                "_id": str(prof.id),
+                "name": prof.name,
+                "department": prof.department,
+                "ratings": prof.ratings.dict() if prof.ratings else None,
+                "current_courses": [str(course_id) for course_id in prof.current_courses]
+            }
+            profList.append(prof_dict)
     
     return {
         "professors": profList
@@ -96,11 +104,20 @@ async def get_search_suggestions(query: str, type: str):
             results = courses
             
         elif type == "professors":
-            # Simple prefix matching for professors
+            # Simple prefix matching for professors with proper field mapping
             professors = await ProfessorModel.find({
-                "name": {"$regex": f"^{query}", "$options": "i"}
+                "$or": [
+                    {"name": {"$regex": f"^{query}", "$options": "i"}},
+                    {"department": {"$regex": f"^{query}", "$options": "i"}}
+                ]
             }).limit(5).to_list()
-            results = professors
+            
+            # Map the fields to match what frontend expects
+            results = [{
+                "name": prof.name,
+                "department": prof.department,
+                "_id": str(prof.id)  # Ensure ID is included and converted to string
+            } for prof in professors]
             
         return results[:5]  # Limit to 5 suggestions
         
