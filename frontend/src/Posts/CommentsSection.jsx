@@ -15,7 +15,7 @@ import { FaCommentAlt, FaReply } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
 import Comment from "./Comment"; // Import the Comment component
 
-const CommentsSection = ({ postId }) => {
+const CommentsSection = ({ postId, onCommentsChange  }) => {
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [comment, setComment] = useState("");
@@ -52,6 +52,22 @@ const CommentsSection = ({ postId }) => {
         fetchComments();
     }, [postId]);
 
+    const removeCommentById = (comments, commentId) => {
+        return comments.reduce((acc, comment) => {
+          // If this comment is the one to delete, skip it
+          if (comment.id === commentId) {
+            return acc;
+          }
+          // Otherwise, if it has replies, process them recursively
+          let updatedReplies = comment.replies;
+          if (comment.replies && comment.replies.length > 0) {
+            updatedReplies = removeCommentById(comment.replies, commentId);
+          }
+          // Include the comment (with its updated replies) in the accumulator
+          return [...acc, { ...comment, replies: updatedReplies }];
+        }, []);
+      };
+
     function addReplyToNestedComments(comments, parentId, newReply) {
         return comments.map((comment) => {
             // If this is the parent comment, append the new reply
@@ -69,49 +85,89 @@ const CommentsSection = ({ postId }) => {
         });
     }
 
+    
+const handleDelete = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
 
-    const handleComment = async (parentId = null, replyText = null) => {
-        const commentText = parentId ? replyText : comment;
-        if (!user || !user.id) {
-            setMessage("You must be logged in to comment.");
-            setIsError(true);
-            return;
-        }
+    try {
+        // Ensure commentId is a string before sending it
+        const objectId = commentId.toString();
 
-        if (!commentText.trim()) {
-            setMessage("Comment cannot be empty.");
-            setIsError(true);
-            return;
-        }
+        await axios.delete(`http://127.0.0.1:8000/api/posts/${postId}/comments/${objectId}`, {
+            withCredentials: true, 
+        });
 
-        try {
-            setIsCommenting(true);
-            const response = await axios.post(`http://127.0.0.1:8000/api/posts/${postId}/comment`, {
+        // Remove deleted comment from state
+        setComments(prevComments => {
+            const updatedComments = removeCommentById(prevComments, commentId);
+            // Call the callback to inform the parent
+            if (onCommentsChange) {
+                onCommentsChange(updatedComments);
+            }
+            return updatedComments;
+        });    } catch (error) {
+        console.error("Failed to delete comment:", error.response?.data || error.message);
+    }
+};
+    
+
+const handleComment = async (parentId = null, replyText = null) => {
+    const commentText = parentId ? replyText : comment;
+    if (!user || !user.id) {
+        setMessage("You must be logged in to comment.");
+        setIsError(true);
+        return;
+    }
+
+    if (!commentText.trim()) {
+        setMessage("Comment cannot be empty.");
+        setIsError(true);
+        return;
+    }
+
+    try {
+        setIsCommenting(true);
+        const response = await axios.post(
+            `http://127.0.0.1:8000/api/posts/${postId}/comment`,
+            {
                 author_id: user.id,
                 content: commentText,
-                parent_id: parentId
-            }, {
+                parent_id: parentId,
+            },
+            {
                 withCredentials: true,
-            });
-
-            if (parentId) {
-                setComments((prevComments) =>
-                    addReplyToNestedComments(prevComments, parentId, response.data.comment)
-                );
-            } else {
-                setComments((prevComments) => [response.data.comment, ...prevComments]);
             }
+        );
 
-            setComment("");
-            setIsError(false);
-        } catch (error) {
-            setMessage("Failed to post commenttttt.");
-            setIsError(true);
-        } finally {
-            setIsCommenting(false);
-            setTimeout(() => setMessage(""), 3000);
+        if (parentId) {
+            setComments((prevComments) => {
+                const updatedComments = addReplyToNestedComments(prevComments, parentId, response.data.comment);
+                if (onCommentsChange) {
+                    onCommentsChange(updatedComments);
+                }
+                return updatedComments;
+            });
+        } else {
+            setComments((prevComments) => {
+                const updatedComments = [response.data.comment, ...prevComments];
+                if (onCommentsChange) {
+                    onCommentsChange(updatedComments);
+                }
+                return updatedComments;
+            });
         }
-    };
+
+        setComment("");
+        setIsError(false);
+    } catch (error) {
+        setMessage("Failed to post comment.");
+        setIsError(true);
+    } finally {
+        setIsCommenting(false);
+        setTimeout(() => setMessage(""), 3000);
+    }
+};
+
 
     function updateCommentLikes(comments, commentId, userId, action) {
         return comments.map(comment => {
@@ -193,6 +249,7 @@ const CommentsSection = ({ postId }) => {
                             handleReply={handleComment}
                             handleLike={handleLike}
                             handleUnlike={handleUnlike}
+                            handleDelete={handleDelete} // ✅ Pass the delete function here
                             depth={0}
                         />
                     ))}

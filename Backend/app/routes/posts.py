@@ -9,6 +9,8 @@ from app.routes.auth import get_current_user
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel
+from fastapi import Depends
+
 
 router = APIRouter()
 REPORT_THRESHOLD = 3
@@ -25,10 +27,15 @@ class LikeRequest(BaseModel):
 class PostCreateRequest(BaseModel):
     title: str
     content: str
+    author:str
       
 class ReportRequest(BaseModel):
     user_id: UUID
     reason: str 
+
+class UsernameUpdateRequest(BaseModel):
+    user_id: UUID
+    new_username: str
 
 def find_comment_and_apply_action(comments, comment_id, action):
     for comment in comments:
@@ -81,7 +88,41 @@ async def delete_nested_comment(post_id: str, comment_id: str):
     await post.save()
     return {"message": "Nested comment deleted"}
 
+@router.post("/posts/update-comments-username")
+async def update_comments_username_endpoint(request_data: UsernameUpdateRequest):
+    # Find all posts that contain comments with the matching author_id.
+    posts = await PostModel.find(PostModel.comments.author_id == request_data.user_id).to_list()
+    
+    # Recursive helper to update username in comments and nested replies.
+    def recursive_update(comments: list) -> bool:
+        updated = False
+        for comment in comments:
+            if comment.author_id == request_data.user_id:
+                comment.author_name = request_data.new_username
+                updated = True
+            if comment.replies:
+                if recursive_update(comment.replies):
+                    updated = True
+        return updated
 
+    # For each post, update its comments if needed.
+    for post in posts:
+        if recursive_update(post.comments):
+            await post.save()
+    
+    return {"message": "Username updated in comments"}
+
+@router.post("/posts/update-author-username")
+async def update_author_username_endpoint(request_data: UsernameUpdateRequest):
+    # Find all posts where the author_id matches the given user_id
+    posts = await PostModel.find(PostModel.author_id == request_data.user_id).to_list()
+    
+    # Update the author field in each post
+    for post in posts:
+        post.author = request_data.new_username
+        await post.save()
+    
+    return {"message": "Username updated in posts"}
 
 
 @router.post("/admin/posts/{post_id}/comments/{comment_id}/unflag")
@@ -220,6 +261,7 @@ async def create_post(request: Request, post_data: PostCreateRequest = Body(...)
         content=post_data.content,
         created_at=datetime.now(timezone.utc),
         author_id=current_user.id,
+        author=post_data.author,
         likes=[],
         comments=[],
         views=0
@@ -246,6 +288,7 @@ async def get_post(post_id: PydanticObjectId):
     post = await PostModel.get(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    print(post, '----- post details -----')
     return post
 
 @router.post("/posts/{post_id}/like")
@@ -284,6 +327,18 @@ async def unlike_post(post_id: PydanticObjectId, request: Request):
     post.likes.remove(user_id)
     await post.save()
     return {"message": "Post unliked", "likes_count": len(post.likes)}
+
+@router.delete("/posts/{post_id}")
+async def delete_post(post_id: str):
+    # Fetch the post from the database (adjust as needed for your ORM)
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Delete the post (this may vary based on your database/ORM)
+    await post.delete()
+    
+    return {"message": "Post deleted successfully"}
 
 def find_comment_by_id(comments: List[CommentModel], comment_id: UUID) -> Optional[CommentModel]:
     for c in comments:
@@ -411,6 +466,37 @@ async def unlike_comment(post_id: PydanticObjectId, comment_id: UUID, request: L
     comment.likes.remove(request.user_id)
     await post.save()
     return {"message": "Comment unliked", "likes_count": len(comment.likes)}
+
+@router.delete("/posts/{post_id}/comments/{comment_id}")
+async def delete_comment(post_id: str, comment_id: str, user=Depends(get_current_user)):
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Recursive function to find the comment and its parent list
+    def find_and_remove(comments, comment_id):
+        for idx, comment in enumerate(comments):
+            if str(comment.id) == comment_id:
+                return idx, comments
+            if comment.replies:
+                result = find_and_remove(comment.replies, comment_id)
+                if result is not None:
+                    return result
+        return None
+
+    result = find_and_remove(post.comments, comment_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    idx, parent_list = result
+    comment_to_delete = parent_list[idx]
+        
+    # Remove the comment
+    parent_list.pop(idx)
+    await post.save()
+    
+    return {"message": "Comment deleted successfully"}
+
 
 # Update the view increment endpoint
 @router.post("/posts/{post_id}/view")

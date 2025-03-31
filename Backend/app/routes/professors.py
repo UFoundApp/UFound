@@ -20,6 +20,26 @@ REPORT_THRESHOLD = 3
 class ReportRequest(BaseModel):
     user_id: UUID
     reason: str
+
+class ReviewAuthorUpdateRequest(BaseModel):
+    user_id: UUID
+    old_username: str
+    new_username: str
+
+@router.post("/professors/update-reviews-author")
+async def update_professor_reviews_author(request_data: ReviewAuthorUpdateRequest):
+    # Find all professor reviews where the author field matches the old username.
+    # (If you had stored a user id in the review, you would filter by that as well.)
+    reviews = await ProfessorReviewModel.find(ProfessorReviewModel.author == request_data.old_username).to_list()
+    if not reviews:
+        return {"message": "No professor reviews found to update."}
+    
+    for review in reviews:
+        review.author = request_data.new_username
+        await review.save()
+    
+    return {"message": "Professor review authors updated successfully."}
+
 @router.delete("/admin/professors/reviews/{review_id}")
 async def delete_professor_review(review_id: str):
     review = await ProfessorReviewModel.get(review_id)

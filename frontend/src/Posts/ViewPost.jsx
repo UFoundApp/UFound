@@ -29,6 +29,14 @@ const ViewPost = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [views, setViews] = useState(0);
+    const [user, setUser] = useState(null); // Track current user
+
+
+    useEffect(() => {
+        // Fetch the currently logged-in user
+        getUser().then((fetchedUser) => setUser(fetchedUser));
+      }, []);
+    
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
@@ -85,6 +93,28 @@ const ViewPost = () => {
             isMounted = false;
         };
     }, [id]);
+
+    const handleDeletePost = async () => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
+    
+        try {
+          await axios.delete(`http://localhost:8000/api/posts/${id}`, {
+            withCredentials: true,
+          });
+          // After deletion, redirect to homepage or another page
+          window.location.href = "/";
+        } catch (error) {
+          setMessage("Failed to delete post.");
+          setIsError(true);
+        }
+      };
+
+    const countTotalComments = (comments) => {
+        return comments.reduce((total, comment) => {
+            return total + 1 + countTotalComments(comment.replies || []);
+        }, 0);
+    };
+    
 
     const handleLike = async () => {
         const user = await getUser();
@@ -199,15 +229,32 @@ const ViewPost = () => {
                     {likes} {hasLiked ? "Unlike" : "Like"}
                 </Button>
                 <Button leftIcon={<FaCommentAlt />}>
-                    {post.comments.length} Comments
+                {countTotalComments(post.comments)} Comments
                 </Button>
+
                 <Button leftIcon={<FaEye />} variant="ghost">
                     {views} Views
                 </Button>
+
+                {user && user.id === post.author_id && (
+          <Button
+            colorPalette="red"
+            onClick={handleDeletePost}
+          >
+            Delete
+          </Button>
+        )}
+                
             </HStack>
 
             {/* Comments Section */}
-            <CommentsSection postId={id} />
+            <CommentsSection 
+    postId={id} 
+    onCommentsChange={(updatedComments) => {
+        // Update the post's comments with the new value
+        setPost(prevPost => ({ ...prevPost, comments: updatedComments }));
+    }} 
+/>
         </Box>
     );
 };

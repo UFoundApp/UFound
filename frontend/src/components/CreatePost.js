@@ -34,10 +34,11 @@ function CreatePost() {
     setMessage("");
     
     try {
+    
       const response = await axios.post("http://127.0.01:8000/api/posts", {
         title,
         content,
-        author: anon ? "Anonymous" : author.username
+        author: anon ? "Anonymous" : user.username
       }, {
         withCredentials: true,
       }

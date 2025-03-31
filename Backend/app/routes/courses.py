@@ -16,6 +16,28 @@ class ReportRequest(BaseModel):
     user_id: UUID
     reason: str
 
+class ReviewAuthorUpdateRequest(BaseModel):
+    user_id: UUID
+    old_username: str
+    new_username: str
+
+@router.post("/courses/update-reviews-author")
+async def update_course_reviews_author(request_data: ReviewAuthorUpdateRequest):
+    # Get all courses
+    courses = await CourseModel.find_all().to_list()
+    updated_count = 0
+    for course in courses:
+        updated = False
+        # Loop over each review in the course
+        for review in course.reviews:
+            if review.author == request_data.old_username:
+                review.author = request_data.new_username
+                updated = True
+                updated_count += 1
+        if updated:
+            await course.save()
+    return {"message": f"Updated {updated_count} course reviews."}
+
 @router.delete("/admin/courses/{course_id}/reviews/{index}")
 async def delete_course_review(course_id: str, index: int):
     course = await CourseModel.get(course_id)
