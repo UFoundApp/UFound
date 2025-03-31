@@ -4,8 +4,9 @@ import { FaReply, FaHeart, FaRegHeart } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
 import { Link } from 'react-router-dom';
 import ReportDialog from "./Reporting.jsx";
+import { FaTrash } from "react-icons/fa";
 
-const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth }) => {
+const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth, handleDelete }) => {
     const [replyText, setReplyText] = useState("");
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [user, setUser] = useState(null);
@@ -17,6 +18,7 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
         }
         fetchUser();
     }, []);
+    
 
     const hasLiked = (comment.likes ?? []).includes(user?.id);
 
@@ -41,9 +43,18 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
                     <Text fontSize="xs" color="gray.500" ml={2}>
                         {new Date(comment.created_at).toLocaleDateString()}
                     </Text>
+                    {user?.id === comment.author_id && (
+                    <FaTrash 
+                        color="gray" 
+                        cursor="pointer" 
+                        onClick={() => handleDelete(comment.id)}
+                        />
+)}
+
                 </Flex>
 
                 {/* Like Button */}
+                
                 <HStack position="absolute" top="8px" right="8px" spacing={3}>
   {/* ❤️ Like icon */}
   {hasLiked ? (
@@ -93,6 +104,7 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
                             handleReply={handleReply}
                             handleLike={handleLike}
                             handleUnlike={handleUnlike}
+                            handleDelete={handleDelete}
                             depth={depth + 1}
                         />
                     ))}

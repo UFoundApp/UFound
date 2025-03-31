@@ -9,6 +9,8 @@ from app.routes.auth import get_current_user
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel
+from fastapi import Depends
+
 
 router = APIRouter()
 REPORT_THRESHOLD = 3
@@ -285,6 +287,18 @@ async def unlike_post(post_id: PydanticObjectId, request: Request):
     await post.save()
     return {"message": "Post unliked", "likes_count": len(post.likes)}
 
+@router.delete("/posts/{post_id}")
+async def delete_post(post_id: str):
+    # Fetch the post from the database (adjust as needed for your ORM)
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Delete the post (this may vary based on your database/ORM)
+    await post.delete()
+    
+    return {"message": "Post deleted successfully"}
+
 def find_comment_by_id(comments: List[CommentModel], comment_id: UUID) -> Optional[CommentModel]:
     for c in comments:
         if c.id == comment_id:
@@ -411,6 +425,37 @@ async def unlike_comment(post_id: PydanticObjectId, comment_id: UUID, request: L
     comment.likes.remove(request.user_id)
     await post.save()
     return {"message": "Comment unliked", "likes_count": len(comment.likes)}
+
+@router.delete("/posts/{post_id}/comments/{comment_id}")
+async def delete_comment(post_id: str, comment_id: str, user=Depends(get_current_user)):
+    post = await PostModel.get(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Recursive function to find the comment and its parent list
+    def find_and_remove(comments, comment_id):
+        for idx, comment in enumerate(comments):
+            if str(comment.id) == comment_id:
+                return idx, comments
+            if comment.replies:
+                result = find_and_remove(comment.replies, comment_id)
+                if result is not None:
+                    return result
+        return None
+
+    result = find_and_remove(post.comments, comment_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    idx, parent_list = result
+    comment_to_delete = parent_list[idx]
+        
+    # Remove the comment
+    parent_list.pop(idx)
+    await post.save()
+    
+    return {"message": "Comment deleted successfully"}
+
 
 # Update the view increment endpoint
 @router.post("/posts/{post_id}/view")
