@@ -39,7 +39,7 @@ async def init_redis():
             app.state.redis = redis.Redis(
                 host=os.getenv("REDIS_HOST", "redis"),
                 port=int(os.getenv("REDIS_PORT", 6379)),
-                #password=os.getenv("REDIS_PASS", None),
+                password=os.getenv("REDIS_PASS", None),
                 decode_responses=True
             )
             await app.state.redis.ping()
