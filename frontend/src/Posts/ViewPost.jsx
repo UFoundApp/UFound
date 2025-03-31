@@ -14,6 +14,10 @@ import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt, FaEye } from 'react-icons/fa
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
+import { FaFlag } from 'react-icons/fa';
+import ReportDialog from './Reporting.jsx';
+import { Link } from 'react-router-dom';
+
 
 const ViewPost = () => {
     const { id } = useParams();
@@ -28,15 +32,16 @@ const ViewPost = () => {
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
-        
+
         const fetchPost = async () => {
             try {
                 // First, get the post data
                 const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
-                
+
                 if (!isMounted) return; // Don't update state if component unmounted
-                
+
                 setPost(response.data);
+                console.log("RESPONSE: ", response.data);
                 setLikes(response.data.likes.length);
                 setViews(response.data.views || 0);
 
@@ -44,19 +49,19 @@ const ViewPost = () => {
                 if (user && response.data.likes.includes(user.id)) {
                     setHasLiked(true);
                 }
-                
+
                 // Increment view count only once per session
                 // Use sessionStorage to track if this post has been viewed in this session
                 const viewedPosts = JSON.parse(sessionStorage.getItem('viewedPosts') || '{}');
-                
+
                 if (!viewedPosts[id]) {
                     // Only increment if not already viewed in this session
                     const viewResponse = await axios.post(`http://localhost:8000/api/posts/${id}/view`);
-                    
+
                     if (!isMounted) return; // Don't update state if component unmounted
-                    
+
                     setViews(viewResponse.data.views);
-                    
+
                     // Mark this post as viewed in this session
                     viewedPosts[id] = true;
                     sessionStorage.setItem('viewedPosts', JSON.stringify(viewedPosts));
@@ -74,7 +79,7 @@ const ViewPost = () => {
         };
 
         fetchPost();
-        
+
         // Cleanup function to set isMounted to false when component unmounts
         return () => {
             isMounted = false;
@@ -96,10 +101,12 @@ const ViewPost = () => {
 
         try {
             setIsProcessing(true);
-            await axios.post(`http://localhost:8000/api/posts/${id}/like?user_id=${user.id}`);
+            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/like?user_id=${user.id}`,
+                {}, {
+                withCredentials: true,
+            });
             setLikes((prev) => prev + 1);
             setHasLiked(true);
-            setMessage("You liked this post!");
             setIsError(false);
         } catch (error) {
             setMessage("Failed to like post.");
@@ -120,10 +127,13 @@ const ViewPost = () => {
 
         try {
             setIsProcessing(true);
-            await axios.post(`http://localhost:8000/api/posts/${id}/unlike?user_id=${user.id}`);
+            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/unlike?user_id=${user.id}`,
+                {}, {
+                withCredentials: true,
+            }
+            );
             setLikes((prev) => prev - 1);
             setHasLiked(false);
-            setMessage("You unliked this post.");
             setIsError(false);
         } catch (error) {
             setMessage("Failed to unlike post.");
@@ -131,6 +141,23 @@ const ViewPost = () => {
         } finally {
             setIsProcessing(false);
             setTimeout(() => setMessage(""), 3000);
+        }
+    };
+
+    const handleReport = async () => {
+        const user = await getUser();
+        if (!user || !user.id) {
+            setMessage("You must be logged in to report a post.");
+            setIsError(true);
+            return;
+        }
+        try {
+            await axios.post(`http://localhost:8000/api/posts/${id}/report?user_id=${user.id}`);
+            setMessage("Post reported successfully.");
+            setIsError(false);
+        } catch (error) {
+            setMessage("Failed to report post.");
+            setIsError(true);
         }
     };
 
@@ -143,9 +170,12 @@ const ViewPost = () => {
     }
 
     return (
-        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8}>
+        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8} position="relative" >
+            <Box position="absolute" top="16px" right="16px">
+                <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
+            </Box>
             <Text fontSize="sm" color="gray.500" mb={2}>
-                {post.author} • {new Date(post.created_at).toLocaleDateString()}
+                {post.author ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
             </Text>
             <Heading as="h1" size="lg" mb={3}>
                 {post.title}

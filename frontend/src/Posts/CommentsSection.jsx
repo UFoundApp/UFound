@@ -86,10 +86,12 @@ const CommentsSection = ({ postId }) => {
 
         try {
             setIsCommenting(true);
-            const response = await axios.post(`http://localhost:8000/api/posts/${postId}/comment`, {
+            const response = await axios.post(`http://127.0.0.1:8000/api/posts/${postId}/comment`, {
                 author_id: user.id,
                 content: commentText,
                 parent_id: parentId
+            }, {
+                withCredentials: true,
             });
 
             if (parentId) {
@@ -101,10 +103,9 @@ const CommentsSection = ({ postId }) => {
             }
 
             setComment("");
-            setMessage("Your comment was posted successfully!");
             setIsError(false);
         } catch (error) {
-            setMessage("Failed to post comment.");
+            setMessage("Failed to post commenttttt.");
             setIsError(true);
         } finally {
             setIsCommenting(false);
@@ -184,10 +185,10 @@ const CommentsSection = ({ postId }) => {
                 <Spinner size="md" />
             ) : (
                 <VStack align="stretch" spacing={3}>
-                    {comments.map((c) => (
+                    {comments.map((c, index) => (
                         <Comment
                             key={c.id}
-                            comment={c}
+                            comment={{...c, index}}
                             postId={postId}
                             handleReply={handleComment}
                             handleLike={handleLike}
@@ -207,11 +208,11 @@ const CommentsSection = ({ postId }) => {
                     isDisabled={isCommenting}
                 />
                 <IconButton
-                    icon={<FaCommentAlt />}
                     onClick={() => handleComment()}
                     aria-label="Add Comment"
                     isLoading={isCommenting}
-                />
+                > <FaCommentAlt color="rgb(255, 255, 255)"  />
+                </IconButton>
             </HStack>
         </Box>
     );

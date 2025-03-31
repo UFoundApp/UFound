@@ -28,6 +28,13 @@ class ProfessorModel(Document):
     class Config:
         arbitrary_types_allowed = True
 
+    class Config:
+        arbitrary_types_allowed = True
+
+class ReportDetail(BaseModel):
+    user_id: UUID
+    user_name: str
+    reason: str
 
 class ProfessorReviewModel(Document):
     professor_id: UUID  # Required: Link to ProfessorModel
@@ -40,7 +47,8 @@ class ProfessorReviewModel(Document):
     strictness: Optional[int] = Field(default=None, ge=1, le=10)  # 1-10
     clarity: Optional[float] = Field(default=None, ge=1, le=10)  # 1-10
     engagement: Optional[float] = Field(default=None, ge=1, le=10)  # 1-10
-
+    reports: List[ReportDetail] = Field(default_factory=list)  # Add reports field
+    flagged: bool = Field(default=False)  # stays False until report threshold met
 
     class Settings:
         collection = "professor_reviews"
