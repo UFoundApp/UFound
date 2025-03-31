@@ -14,7 +14,7 @@ import CreatePost from "./components/CreatePost";
 import ReviewsPage from "./components/ReviewPage";
 import CoursePage from "./components/CoursePage";
 import UserProfile from "./components/UserProfile";
-import ProfessorPage from "./pages/ProfessorPage"; 
+import ProfessorPage from "./pages/ProfessorPage";
 import Professors from "./components/Professors";
 import SearchResults from './components/SearchResults';
 import AdminFlaggedPage from './components/AdminFlaggedPage'; 
@@ -22,7 +22,9 @@ import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import { AlertProvider } from './components/ui/AlertContext';
 import AlertComponent from './components/ui/Alert';
+
 function App() {
+
   return (
     <ChakraProvider value={system}>
       <AlertProvider>

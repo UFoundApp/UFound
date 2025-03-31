@@ -1,0 +1,39 @@
+services:
+  react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.react
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - CACHE_URL=http://localhost:8000/api/cache
+    volumes:
+      - ./frontend:/app
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - USE_REDIS=true
+      - REDIS_PASS=ufoundTEST123
+    depends_on:
+      - redis
+    volumes:
+      - ./backend:/app
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --requirepass ufoundTEST123
+
+volumes:
+  redis-data:

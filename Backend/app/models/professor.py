@@ -24,6 +24,9 @@ class ProfessorModel(Document):
 
     class Settings:
         collection = "professors"
+    
+    class Config:
+        arbitrary_types_allowed = True
 
     class Config:
         arbitrary_types_allowed = True

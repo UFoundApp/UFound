@@ -15,4 +15,8 @@ watchfiles
 aiostream
 requests
 bs4
+redis 
+aiohttp
+pymongo
 fuzzywuzzy
+
