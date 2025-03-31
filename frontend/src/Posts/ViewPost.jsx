@@ -68,7 +68,7 @@ const ViewPost = () => {
                 }
             } catch (error) {
                 if (isMounted) {
-                    setMessage("Failed to load post.");
+                    // setMessage("Failed to load post.");
                     setIsError(true);
                 }
             } finally {
