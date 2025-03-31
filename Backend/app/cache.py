@@ -1,36 +1,11 @@
-import redis.asyncio as redis
-import os
+from fastapi import FastAPI
 import json
-from dotenv import load_dotenv
 
-load_dotenv()
-
-redis_client = None
-
-async def init_redis():
-    global redis_client
-    if os.getenv("USE_REDIS", "false").lower() == "true":
+# These functions now depend on the app instance
+async def set_cache(app: FastAPI, key: str, value: dict, expiration: int = 3600):
+    if app.state.redis:
         try:
-            redis_client = redis.Redis(
-                host=os.getenv("REDIS_HOST", "redis"),
-                port=int(os.getenv("REDIS_PORT", 6379)),
-                password=os.getenv("REDIS_PASS", None),
-                decode_responses=True
-            )
-            await redis_client.ping()
-            print("Redis connected successfully")
-        except Exception as e:
-            print(f"Redis connection failed: {e}")
-            redis_client = None
-
-async def close_redis():
-    if redis_client:
-        await redis_client.close()
-
-async def set_cache(key: str, value: dict, expiration: int = 3600):
-    if redis_client:
-        try:
-            await redis_client.setex(key, expiration, json.dumps(value))
+            await app.state.redis.setex(key, expiration, json.dumps(value))
             print(f"Cached data for key: {key}")
             return True
         except Exception as e:
@@ -38,10 +13,10 @@ async def set_cache(key: str, value: dict, expiration: int = 3600):
             return False
     return False
 
-async def get_cache(key: str):
-    if redis_client:
+async def get_cache(app: FastAPI, key: str):
+    if app.state.redis:
         try:
-            cached = await redis_client.get(key)
+            cached = await app.state.redis.get(key)
             if cached:
                 print(f"Cache hit for key: {key}")
                 return json.loads(cached)
@@ -52,11 +27,11 @@ async def get_cache(key: str):
             return None
     return None
 
-async def invalidate_cache(key: str):
+async def invalidate_cache(app: FastAPI, key: str):
     """Remove a specific key from the cache."""
-    if redis_client:
+    if app.state.redis:
         try:
-            await redis_client.delete(key)
+            await app.state.redis.delete(key)
             print(f"Invalidated cache for key: {key}")
             return True
         except Exception as e:

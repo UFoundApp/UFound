@@ -28,7 +28,7 @@ class CourseModel(Document):
     distribution: str  # Fixed typo
     reviews: List[ReviewModel] = Field(default_factory=list)  
     created_at: datetime = Field(default_factory=datetime.now)
-    professors: Optional[List[str]] = Field(default_factory=list)  # Placeholder
+    professors: Optional[List[UUID]] = Field(default_factory=list)  # Placeholder
     rating: float = Field(default=0.0)
     ratings: OverallRatingModel = Field(default_factory=OverallRatingModel)
     likes: List[UUID] = Field(default_factory=list)  # Store user IDs
