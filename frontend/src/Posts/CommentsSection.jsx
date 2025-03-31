@@ -103,7 +103,6 @@ const CommentsSection = ({ postId }) => {
             }
 
             setComment("");
-            setMessage("Your comment was posted successfully!");
             setIsError(false);
         } catch (error) {
             setMessage("Failed to post commenttttt.");

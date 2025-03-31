@@ -122,7 +122,7 @@ const Timeline = () => {
     e.stopPropagation(); // Stop event propagation
 
     if (!user || !user.id) {
-        console.error("You must be logged in to like a post.");
+        showAlert("error", "surface", "Error", "You must be logged in to like a post");
         return;
     }
 
@@ -132,7 +132,11 @@ const Timeline = () => {
 
         if (hasLiked) {
             // Unlike
-            await axios.post(`http://localhost:8000/api/posts/${postId}/unlike?user_id=${user.id}`);
+            await axios.post(
+                `http://127.0.0.1:8000/api/posts/${postId}/unlike`,
+                { user_id: user.id },
+                { withCredentials: true }
+            );
             setPosts(prevPosts => prevPosts.map(p => {
                 if (p._id === postId) {
                     return {
@@ -144,7 +148,11 @@ const Timeline = () => {
             }));
         } else {
             // Like
-            await axios.post(`http://localhost:8000/api/posts/${postId}/like?user_id=${user.id}`);
+            await axios.post(
+                `http://127.0.0.1:8000/api/posts/${postId}/like`,
+                { user_id: user.id },
+                { withCredentials: true }
+            );
             setPosts(prevPosts => prevPosts.map(p => {
                 if (p._id === postId) {
                     return {
@@ -157,6 +165,7 @@ const Timeline = () => {
         }
     } catch (error) {
         console.error("Error updating like:", error);
+        showAlert("error", "surface", "Error", "Failed to update like");
     }
   };
 

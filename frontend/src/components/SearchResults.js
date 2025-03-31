@@ -98,7 +98,7 @@ const SearchResults = () => {
                             <Box border="1px solid" bg='white' borderColor="gray.200" p={4} mt={4} borderRadius="md" _hover={{ cursor: 'pointer', backgroundColor: 'gray.100' }}>
                                 <Text fontWeight="bold">{professor.name}</Text>
                                 <Text mt={2}>{professor.department}</Text>
-                                <Text fontSize="sm" color="gray.500" mt={2}>Rating: ⭐ {professor.ratings ? professor.ratings.toFixed(1) : "N/A"}/5</Text>
+                                <Text fontSize="sm" color="gray.500" mt={2}>Rating: ⭐ {professor.ratings ? professor.ratings.overall.toFixed(1) : "N/A"}/5</Text>
                                 <Text fontSize="sm" color="gray.500">Current Courses: {professor.current_courses.length}</Text>
                             </Box>
                         </Link>

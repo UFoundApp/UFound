@@ -26,6 +26,8 @@ import axios from "axios";
 
 import ReportDialog from "../Posts/Reporting";  
 import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { Link as RouterLink } from "react-router-dom";
+
 
 // DonutChart: uses the numeric rating (out of 5) for the fill,
 // shows "X.X/5" in the center, and "Overall Rating" below.
@@ -387,7 +389,7 @@ const ProfessorPage = () => {
                             <Heading size="md" mb={2}>
                                 Current Courses
                             </Heading>
-                            {professor.current_courses.length > 0 ? (
+                            {professor?.current_courses?.length > 0 ? (
                                 <VStack spacing={2} align="stretch">
                                     {professor.current_courses.map((course, index) => (
                                         <Tag.Root
@@ -396,7 +398,9 @@ const ProfessorPage = () => {
                                             p={2}
                                             borderRadius="md"
                                         >
-                                            <Tag.Label>{course.title}</Tag.Label>
+                                            <RouterLink to={`/course/${course._id?.$oid || course._id}`}>
+                                                <Tag.Label cursor="pointer">{course.title}</Tag.Label>
+                                            </RouterLink>
                                         </Tag.Root>
                                     ))}
                                 </VStack>
@@ -410,7 +414,7 @@ const ProfessorPage = () => {
                             <Heading size="md" mb={2}>
                                 Past Courses
                             </Heading>
-                            {professor.past_courses.length > 0 ? (
+                            {professor?.past_courses?.length > 0 ? (
                                 <VStack spacing={2} align="stretch">
                                     {professor.past_courses.map((course, index) => (
                                         <Tag.Root
@@ -419,7 +423,9 @@ const ProfessorPage = () => {
                                             p={2}
                                             borderRadius="md"
                                         >
-                                            <Tag.Label>{course.title}</Tag.Label>
+                                            <RouterLink to={`/course/${course._id?.$oid || course._id}`}>
+                                                <Tag.Label cursor="pointer">{course.title}</Tag.Label>
+                                            </RouterLink>
                                         </Tag.Root>
                                     ))}
                                 </VStack>
@@ -580,7 +586,7 @@ const ProfessorPage = () => {
                     )}
 
                     {/* Reviews List */}
-                    {professor.reviews.length > 0 ? (
+                    {professor?.reviews?.length > 0 ? (
                         <VStack spacing={4} align="stretch">
                             {professor.reviews.map((review, index) => (
                                 <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white" position="relative">

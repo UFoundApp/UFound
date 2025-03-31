@@ -107,7 +107,6 @@ const ViewPost = () => {
             });
             setLikes((prev) => prev + 1);
             setHasLiked(true);
-            setMessage("You liked this post!");
             setIsError(false);
         } catch (error) {
             setMessage("Failed to like post.");
@@ -135,7 +134,6 @@ const ViewPost = () => {
             );
             setLikes((prev) => prev - 1);
             setHasLiked(false);
-            setMessage("You unliked this post.");
             setIsError(false);
         } catch (error) {
             setMessage("Failed to unlike post.");
