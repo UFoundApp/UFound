@@ -4,7 +4,8 @@ from app.models.user import UserModel
 from app.courseScrape import scrape_all_pages
 from beanie import PydanticObjectId
 from pydantic import BaseModel
-
+from beanie.operators import In
+from app.models.professor import ProfessorModel
 from uuid import UUID
 import math 
 
@@ -152,14 +153,20 @@ async def get_courses(page: int = 0, limit: int = 20):
 
 @router.get("/courses/{course_id}")
 async def get_course(course_id: PydanticObjectId):
-    """Fetch a single course by ID, including its reviews"""
     course = await CourseModel.get(course_id)
-
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    return course
+    # Fetch professor details
+    professors = await ProfessorModel.find(In(ProfessorModel.id, course.professors)).to_list()
 
+    return {
+        **course.dict(),
+        "professors": [
+            {"id": str(p.id), "name": p.name, "department": p.department}
+            for p in professors
+        ]
+    }
 
   
 @router.post("/courses/{course_id}/review")
