@@ -46,8 +46,39 @@ async def delete_professor_review(review_id: str):
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
+    professor = await ProfessorModel.get(review.professor_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Associated professor not found")
+
+    # Delete the review
     await review.delete()
-    return {"message": "Professor review deleted"}
+
+    # Fetch remaining reviews for that professor
+    reviews = await ProfessorReviewModel.find({"professor_id": professor.id}).to_list()
+
+    # If reviews remain, recalculate
+    if reviews:
+        total = len(reviews)
+
+        def safe(val):
+            return val if val is not None else 0
+
+        professor.ratings.total_reviews = total
+        professor.ratings.overall = round(sum(r.overall_rating for r in reviews) / total, 2)
+        professor.ratings.clarity = round(sum(safe(r.clarity) for r in reviews) / total, 2)
+        professor.ratings.engagement = round(sum(safe(r.engagement) for r in reviews) / total, 2)
+        professor.ratings.strictness = round(sum(safe(r.strictness) for r in reviews) / total, 2)
+    else:
+        # Reset all ratings if no reviews remain
+        professor.ratings.overall = 0.0
+        professor.ratings.clarity = 0.0
+        professor.ratings.engagement = 0.0
+        professor.ratings.strictness = 0.0
+        professor.ratings.total_reviews = 0
+
+    await professor.save()
+    return {"message": "Professor review deleted and ratings updated"}
+
 
 @router.post("/admin/professors/reviews/{review_id}/unflag")
 async def unflag_professor_review(review_id: str):

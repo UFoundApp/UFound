@@ -46,9 +46,31 @@ async def delete_course_review(course_id: str, index: int):
     if index < 0 or index >= len(course.reviews):
         raise HTTPException(status_code=404, detail="Review index out of range")
 
+    # Remove the review
     course.reviews.pop(index)
+
+    # Recalculate ratings
+    if course.reviews:
+        total = len(course.reviews)
+        sum_E = sum(r.ratingE for r in course.reviews)
+        sum_MD = sum(r.ratingMD for r in course.reviews)
+        sum_AD = sum(r.ratingAD for r in course.reviews)
+
+        course.ratings.average_rating_E = round(sum_E / total, 2)
+        course.ratings.average_rating_MD = round(sum_MD / total, 2)
+        course.ratings.average_rating_AD = round(sum_AD / total, 2)
+
+        course.rating = math.floor((course.ratings.average_rating_E +
+                                    course.ratings.average_rating_MD +
+                                    course.ratings.average_rating_AD) / 3)
+    else:
+        # No reviews left
+        course.ratings = OverallRatingModel()
+        course.rating = 0
+
     await course.save()
-    return {"message": "Course review deleted"}
+    return {"message": "Course review deleted and ratings updated"}
+
 
 @router.post("/admin/courses/{course_id}/reviews/{index}/unflag")
 async def unflag_course_review(course_id: str, index: int):
@@ -144,20 +166,24 @@ async def get_course(course_id: PydanticObjectId):
 async def create_course_review(course_id: PydanticObjectId, review: ReviewModel):
     course = await CourseModel.get(course_id)
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")   
+        raise HTTPException(status_code=404, detail="Course not found")
 
-    #update the ratings for all fields
-    course.ratings.average_rating_E = math.floor((course.ratings.average_rating_E + review.ratingE) / 2)
-    course.ratings.average_rating_MD = math.floor((course.ratings.average_rating_MD + review.ratingMD) / 2)
-    course.ratings.average_rating_AD = math.floor((course.ratings.average_rating_AD + review.ratingAD) / 2)
-
-    # get overal average 
-
-    overall = (course.ratings.average_rating_E + course.ratings.average_rating_MD + course.ratings.average_rating_AD) / 3
-    course.rating = math.floor(overall)
-    
-    # Update the course's reviews array
+    # Add the new review
     course.reviews.append(review)
+
+    # Recalculate average ratings based on all reviews
+    total = len(course.reviews)
+    sum_E = sum(r.ratingE for r in course.reviews)
+    sum_MD = sum(r.ratingMD for r in course.reviews)
+    sum_AD = sum(r.ratingAD for r in course.reviews)
+
+    course.ratings.average_rating_E = round(sum_E / total, 2)
+    course.ratings.average_rating_MD = round(sum_MD / total, 2)
+    course.ratings.average_rating_AD = round(sum_AD / total, 2)
+
+    course.rating = math.floor((course.ratings.average_rating_E +
+                                course.ratings.average_rating_MD +
+                                course.ratings.average_rating_AD) / 3)
+
     await course.save()
-    
     return review
