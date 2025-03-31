@@ -51,7 +51,7 @@ async def searchPosts(query: str):
     courseList = []
     
     for course in courses:
-        if query in course.title.lower() or query in course.description.lower():
+        if query in course.title.lower():
             courseList.append(course)
     
     return {
