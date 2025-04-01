@@ -757,7 +757,7 @@ const ProfessorPage = () => {
                       ⭐ {review.overall_rating}/5
                     </Text>
                     <HStack spacing={2}>
-                      {review.likes.includes(getUser()?.id) ? (
+                      {review.likes.includes(user?.id) ? (
                         <FaHeart
                           color="red"
                           cursor="pointer"
