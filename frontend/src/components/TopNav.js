@@ -346,9 +346,11 @@ const TopNav = () => {
             </Button>
             <Button
               variant="ghost"
-              color="gray.600"
-              _hover={{ color: "primary" }}
+              color="white"
+              bg="primary"
+              _hover={{ color: "gray.500" }}
               onClick={() => navigate("/create-post")}
+
             >
               Write a post
             </Button>
