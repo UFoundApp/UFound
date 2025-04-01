@@ -30,6 +30,11 @@ const LeftSidebar = () => {
             }}
         >
             <Stack spacing={2} align="stretch" direction="column">
+            <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
+                    Quick Links
+                </Text>
+                                <Box as="hr" my={4} borderColor="gray.200" />
+
                 {/* Main Navigation */}
                 <Button
                     leftIcon={<FaRss />}
@@ -38,22 +43,21 @@ const LeftSidebar = () => {
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
-                    onClick={() => navigate("/home")}
+                    onClick={() => window.open("https://www.acorn.utoronto.ca/")}
                 >
-                    Feed
+                    Acorn
                 </Button>
-                
                 <Button
-                    leftIcon={<FaBuilding />}
+                    leftIcon={<FaChartLine />}
                     justifyContent="flex-start"
                     variant="ghost"
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://studentlife.utoronto.ca/service/mental-health-clinical-services/")}
                 >
-                    My School
+                    Wellness
                 </Button>
-
                 <Button
                     leftIcon={<FaPoll />}
                     justifyContent="flex-start"
@@ -61,9 +65,23 @@ const LeftSidebar = () => {
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://www.utoronto.ca/alerts")}
                 >
-                    Polls
+                    UTAlert
                 </Button>
+                <Button
+                    leftIcon={<FaBuilding />}
+                    justifyContent="flex-start"
+                    variant="ghost"
+                    width="100%"
+                    py={6}
+                    _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://www.utoronto.ca/news/university-toronto-names-its-17th-president?utm_source=UofTHome&utm_medium=WebsiteBanner&utm_campaign=news_2025&utm_content=president_woodin")}
+                >
+                    UofT News
+                </Button>
+
+
 
                 <Button
                     leftIcon={<FaLayerGroup />}
@@ -72,8 +90,10 @@ const LeftSidebar = () => {
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://www.utm.utoronto.ca/shuttle/")}
                 >
-                    Posts
+                    
+                    Shuttle Service
                 </Button>
 
                 <Button
@@ -83,36 +103,23 @@ const LeftSidebar = () => {
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://www.utoronto.ca/campus-status")}
                 >
-                    Featured Content
+                    Campus Status
                 </Button>
 
                 <Button
-                    leftIcon={<FaChartLine />}
+                    leftIcon={<FaStar />}
                     justifyContent="flex-start"
                     variant="ghost"
                     width="100%"
                     py={6}
                     _hover={{ bg: 'gray.100' }}
+                    onClick={() => window.open("https://utm.calendar.utoronto.ca/")}
                 >
-                    Trending
+                    Acamic Calendar
                 </Button>
 
-                {/* Industries Section */}
-                <Box as="hr" my={4} borderColor="gray.200" />
-                <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
-                    Reviews
-                </Text>
-                <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Courses</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Health Plan</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Professors</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
-                        Show more
-                    </Button>
-                </Stack>
-
-                {/* Job Groups Section */}
                 <Box as="hr" my={4} borderColor="gray.200" />
 
             </Stack>
