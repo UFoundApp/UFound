@@ -26,6 +26,16 @@ class ReviewAuthorUpdateRequest(BaseModel):
     old_username: str
     new_username: str
 
+@router.delete("/professors/reviews/{review_id}")
+async def delete_professor_review(review_id: str):
+    # 1. Fetch the review
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    await review.delete()
+    return {"message": "Review deleted successfully"}
+
 @router.post("/professors/update-reviews-author")
 async def update_professor_reviews_author(request_data: ReviewAuthorUpdateRequest):
     # Find all professor reviews where the author field matches the old username.

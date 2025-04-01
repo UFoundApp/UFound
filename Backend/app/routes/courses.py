@@ -22,6 +22,26 @@ class ReviewAuthorUpdateRequest(BaseModel):
     old_username: str
     new_username: str
 
+@router.delete("/courses/{course_id}/reviews/{index}")
+async def delete_own_course_review(
+    course_id: str, 
+    index: int, 
+):
+    # 1. Fetch the course
+    course = await CourseModel.get(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # 2. Validate the review index
+    if index < 0 or index >= len(course.reviews):
+        raise HTTPException(status_code=404, detail="Review index out of range")
+
+    # 4. Remove the review and save
+    course.reviews.pop(index)
+    await course.save()
+
+    return {"message": "Review deleted successfully"}
+
 @router.post("/courses/update-reviews-author")
 async def update_course_reviews_author(request_data: ReviewAuthorUpdateRequest):
     # Get all courses
