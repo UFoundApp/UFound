@@ -116,8 +116,11 @@ const Timeline = () => {
     });
   };
   
-
-
+  const countTotalComments = (comments) => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + countTotalComments(comment.replies || []);
+    }, 0);
+  };
 
   const handleLike = async (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
@@ -254,12 +257,12 @@ const Timeline = () => {
                   )}
                 </Flex>
                 
-                {/* Comment count */}
+                {/* Comment count - Updated to include replies */}
                 <Flex alignItems="center" ml={4}>
                   <Icon as={FaComment} color={colorMode === 'light' ? "gray.500" : "white"} mr={1} />
-                  {post.comments.length > 0 && (
-                    <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>{post.comments.length}</Text>
-                  )}
+                  <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>
+                    {countTotalComments(post.comments)}
+                  </Text>
                 </Flex>
                 
                 {/* Views count */}
