@@ -204,9 +204,22 @@ const ViewPost = () => {
             <Box position="absolute" top="16px" right="16px">
                 <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
             </Box>
-            <Text fontSize="sm" color="gray.500" mb={2}>
-            {(post.author !== "Anonymous") ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
+            <Text fontSize="sm" fontWeight="bold" mb={2}>
+  {post.author !== "Anonymous" ? (
+    <Link to={`/profile/${post.author}`}>
+        <Text
+                as="span"
+                color="black"
+                _hover={{ textDecoration: "underline", color: "blue.500" }}
+            >
+                {post.author}
             </Text>
+            </Link>
+        ) : (
+            "Anonymous"
+        )} • {new Date(post.created_at).toLocaleDateString()}
+        </Text>
+
             <Heading as="h1" size="lg" mb={3}>
                 {post.title}
             </Heading>
