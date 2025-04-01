@@ -21,14 +21,74 @@ class ReportRequest(BaseModel):
     user_id: UUID
     reason: str
 
+class ReviewAuthorUpdateRequest(BaseModel):
+    user_id: UUID
+    old_username: str
+    new_username: str
+
+@router.delete("/professors/reviews/{review_id}")
+async def delete_professor_review(review_id: str):
+    # 1. Fetch the review
+    review = await ProfessorReviewModel.get(review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    await review.delete()
+    return {"message": "Review deleted successfully"}
+
+@router.post("/professors/update-reviews-author")
+async def update_professor_reviews_author(request_data: ReviewAuthorUpdateRequest):
+    # Find all professor reviews where the author field matches the old username.
+    # (If you had stored a user id in the review, you would filter by that as well.)
+    reviews = await ProfessorReviewModel.find(ProfessorReviewModel.author == request_data.old_username).to_list()
+    if not reviews:
+        return {"message": "No professor reviews found to update."}
+    
+    for review in reviews:
+        review.author = request_data.new_username
+        await review.save()
+    
+    return {"message": "Professor review authors updated successfully."}
+
 @router.delete("/admin/professors/reviews/{review_id}")
 async def delete_professor_review(review_id: str):
     review = await ProfessorReviewModel.get(review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
+    professor = await ProfessorModel.get(review.professor_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Associated professor not found")
+
+    # Delete the review
     await review.delete()
-    return {"message": "Professor review deleted"}
+
+    # Fetch remaining reviews for that professor
+    reviews = await ProfessorReviewModel.find({"professor_id": professor.id}).to_list()
+
+    # If reviews remain, recalculate
+    if reviews:
+        total = len(reviews)
+
+        def safe(val):
+            return val if val is not None else 0
+
+        professor.ratings.total_reviews = total
+        professor.ratings.overall = round(sum(r.overall_rating for r in reviews) / total, 2)
+        professor.ratings.clarity = round(sum(safe(r.clarity) for r in reviews) / total, 2)
+        professor.ratings.engagement = round(sum(safe(r.engagement) for r in reviews) / total, 2)
+        professor.ratings.strictness = round(sum(safe(r.strictness) for r in reviews) / total, 2)
+    else:
+        # Reset all ratings if no reviews remain
+        professor.ratings.overall = 0.0
+        professor.ratings.clarity = 0.0
+        professor.ratings.engagement = 0.0
+        professor.ratings.strictness = 0.0
+        professor.ratings.total_reviews = 0
+
+    await professor.save()
+    return {"message": "Professor review deleted and ratings updated"}
+
 
 @router.post("/admin/professors/reviews/{review_id}/unflag")
 async def unflag_professor_review(review_id: str):

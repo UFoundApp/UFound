@@ -35,10 +35,11 @@ function CreatePost() {
     setMessage("");
     
     try {
+    
       const response = await axios.post("http://127.0.01:8000/api/posts", {
         title,
         content,
-        author: anon ? "Anonymous" : author.username
+        author: anon ? "Anonymous" : user.username
       }, {
         withCredentials: true,
       }
@@ -50,7 +51,7 @@ function CreatePost() {
       }
     } catch (error) {
       setMessage("Failed to create post.");
-      showAlert("error", "surface", "Failed to create post", "Failed to create post.");
+      showAlert("error", "surface", "Failed to create post", "You need an account to post. Sign in");
     }
     setLoading(false);
   };

@@ -4,6 +4,7 @@ import {
   Text,
   Heading,
   Flex,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   TabsRoot,
@@ -17,14 +18,28 @@ import RightSidebar from "./RightSidebar";
 import { LuFolder, LuSquareCheck, LuUser } from "react-icons/lu";
 import { Button } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { getUser } from './AuthPageUtil';
 
 const AdminFlaggedPage = () => {
   const [flaggedPosts, setFlaggedPosts] = useState([]);
   const [flaggedComments, setFlaggedComments] = useState([]);
   const [flaggedCourseReviews, setFlaggedCourseReviews] = useState([]);
   const [flaggedProfessorReviews, setFlaggedProfessorReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    async function checkAdminAndFetch() {
+      const user = await getUser();
+      if (!user?.is_admin) {
+        navigate("/", { replace: true });
+      } else {
+        await fetchData();
+        setLoading(false);
+      }
+    }
+
     const fetchData = async () => {
       try {
         const [posts, comments, courseReviews, profReviews] = await Promise.all([
@@ -43,9 +58,29 @@ const AdminFlaggedPage = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    checkAdminAndFetch();
+  }, [navigate]);
 
+  if (loading) {
+    return (
+      <Flex
+        justify="center"
+        align="center"
+        height="100vh"
+        bg="gray.50"
+        direction="column"
+      >
+        <Spinner size="xl" thickness="4px" speed="0.65s" color="blue.500" mb={4} />
+        <Heading size="md" color="gray.700">
+          Verifying Admin Access...
+        </Heading>
+        <Text color="gray.500" mt={2}>
+          Hang tight while we load the admin panel.
+        </Text>
+      </Flex>
+    );
+  }
+  
   return (
     <Flex flex="1" bg="gray.50">
       {/* Left Sidebar */}

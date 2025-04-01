@@ -70,7 +70,7 @@ function UserProfile() {
 
   // Handle saving profile changes (only for own profile)
   const handleSave = async () => {
-    // check uniqueness of username
+    // Check uniqueness if username is changed
     if (profile.username !== username) {
       const available = await checkUsernameAvailability(profile.username);
       if (!available) {
@@ -78,13 +78,51 @@ function UserProfile() {
         return;
       }
     }
-
+  
     try {
+      // Update the profile
       await axios.put(`http://localhost:8000/api/profile/${username}`, profile);
       setMessage('Profile updated successfully');
-
-      // If the username was changed, update stored username and navigate to the new URL
+  
+      // If the username was changed, update the username in comments, update storage, and navigate
       if (profile.username !== username) {
+        await axios.post(
+          `http://localhost:8000/api/posts/update-comments-username`,
+          {
+            user_id: currentUser.id,
+            new_username: profile.username,
+          },
+          { withCredentials: true }
+        );
+
+        await axios.post(
+          `http://localhost:8000/api/posts/update-author-username`,
+          {
+            user_id: currentUser.id,
+            new_username: profile.username,
+          },
+          { withCredentials: true }
+        );
+        await axios.post(
+          `http://localhost:8000/api/professors/update-reviews-author`,
+          {
+            user_id: currentUser.id,
+            old_username: currentUser.username,
+            new_username: profile.username,
+          },
+          { withCredentials: true }
+        );
+        // Update course reviews
+        await axios.post(
+          `http://localhost:8000/api/courses/update-reviews-author`,
+          {
+            user_id: currentUser.id,
+            old_username: currentUser.username,
+            new_username: profile.username,
+          },
+          { withCredentials: true }
+        );
+  
         updateStoredUsername(profile.username);
         navigate(`/profile/${profile.username}`);
       }
@@ -92,6 +130,7 @@ function UserProfile() {
       setMessage(error.response?.data?.detail || 'Error updating profile');
     }
   };
+  
 
   return (
     <Flex flex="1" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
