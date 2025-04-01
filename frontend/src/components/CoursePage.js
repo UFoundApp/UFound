@@ -38,6 +38,15 @@ const CoursePage = () => {
     const [isPostingReview, setIsPostingReview] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+
+    useEffect(() => {
+        async function fetchUser() {
+            const userData = await getUser();
+            setCurrentUser(userData);
+        }
+        fetchUser();
+    }, []);
 
      const fetchCourse = useCallback(async () => {
         try {
@@ -117,6 +126,27 @@ const CoursePage = () => {
         await fetchCourse();            
            
     };
+
+    const handleDeleteReview = async (reviewIndex) => {
+        if (!window.confirm("Are you sure you want to delete this review?")) return;
+        try {
+            await axios.delete(`http://localhost:8000/api/courses/${courseId}/reviews/${reviewIndex}`, {
+                withCredentials: true,
+            });
+            // Update the course state by filtering out the deleted review
+            setCourse(prev => ({
+                ...prev,
+                reviews: prev.reviews.filter((_, idx) => idx !== reviewIndex)
+            }));
+            setMessage("Review deleted successfully.");
+            setIsError(false);
+        } catch (error) {
+            console.error("Failed to delete review:", error.response?.data || error.message);
+            setMessage("Failed to delete review.");
+            setIsError(true);
+        }
+    };
+    
 
     if (loading) {
         return (
@@ -326,6 +356,15 @@ const CoursePage = () => {
                             <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.100" position="relative">
                                 <Box position="absolute" top="8px" right="8px">
                                 <ReportDialog endpoint={`http://localhost:8000/api/courses/reviews/${courseId}/${index}/report`} />
+                                {currentUser && currentUser.username === r.author && (
+                                        <Button
+                                            colorPalette="red"
+                                            size="xs"
+                                            onClick={() => handleDeleteReview(index)}
+                                        >
+                                            Delete
+                                        </Button>
+                                )}
                                 </Box>
                                 <Text fontWeight="bold">{r.author}</Text>
                                 <RatingGroup.Root readOnly count={5} value={Math.floor((r.ratingE + r.ratingMD + r.ratingAD ) / 3) } size="sm" >

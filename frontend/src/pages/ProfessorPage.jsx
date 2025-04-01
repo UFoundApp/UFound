@@ -237,6 +237,23 @@ const ProfessorPage = () => {
         }
     };
 
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm("Are you sure you want to delete this review?")) return;
+        try {
+          await axios.delete(`http://localhost:8000/api/professors/reviews/${reviewId}`, {
+            withCredentials: true, // ensures cookies/token are sent
+          });
+          // Remove the deleted review from local state
+          setProfessor((prev) => ({
+            ...prev,
+            reviews: prev.reviews.filter((r) => r._id !== reviewId),
+          }));
+        } catch (error) {
+          console.error("Failed to delete review:", error);
+          setReviewMessage("Failed to delete review.");
+        }
+      };
+
     if (loading) return <Spinner size="xl" mt="20px" />;
     if (!professor) return <Text fontSize="xl" mt="20px">Professor not found.</Text>;
 
@@ -624,6 +641,15 @@ const ProfessorPage = () => {
                                             setMessage={setReviewMessage}
                                             setIsError={() => {}} // optional, you can modify this to match your error handling
                                             />
+                                            {user?.username === review.author && (
+                                            <Button
+                                            colorPalette="red"
+                                            size="xs"
+                                            onClick={() => handleDeleteReview(review._id)}
+                                            >
+                                            Delete
+                                            </Button>
+                                        )}
                                         </HStack>
                                     </Flex>
                                     {likeMessages && likeMessages[review._id] && (
