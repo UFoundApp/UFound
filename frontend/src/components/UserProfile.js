@@ -7,6 +7,7 @@ import axios from 'axios';
 import LeftSidebar from './LeftSidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
+import { useColorMode } from '../theme/ColorModeContext';
 
 function UserProfile() {
   const { username } = useParams();
@@ -15,6 +16,7 @@ function UserProfile() {
   const [code, setCode] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
   const [emailUpdated, setEmailUpdated] = useState(false);
+  const { colorMode } = useColorMode();
 
   // State for current signed-in user
   const [currentUser, setCurrentUser] = useState(null);
@@ -92,15 +94,23 @@ function UserProfile() {
   };
 
   return (
-    <Flex flex="1">
-      <Box as="aside" width={{ base: '0', md: '25%' }} display={{ base: 'none', md: 'block' }} bg="gray.50" height="calc(100vh - 60px)" position="fixed" left="0">
+    <Flex flex="1" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
+      <Box 
+        as="aside" 
+        width={{ base: '0', md: '25%' }} 
+        display={{ base: 'none', md: 'block' }} 
+        bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} 
+        height="calc(100vh - 60px)" 
+        position="fixed" 
+        left="0"
+      >
         <Box width="80%" ml="auto"><LeftSidebar /></Box>
       </Box>
 
       {/* Main Content */}
       <Box
         flex="1"
-        bg="gray.50"
+        bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
         ml={{ base: 0, md: '25%' }}
         mr={{ base: 0, md: '25%' }}
         overflowY="scroll"
@@ -110,26 +120,70 @@ function UserProfile() {
           <VStack spacing={4} align="stretch">
             {isOwnProfile ? (
               <>
-                <Heading size="lg" mb={2}>Your Profile</Heading>
+                <Heading size="lg" mb={2} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Your Profile</Heading>
                 {message && (
                   <Text color={
                     message.includes('Error') || message.includes('taken')
                       ? 'red.500'
                       : 'green.500'
-                  }>                    {message}
+                  }>
+                    {message}
                   </Text>
                 )}
-                <Text mb={2}>Username</Text>
-                <Input value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder="Username" />
-                <Text mb={2}>Bio</Text>
-                <Textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell other users about yourself" h="150px" />
-                <Button colorScheme="blue" onClick={handleSave} w="100%">Save</Button>
+                <Text mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>Username</Text>
+                <Input 
+                  value={profile.username} 
+                  onChange={(e) => setProfile({ ...profile, username: e.target.value })} 
+                  placeholder="Username" 
+                  bg={colorMode === 'light' ? 'white' : 'gray.700'}
+                  color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                  borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                />
+                <Text mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>Bio</Text>
+                <Textarea 
+                  value={profile.bio} 
+                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })} 
+                  placeholder="Tell other users about yourself" 
+                  h="150px"
+                  bg={colorMode === 'light' ? 'white' : 'gray.700'}
+                  color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                  borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                />
+                <Button 
+                  colorScheme="blue" 
+                  onClick={handleSave} 
+                  w="100%"
+                  bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                  color="white"
+                  _hover={{
+                    bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                  }}
+                >
+                  Save
+                </Button>
 
                 {/* UofT Email Upgrade */}
                 {currentUser && !currentUser.is_uoft && (
-                  <Box mt={6} p={4} borderWidth="1px" borderRadius="lg" bg="gray.50">
-                    <Text fontWeight="semibold" mb={2}>Upgrade to UofT Email</Text>
-                    <Text fontSize="sm" color="gray.600" mb={2}>
+                  <Box 
+                    mt={6} 
+                    p={4} 
+                    borderWidth="1px" 
+                    borderRadius="lg" 
+                    bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                    borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                  >
+                    <Text 
+                      fontWeight="semibold" 
+                      mb={2}
+                      color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    >
+                      Upgrade to UofT Email
+                    </Text>
+                    <Text 
+                      fontSize="sm" 
+                      color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+                      mb={2}
+                    >
                       Your current email: <strong>{currentUser.email}</strong>
                     </Text>
 
@@ -140,6 +194,9 @@ function UserProfile() {
                           value={newEmail}
                           onChange={(e) => setNewEmail(e.target.value)}
                           mb={2}
+                          bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                          color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                          borderColor={colorMode === 'light' ? 'gray.200' : 'gray.500'}
                         />
                         <Button
                           colorScheme="blue"
@@ -155,6 +212,11 @@ function UserProfile() {
                             }
                           }}
                           isDisabled={!newEmail.endsWith("@mail.utoronto.ca")}
+                          bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                          color="white"
+                          _hover={{
+                            bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                          }}
                         >
                           Send Verification Code
                         </Button>
@@ -166,6 +228,9 @@ function UserProfile() {
                           value={code}
                           onChange={(e) => setCode(e.target.value)}
                           mb={2}
+                          bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                          color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                          borderColor={colorMode === 'light' ? 'gray.200' : 'gray.500'}
                         />
                         <Button
                           colorScheme="green"
@@ -188,12 +253,17 @@ function UserProfile() {
                               setMessage(err.response?.data?.detail || "Verification failed");
                             }
                           }}
+                          bg={colorMode === 'light' ? 'green.500' : 'green.400'}
+                          color="white"
+                          _hover={{
+                            bg: colorMode === 'light' ? 'green.600' : 'green.500'
+                          }}
                         >
                           Confirm & Update Email
                         </Button>
                       </>
                     ) : (
-                      <Text color="green.600">Your email has been upgraded!</Text>
+                      <Text color="green.500">Your email has been upgraded!</Text>
                     )}
                   </Box>
                 )}
@@ -206,22 +276,39 @@ function UserProfile() {
                     fontWeight="bold"
                     fontSize="lg"
                     boxShadow="md"
-                    _hover={{ bg: "green.600", transform: "scale(1.03)" }}
+                    _hover={{ bg: colorMode === 'light' ? "green.600" : "green.500", transform: "scale(1.03)" }}
                     mt={6}
                     onClick={() => navigate("/admin")}
                     w="100%"
+                    bg={colorMode === 'light' ? 'green.500' : 'green.400'}
+                    color="white"
                   >
                     Go to Admin Panel
                   </Button>
                 )}
 
-               </>
-             ) : (
+              </>
+            ) : (
               <>
-                <Heading mb={4}>{profile.username}'s Profile</Heading>
-                <Box p={6} borderWidth="1px" borderRadius="lg" bg="gray.50">
-                  <Text fontSize="lg" fontWeight="bold" mb={2}>About {profile.username}</Text>
-                  <Text>{profile.bio || "This user hasn't written a bio yet."}</Text>
+                <Heading mb={4} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>{profile.username}'s Profile</Heading>
+                <Box 
+                  p={6} 
+                  borderWidth="1px" 
+                  borderRadius="lg" 
+                  bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                  borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                >
+                  <Text 
+                    fontSize="lg" 
+                    fontWeight="bold" 
+                    mb={2}
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                  >
+                    About {profile.username}
+                  </Text>
+                  <Text color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
+                    {profile.bio || "This user hasn't written a bio yet."}
+                  </Text>
                 </Box>
               </>
             )}
@@ -234,13 +321,13 @@ function UserProfile() {
         as="aside"
         width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
+        bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
         height="calc(100vh - 60px)"
         position="fixed"
         right="0"
       >
         <Box
-          bg="gray.50"
+          bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
           height="85vh"
           p={4}
           width="100%"
@@ -253,21 +340,33 @@ function UserProfile() {
               width: '6px',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: 'gray.200',
+              background: colorMode === 'light' ? 'gray.200' : 'gray.600',
               borderRadius: '24px',
             },
           }}
         >
           <Flex justify="space-between" align="center" mb={4}>
-            <Text fontWeight="bold" color="gray.700">{profile.username}'s RECENT POSTS</Text>
+            <Text 
+              fontWeight="bold" 
+              color={colorMode === 'light' ? 'gray.700' : 'gray.200'}
+            >
+              {profile.username}'s RECENT POSTS
+            </Text>
           </Flex>
 
-          <Box bg="white" borderRadius="xl" boxShadow="sm" p={3} border="1px" borderColor="gray.200">
+          <Box 
+            bg={colorMode === 'light' ? 'white' : 'gray.700'} 
+            borderRadius="xl" 
+            boxShadow="sm" 
+            p={3} 
+            border="1px" 
+            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+          >
             <VStack spacing={2} align="stretch">
               {profile.posts.map((post) => (
                 <Flex
                   key={post._id}
-                  _hover={{ bg: 'gray.100' }}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.600' }}
                   p={2}
                   borderRadius="md"
                   cursor="pointer"
@@ -275,21 +374,27 @@ function UserProfile() {
                 >
                   <FontAwesomeIcon
                     icon={faComments}
-                    color="gray.600"
+                    color={colorMode === 'light' ? '#4A5568' : '#A0AEC0'}
                     size="lg"
                     style={{ marginTop: '4px' }}
                   />
                   <Box ml={3}>
-                    <Text color="gray.700" fontSize="sm">{post.title}</Text>
-                    <Text color="gray.600" fontSize="xs" noOfLines={2}>{post.content}</Text>
-                    <Text color="gray.500" fontSize="xs" mt={1}>
+                    <Text color={colorMode === 'light' ? 'gray.700' : 'gray.200'} fontSize="sm">
+                      {post.title}
+                    </Text>
+                    <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'} fontSize="xs" noOfLines={2}>
+                      {post.content}
+                    </Text>
+                    <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'} fontSize="xs" mt={1}>
                       {post.likes?.length || 0} likes · {post.comments?.length || 0} comments
                     </Text>
                   </Box>
                 </Flex>
               ))}
               {profile.posts.length === 0 && (
-                <Text color="gray.500" fontSize="sm" p={2}>No posts yet</Text>
+                <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'} fontSize="sm" p={2}>
+                  No posts yet
+                </Text>
               )}
             </VStack>
           </Box>

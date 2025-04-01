@@ -3,19 +3,21 @@ import React from 'react';
 import { Box, Stack, Button, Text } from '@chakra-ui/react';
 import { FaRss, FaBuilding, FaPoll, FaLayerGroup, FaStar, FaChartLine } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useColorMode } from '../theme/ColorModeContext';
 
 
 const LeftSidebar = () => {
     const navigate = useNavigate();
+    const { colorMode } = useColorMode();
 
     return (
         <Box
-            bg="gray.50"  // Very light grey background
-            height="85vh"  // Changed to viewport height
+            bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
+            height="85vh"
             p={4}
-            pl={14}  // Added more left padding
+            pl={14}
             width="100%"
-            overflowY="auto"  // Enable vertical scrolling when needed
+            overflowY="auto"
             css={{
                 '&::-webkit-scrollbar': {
                     width: '4px',
@@ -24,7 +26,7 @@ const LeftSidebar = () => {
                     width: '6px',
                 },
                 '&::-webkit-scrollbar-thumb': {
-                    background: 'gray.200',
+                    background: colorMode === 'light' ? 'gray.200' : 'gray.600',
                     borderRadius: '24px',
                 },
             }}
@@ -37,7 +39,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                     onClick={() => navigate("/home")}
                 >
                     Feed
@@ -49,7 +52,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 >
                     My School
                 </Button>
@@ -60,7 +64,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 >
                     Polls
                 </Button>
@@ -71,7 +76,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 >
                     Posts
                 </Button>
@@ -82,7 +88,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 >
                     Featured Content
                 </Button>
@@ -93,7 +100,8 @@ const LeftSidebar = () => {
                     variant="ghost"
                     width="100%"
                     py={6}
-                    _hover={{ bg: 'gray.100' }}
+                    color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                    _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 >
                     Trending
                 </Button>
@@ -104,10 +112,10 @@ const LeftSidebar = () => {
                     Reviews
                 </Text>
                 <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Courses</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Health Plan</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Professors</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
+                    <Button variant="ghost" justifyContent="flex-start" py={2} color={colorMode === 'light' ? 'gray.600' : 'gray.200'}>Courses</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2} color={colorMode === 'light' ? 'gray.600' : 'gray.200'}>Health Plan</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2} color={colorMode === 'light' ? 'gray.600' : 'gray.200'}>Professors</Button>
+                    <Button variant="ghost" justifyContent="flex-start" py={2} color={colorMode === 'light' ? 'blue.500' : 'blue.300'}>
                         Show more
                     </Button>
                 </Stack>

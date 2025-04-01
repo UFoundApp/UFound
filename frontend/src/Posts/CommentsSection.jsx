@@ -14,6 +14,7 @@ import {
 import { FaCommentAlt, FaReply } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
 import Comment from "./Comment"; // Import the Comment component
+import { useColorMode } from '../theme/ColorModeContext';
 
 const CommentsSection = ({ postId }) => {
     const [comments, setComments] = useState([]);
@@ -24,6 +25,7 @@ const CommentsSection = ({ postId }) => {
     const [isError, setIsError] = useState(false);
 
     const [user, setUser] = useState(null);
+    const { colorMode } = useColorMode();
 
     useEffect(() => {
         async function fetchUser() {
@@ -171,7 +173,12 @@ const CommentsSection = ({ postId }) => {
 
     return (
         <Box mt={6}>
-            <Text fontSize="lg" fontWeight="bold" mb={4}>
+            <Text 
+                fontSize="lg" 
+                fontWeight="bold" 
+                mb={4}
+                color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+            >
                 Comments
             </Text>
 
@@ -194,10 +201,10 @@ const CommentsSection = ({ postId }) => {
                             handleLike={handleLike}
                             handleUnlike={handleUnlike}
                             depth={0}
+                            colorMode={colorMode}
                         />
                     ))}
                 </VStack>
-
             )}
 
             <HStack mt={4}>
@@ -206,12 +213,24 @@ const CommentsSection = ({ postId }) => {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     isDisabled={isCommenting}
+                    bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    _placeholder={{
+                        color: colorMode === 'light' ? 'gray.400' : 'gray.300'
+                    }}
+                    borderColor={colorMode === 'light' ? 'gray.200' : 'gray.500'}
                 />
                 <IconButton
                     onClick={() => handleComment()}
                     aria-label="Add Comment"
                     isLoading={isCommenting}
-                > <FaCommentAlt color="rgb(255, 255, 255)"  />
+                    bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    _hover={{
+                        bg: colorMode === 'light' ? 'gray.100' : 'gray.500'
+                    }}
+                >
+                    <FaCommentAlt />
                 </IconButton>
             </HStack>
         </Box>

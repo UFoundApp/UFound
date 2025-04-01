@@ -16,10 +16,9 @@ import {
     useRatingGroup,
     Progress,
     Button
-
 } from '@chakra-ui/react';
-import  LeftSidebar  from './LeftSidebar';
-import  RatingInput  from './RatingInput';
+import LeftSidebar from './LeftSidebar';
+import RatingInput from './RatingInput';
 import { FaPlusCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
@@ -28,6 +27,7 @@ import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import { AlertContext } from './ui/AlertContext';
+import { useColorMode } from '../theme/ColorModeContext';
 
 const CoursePage = () => {
     const { courseId } = useParams();
@@ -44,7 +44,7 @@ const CoursePage = () => {
     const [user, setUser] = useState(null);
     const isUofT = user?.is_uoft === true;
     const disableReviewUI = user && !isUofT;
-
+    const { colorMode } = useColorMode();
 
     const { showAlert } = useContext(AlertContext);
 
@@ -77,7 +77,6 @@ const CoursePage = () => {
           year: now.getFullYear() !== estDate.getFullYear() ? "numeric" : undefined,
         });
       };      
-
 
      const fetchCourse = useCallback(async () => {
         try {
@@ -181,13 +180,13 @@ const CoursePage = () => {
     } else 
     {
     return (
-        <Flex flex="1" bg="gray.50">
+        <Flex flex="1" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
             {/* Left Sidebar Area - Fixed */}
             <Box
                 as="aside"
                 width={{ base: '0', md: '25%' }}
                 display={{ base: 'none', md: 'block' }}
-                bg="gray.50"
+                bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
                 height="calc(100vh - 60px)"
                 position="fixed"
                 left="0"
@@ -204,54 +203,61 @@ const CoursePage = () => {
                 mr={{ base: 0, md: '5%' }}
                 mt={6}
                 mb={6}
-                bg="gray.50"
+                bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
                 minH="calc(100vh - 60px)"
             >
                 
-                <Heading as="h1" size="lg" mb={3}>
+                <Heading as="h1" size="lg" mb={3} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                     {course.title}
                 </Heading>
-                <Text fontSize="md" color="gray.600" mb={4}>
+                <Text fontSize="md" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} mb={4}>
                     {course.description}
                 </Text>
 
-                <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} my={4} />
 
                 {/* Course Details */}
-                <Text fontSize="md" fontWeight="bold">Prerequisites:</Text>
-                <Text mb={2}>{course.prerequisites || "None"}</Text>
+                <Text fontSize="md" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Prerequisites:</Text>
+                <Text mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>{course.prerequisites || "None"}</Text>
                 
-                <Text fontSize="md" fontWeight="bold">Exclusions:</Text>
-                <Text mb={2}>{course.exclusion || "None"}</Text>
+                <Text fontSize="md" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Exclusions:</Text>
+                <Text mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>{course.exclusion || "None"}</Text>
                 
-                <Text fontSize="md" fontWeight="bold">Distribution:</Text>
-                <Text mb={4}>{course.distribution || "N/A"}</Text>
+                <Text fontSize="md" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Distribution:</Text>
+                <Text mb={4} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>{course.distribution || "N/A"}</Text>
 
-                <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} my={4} />
 
                 {/* Professors Section */}
-                <Heading as="h2" size="md" mb={3}>Professors</Heading>
+                <Heading as="h2" size="md" mb={3} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Professors</Heading>
                 <VStack spacing={2} align="stretch">
                     {course.professors.length > 0 ? (
                         course.professors.map((prof, index) => (
-                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                                <Text fontWeight="bold">{prof.name}</Text>
-                                <Text fontSize="sm" color="gray.500">{prof.department}</Text>
+                            <Box 
+                                key={index} 
+                                p={3} 
+                                borderWidth="1px" 
+                                borderRadius="md" 
+                                borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                                bg={colorMode === 'light' ? 'white' : 'gray.700'}
+                            >
+                                <Text fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>{prof.name}</Text>
+                                <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>{prof.department}</Text>
                             </Box>
                         ))
                     ) : (
-                        <Text fontStyle="italic" color="gray.500">No professors listed.</Text>
+                        <Text fontStyle="italic" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>No professors listed.</Text>
                     )}
                 </VStack>
 
-                <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} my={4} />
                 
                 { overallRating == 0 ? (
-                    <Text fontStyle="italic" color="gray.500">No reviews yet</Text>
+                    <Text fontStyle="italic" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>No reviews yet</Text>
                     ) : (
                     <div>
                     <HStack >
-                        <Heading as="h2" size="md" >Overall Rating:</Heading>
+                        <Heading as="h2" size="md" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Overall Rating:</Heading>
                         <RatingGroup.Root readOnly colorPalette="yellow" count={5} value={overallRating} size="lg" >
                                 <RatingGroup.HiddenInput />
                                 <RatingGroup.Control>
@@ -265,7 +271,7 @@ const CoursePage = () => {
                     </HStack>
                     <VStack spacing={2} align="stretch" mt={4}>
                         
-                        <Text fontSize="lg">Engagement:</Text>    
+                        <Text fontSize="lg" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Engagement:</Text>    
                         <RatingGroup.Root readOnly count={5} ml={2} value={course.ratings.average_rating_E} size="md" >
                             <RatingGroup.HiddenInput />
                             <RatingGroup.Control>
@@ -277,7 +283,7 @@ const CoursePage = () => {
                             </RatingGroup.Control>
                         </RatingGroup.Root>
                         
-                        <Text fontSize="lg">Material Difficulty:</Text>  
+                        <Text fontSize="lg" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Material Difficulty:</Text>  
                         <RatingGroup.Root readOnly count={5} ml={2} value={course.ratings.average_rating_MD} size="md" >
                             <RatingGroup.HiddenInput />
                             <RatingGroup.Control>
@@ -289,7 +295,7 @@ const CoursePage = () => {
                             </RatingGroup.Control>
                         </RatingGroup.Root>
                         
-                        <Text fontSize="lg">Assessment Difficulty:</Text>  
+                        <Text fontSize="lg" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Assessment Difficulty:</Text>  
                         <RatingGroup.Root readOnly count={5} ml={2} value={course.ratings.average_rating_AD} size="md" >
                             <RatingGroup.HiddenInput />
                             <RatingGroup.Control>
@@ -305,24 +311,24 @@ const CoursePage = () => {
                     </VStack>
                     </div>
                     )}
-                <Box borderBottom="1px solid gray" my={4} />
+                <Box borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} my={4} />
 
                 {/* Reviews Section */}
-                <Heading as="h2" size="md" mt={5} mb={1}>Leave a Review</Heading>
+                <Heading as="h2" size="md" mt={5} mb={1} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Leave a Review</Heading>
                 {disableReviewUI && (
                 <Text color="red.500" fontSize="sm" mb={2}>
                     Only UofT-verified users can leave reviews.
                 </Text>
                 )}
-                <VStack mt={4} position="relative" alignItems="start" bg="white" borderColor="gray.100" borderWidth="1px" p={4} borderRadius="md">
+                <VStack mt={4} position="relative" alignItems="start" bg={colorMode === 'light' ? 'white' : 'gray.700'} borderColor={colorMode === 'light' ? 'gray.100' : 'gray.600'} borderWidth="1px" p={4} borderRadius="md">
 
-                    <Heading as="h2" size="sm" mt={1} mb={1}>Engagement:</Heading>
+                    <Heading as="h2" size="sm" mt={1} mb={1} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Engagement:</Heading>
                     <RatingInput rating={ratingE} size="lg" isDisabled={disableReviewUI}/>
                                 
-                    <Heading as="h2" size="sm" mt={1} mb={1}>Material Difficulty:</Heading>
+                    <Heading as="h2" size="sm" mt={1} mb={1} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Material Difficulty:</Heading>
                     <RatingInput rating={ratingMD} size="lg" isDisabled={disableReviewUI}/>
 
-                    <Heading as="h2" size="sm" mt={1} mb={1}>Assessment Difficulty:</Heading>
+                    <Heading as="h2" size="sm" mt={1} mb={1} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Assessment Difficulty:</Heading>
                     <RatingInput rating={ratingAD} size="lg" isDisabled={disableReviewUI}/>
 
                     <Field.Root 
@@ -336,16 +342,21 @@ const CoursePage = () => {
                             }}
                             isDisabled={isPostingReview || disableReviewUI}
                             errorText={isError ? message : ""}
-                            
+                            bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                            color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.500'}
+                            _placeholder={{
+                                color: colorMode === 'light' ? 'gray.400' : 'gray.300'
+                            }}
                         />
                         <Field.ErrorText>{message}</Field.ErrorText>
                     </Field.Root>
                     <HStack>
                         <Button
-                        bg="white"
-                        color="black"
+                        bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                        color={colorMode === 'light' ? 'black' : 'gray.100'}
                         borderWidth="1px"
-                        borderColor="black"
+                        borderColor={colorMode === 'light' ? 'black' : 'gray.400'}
                         onClick={() => {
                             setReview('');
                             ratingAD.setValue(0);
@@ -354,9 +365,11 @@ const CoursePage = () => {
                             setIsError(false);
                             setMessage("");
                         }}
-                        aria-label="Add Review"
-                        text="Add Review"
+                        aria-label="Reset"
                         mt={2}
+                        _hover={{
+                            bg: colorMode === 'light' ? 'gray.100' : 'gray.500'
+                        }}
                     >
                         Reset
                     </Button>
@@ -367,31 +380,49 @@ const CoursePage = () => {
                         alignContent={"end"}
                         onClick={handleAddReview}
                         aria-label="Add Review"
-                        text="Add Review"
                         isLoading={isPostingReview}
                         mt={2}
+                        bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                        color="white"
+                        _hover={{
+                            bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                        }}
                     >
                         Add Review
                     </Button>
                     </HStack>
                 </VStack>
 
-                <Heading as="h2" size="md" mt={5} mb={3}>Reviews</Heading>
+                <Heading as="h2" size="md" mt={5} mb={3} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Reviews</Heading>
                 <VStack spacing={3} align="stretch">
                     {course.reviews.length > 0 ? (
                     course.reviews.map((r, index) => (
-                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.100" position="relative">
+                            <Box 
+                                key={index} 
+                                p={3} 
+                                borderWidth="1px" 
+                                borderRadius="md" 
+                                bg={colorMode === 'light' ? 'white' : 'gray.700'} 
+                                borderColor={colorMode === 'light' ? 'gray.100' : 'gray.600'} 
+                                position="relative"
+                            >
                                 <Box position="absolute" top="8px" right="8px">
                                 <ReportDialog endpoint={`http://localhost:8000/api/courses/reviews/${courseId}/${index}/report`} />
                                 </Box>
                                 <Link to={`/profile/${r.author}`}>
-                                <Text fontWeight="bold" _hover={{ textDecoration: "underline", color: "blue.500" }}>
+                                <Text 
+                                    fontWeight="bold" 
+                                    _hover={{ textDecoration: "underline", color: "blue.500" }}
+                                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                                >
                                     {r.author}
                                 </Text>
                                 </Link>
                                 <RatingGroup.Root readOnly count={5} value={Math.floor((r.ratingE + r.ratingMD + r.ratingAD ) / 3) } size="sm" >
                                     <RatingGroup.HiddenInput />
-                                    <RatingGroup.Label mr={2}>Overall Rating:</RatingGroup.Label>
+                                    <RatingGroup.Label mr={2} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
+                                        Overall Rating:
+                                    </RatingGroup.Label>
                                     <RatingGroup.Control>
                                         {Array.from({ length: 5 }).map((_, index) => (
                                         <RatingGroup.Item key={index} index={index + 1}>
@@ -400,12 +431,18 @@ const CoursePage = () => {
                                         ))}
                                     </RatingGroup.Control>
                                 </RatingGroup.Root>
-                                <Text fontSize="sm" color="gray.500">{formatDate(r.created_at)}</Text>
-                                <Text mt={2}>{r.content}</Text>
+                                <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                                    {formatDate(r.created_at)}
+                                </Text>
+                                <Text mt={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
+                                    {r.content}
+                                </Text>
                             </Box>
                         ))
                     ) : (
-                        <Text fontStyle="italic" color="gray.500">Be the first to leave a review.</Text>
+                        <Text fontStyle="italic" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                            Be the first to leave a review.
+                        </Text>
                     )}
                 </VStack>
                 

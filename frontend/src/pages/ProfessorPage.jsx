@@ -27,11 +27,13 @@ import axios from "axios";
 import ReportDialog from "../Posts/Reporting";  
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { Link as RouterLink } from "react-router-dom";
+import { useColorMode } from '../theme/ColorModeContext';
 
 
 // DonutChart: uses the numeric rating (out of 5) for the fill,
 // shows "X.X/5" in the center, and "Overall Rating" below.
 const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
+    const { colorMode } = useColorMode();
     // Convert rating (out of 5) to 0–100 for the donut fill
     const percentage = value ? (value / 5) * 100 : 0;
     // Calculate fill angle for conic-gradient
@@ -47,7 +49,7 @@ const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
                 width="100%"
                 height="100%"
                 borderRadius="50%"
-                bg={`conic-gradient(#3182ce 0deg, #3182ce ${angle}deg, #e2e8f0 ${angle}deg 360deg)`}
+                bg={`conic-gradient(#3182ce 0deg, #3182ce ${angle}deg, ${colorMode === 'light' ? '#e2e8f0' : '#2D3748'} ${angle}deg 360deg)`}
             />
             {/* Inner white circle to create the donut hole */}
             <Box
@@ -58,18 +60,18 @@ const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
                 width={`calc(${size} - ${thickness} * 2)`}
                 height={`calc(${size} - ${thickness} * 2)`}
                 borderRadius="50%"
-                bg="white"
+                bg={colorMode === 'light' ? 'white' : 'gray.700'}
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
                 justifyContent="center"
             >
                 {/* Show the rating out of 5 */}
-                <Text fontSize="xl" fontWeight="bold" lineHeight="1">
+                <Text fontSize="xl" fontWeight="bold" lineHeight="1" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                     {value ? value.toFixed(1) : "N/A"}/5
                 </Text>
                 {/* Label underneath */}
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
                     Overall Rating
                 </Text>
             </Box>
@@ -100,6 +102,7 @@ const ProfessorPage = () => {
     const [user, setUser] = useState(null);
     const isUofT = user?.is_uoft === true;
     const disableReviewUI = user && !isUofT;    
+    const { colorMode } = useColorMode();
 
     useEffect(() => {
         const loadUser = async () => {
@@ -230,20 +233,24 @@ const ProfessorPage = () => {
         }
     };
 
-    if (loading) return <Spinner size="xl" mt="20px" />;
+    if (loading) return (
+        <Flex justify="center" align="center" height="100vh">
+            <Spinner size="xl" />
+        </Flex>
+    );
     if (!professor) return <Text fontSize="xl" mt="20px">Professor not found.</Text>;
 
     // We'll show the total number of reviews in the donut area
     const totalReviews = professor?.reviews?.length || 0;
 
     return (
-        <Flex flex="1" bg="gray.50">
+        <Flex flex="1" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
             {/* Left Sidebar Area - Fixed */}
             <Box
                 as="aside"
                 width={{ base: "0", md: "25%" }}
                 display={{ base: "none", md: "block" }}
-                bg="gray.50"
+                bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
                 height="calc(100vh - 60px)"
                 position="fixed"
                 left="0"
@@ -257,7 +264,7 @@ const ProfessorPage = () => {
             <Box
                 flex="1"
                 ml={{ base: 0, md: "25%" }}
-                bg="gray.50"
+                bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
                 minH="calc(100vh - 60px)"
             >
                 <Container maxW="1300px" py={6} px={6}>
@@ -265,15 +272,17 @@ const ProfessorPage = () => {
                     <Flex justify="space-between" align="center">
                         {/* Professor Info (Left) */}
                         <Box>
-                            <Heading size="xl">{professor.name}</Heading>
-                            <Text fontSize="lg" color="gray.600">
+                            <Heading size="xl" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
+                                {professor.name}
+                            </Heading>
+                            <Text fontSize="lg" color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
                                 {professor.department}
                             </Text>
                             {professor.profile_link && (
                                 <Link
                                     href={professor.profile_link}
                                     isExternal
-                                    color="blue.500"
+                                    color={colorMode === 'light' ? 'blue.500' : 'blue.300'}
                                     mt={2}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -285,11 +294,11 @@ const ProfessorPage = () => {
 
                         {/* Ratings (Right) */}
                         <Box w="500px">
-                            <Flex align="center" p={4} bg="white" borderRadius="md" boxShadow="md">
+                            <Flex align="center" p={4} bg={colorMode === 'light' ? 'white' : 'gray.700'} borderRadius="md" boxShadow="md">
                                 {/* Donut + number of reviews on the left */}
                                 <Box mr={6} textAlign="center">
                                     <DonutChart value={overallRating} size="150px" thickness="15px" />
-                                    <Text fontSize="xs" color="gray.500" mt={2}>
+                                    <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={2}>
                                         {totalReviews} {totalReviews === 1 ? "review" : "reviews"}
                                     </Text>
                                 </Box>
@@ -301,11 +310,11 @@ const ProfessorPage = () => {
                                         {/* Label row (label + icon on left, percentage on right) */}
                                         <Flex align="center" justify="space-between" mb={1}>
                                             <HStack spacing={1}>
-                                                <Text fontWeight="semibold" fontSize="sm">
+                                                <Text fontWeight="semibold" fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                                     Clarity
                                                 </Text>
                                             </HStack>
-                                            <Text fontSize="sm" color="gray.700">
+                                            <Text fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
                                                 {clarity
                                                     ? Math.round((clarity / 5) * 100) + "%"
                                                     : "0%"}
@@ -314,11 +323,11 @@ const ProfessorPage = () => {
                                         {/* Larger progress bar below */}
                                         <Progress.Root
                                             value={clarity ? (clarity / 5) * 100 : 0}
-                                            colorScheme="blue"
+                                            colorScheme={colorMode === 'light' ? 'blue' : 'blue'}
                                             size="md"
                                             borderRadius="md"
                                         >
-                                            <Progress.Track>
+                                            <Progress.Track bg={colorMode === 'light' ? 'gray.100' : 'gray.600'}>
                                                 <Progress.Range />
                                             </Progress.Track>
                                         </Progress.Root>
@@ -328,11 +337,11 @@ const ProfessorPage = () => {
                                     <Box>
                                         <Flex align="center" justify="space-between" mb={1}>
                                             <HStack spacing={1}>
-                                                <Text fontWeight="semibold" fontSize="sm">
+                                                <Text fontWeight="semibold" fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                                     Engagement
                                                 </Text>
                                             </HStack>
-                                            <Text fontSize="sm" color="gray.700">
+                                            <Text fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
                                                 {engagement
                                                     ? Math.round((engagement / 5) * 100) + "%"
                                                     : "0%"}
@@ -340,11 +349,11 @@ const ProfessorPage = () => {
                                         </Flex>
                                         <Progress.Root
                                             value={engagement ? (engagement / 5) * 100 : 0}
-                                            colorScheme="blue"
+                                            colorScheme={colorMode === 'light' ? 'blue' : 'blue'}
                                             size="md"
                                             borderRadius="md"
                                         >
-                                            <Progress.Track>
+                                            <Progress.Track bg={colorMode === 'light' ? 'gray.100' : 'gray.600'}>
                                                 <Progress.Range />
                                             </Progress.Track>
                                         </Progress.Root>
@@ -354,11 +363,11 @@ const ProfessorPage = () => {
                                     <Box>
                                         <Flex align="center" justify="space-between" mb={1}>
                                             <HStack spacing={1}>
-                                                <Text fontWeight="semibold" fontSize="sm">
+                                                <Text fontWeight="semibold" fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                                     Strictness
                                                 </Text>
                                             </HStack>
-                                            <Text fontSize="sm" color="gray.700">
+                                            <Text fontSize="sm" color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
                                                 {strictness
                                                     ? Math.round((strictness / 5) * 100) + "%"
                                                     : "0%"}
@@ -366,11 +375,11 @@ const ProfessorPage = () => {
                                         </Flex>
                                         <Progress.Root
                                             value={strictness ? (strictness / 5) * 100 : 0}
-                                            colorScheme="blue"
+                                            colorScheme={colorMode === 'light' ? 'blue' : 'blue'}
                                             size="md"
                                             borderRadius="md"
                                         >
-                                            <Progress.Track>
+                                            <Progress.Track bg={colorMode === 'light' ? 'gray.100' : 'gray.600'}>
                                                 <Progress.Range />
                                             </Progress.Track>
                                         </Progress.Root>
@@ -380,13 +389,13 @@ const ProfessorPage = () => {
                         </Box>
                     </Flex>
 
-                    <Separator my={4} />
+                    <Separator my={4} borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} />
 
                     {/* Current & Past Courses */}
                     <Flex>
                         {/* Current Courses */}
                         <Box flex={1} mr={4}>
-                            <Heading size="md" mb={2}>
+                            <Heading size="md" mb={2} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                                 Current Courses
                             </Heading>
                             {professor?.current_courses?.length > 0 ? (
@@ -397,21 +406,24 @@ const ProfessorPage = () => {
                                             colorScheme="blue"
                                             p={2}
                                             borderRadius="md"
+                                            bg={colorMode === 'light' ? 'blue.50' : 'blue.900'}
                                         >
                                             <RouterLink to={`/course/${course._id?.$oid || course._id}`}>
-                                                <Tag.Label cursor="pointer">{course.title}</Tag.Label>
+                                                <Tag.Label cursor="pointer" color={colorMode === 'light' ? 'blue.700' : 'blue.200'}>
+                                                    {course.title}
+                                                </Tag.Label>
                                             </RouterLink>
                                         </Tag.Root>
                                     ))}
                                 </VStack>
                             ) : (
-                                <Text>No current courses.</Text>
+                                <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>No current courses.</Text>
                             )}
                         </Box>
 
                         {/* Past Courses */}
                         <Box flex={1}>
-                            <Heading size="md" mb={2}>
+                            <Heading size="md" mb={2} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                                 Past Courses
                             </Heading>
                             {professor?.past_courses?.length > 0 ? (
@@ -422,24 +434,27 @@ const ProfessorPage = () => {
                                             colorScheme="green"
                                             p={2}
                                             borderRadius="md"
+                                            bg={colorMode === 'light' ? 'green.50' : 'green.900'}
                                         >
                                             <RouterLink to={`/course/${course._id?.$oid || course._id}`}>
-                                                <Tag.Label cursor="pointer">{course.title}</Tag.Label>
+                                                <Tag.Label cursor="pointer" color={colorMode === 'light' ? 'green.700' : 'green.200'}>
+                                                    {course.title}
+                                                </Tag.Label>
                                             </RouterLink>
                                         </Tag.Root>
                                     ))}
                                 </VStack>
                             ) : (
-                                <Text>No past courses.</Text>
+                                <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>No past courses.</Text>
                             )}
                         </Box>
                     </Flex>
 
-                    <Separator my={4} />
+                    <Separator my={4} borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} />
 
                     {/* Reviews Header */}
                     <Flex justify="space-between" align="center" mb={4}>
-                        <Heading size="md">Student Reviews</Heading>
+                        <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Student Reviews</Heading>
                         {disableReviewUI && (
                         <Text fontSize="sm" color="red.500" mt={1}>
                             Only UofT-verified students can leave reviews.
@@ -455,6 +470,11 @@ const ProfessorPage = () => {
                             isDisabled={disableReviewUI}
                             opacity={disableReviewUI ? 0.6 : 1}
                             cursor={disableReviewUI ? "not-allowed" : "pointer"}
+                            bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                            color="white"
+                            _hover={{
+                                bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                            }}
                         >
                             {showReviewForm ? "Cancel" : "Leave a Review"}
                         </Button>
@@ -465,22 +485,22 @@ const ProfessorPage = () => {
                         <Box
                             p={5}
                             border="1px"
-                            borderColor="gray.200"
+                            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
                             borderRadius="md"
-                            bg="white"
+                            bg={colorMode === 'light' ? 'white' : 'gray.700'}
                             mb={6}
                             boxShadow="md"
                         >
                             <VStack spacing={4} align="stretch">
-                                <Heading size="sm">Write Your Review</Heading>
+                                <Heading size="sm" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>Write Your Review</Heading>
 
                                 <Box>
-                                    <Text mb={2} fontWeight="medium">
+                                    <Text mb={2} fontWeight="medium" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                         Overall Rating
                                     </Text>
                                     <RatingGroup.RootProvider
                                         value={overallRatingGroup}
-                                        colorPalette="black"
+                                        colorPalette={colorMode === 'light' ? 'black' : 'yellow'}
                                         size="lg"
                                     >
                                         <RatingGroup.HiddenInput />
@@ -495,12 +515,12 @@ const ProfessorPage = () => {
                                 </Box>
 
                                 <Box>
-                                    <Text mb={2} fontWeight="medium">
+                                    <Text mb={2} fontWeight="medium" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                         Clarity (1-5)
                                     </Text>
                                     <RatingGroup.RootProvider
                                         value={clarityRatingGroup}
-                                        colorPalette="black"
+                                        colorPalette={colorMode === 'light' ? 'black' : 'yellow'}
                                         size="md"
                                     >
                                         <RatingGroup.HiddenInput />
@@ -515,12 +535,12 @@ const ProfessorPage = () => {
                                 </Box>
 
                                 <Box>
-                                    <Text mb={2} fontWeight="medium">
+                                    <Text mb={2} fontWeight="medium" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                         Engagement (1-5)
                                     </Text>
                                     <RatingGroup.RootProvider
                                         value={engagementRatingGroup}
-                                        colorPalette="black"
+                                        colorPalette={colorMode === 'light' ? 'black' : 'yellow'}
                                         size="md"
                                     >
                                         <RatingGroup.HiddenInput />
@@ -535,12 +555,12 @@ const ProfessorPage = () => {
                                 </Box>
 
                                 <Box>
-                                    <Text mb={2} fontWeight="medium">
+                                    <Text mb={2} fontWeight="medium" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                         Strictness (1-5)
                                     </Text>
                                     <RatingGroup.RootProvider
                                         value={strictnessRatingGroup}
-                                        colorPalette="black"
+                                        colorPalette={colorMode === 'light' ? 'black' : 'yellow'}
                                         size="md"
                                     >
                                         <RatingGroup.HiddenInput />
@@ -555,7 +575,7 @@ const ProfessorPage = () => {
                                 </Box>
 
                                 <Box>
-                                    <Text mb={2} fontWeight="medium">
+                                    <Text mb={2} fontWeight="medium" color={colorMode === 'light' ? 'gray.700' : 'gray.200'}>
                                         Review Content
                                     </Text>
                                     <Textarea
@@ -564,19 +584,38 @@ const ProfessorPage = () => {
                                         placeholder="Share your experience with this professor..."
                                         size="md"
                                         rows={4}
+                                        bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                                        color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                                        borderColor={colorMode === 'light' ? 'gray.200' : 'gray.500'}
+                                        _placeholder={{
+                                            color: colorMode === 'light' ? 'gray.400' : 'gray.300'
+                                        }}
                                     />
                                 </Box>
 
                                 {reviewMessage && <Text color="red.500">{reviewMessage}</Text>}
 
                                 <HStack spacing={4} justify="flex-end">
-                                    <Button variant="outline" onClick={() => setShowReviewForm(false)}>
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => setShowReviewForm(false)}
+                                        color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+                                        borderColor={colorMode === 'light' ? 'gray.300' : 'gray.500'}
+                                        _hover={{
+                                            bg: colorMode === 'light' ? 'gray.50' : 'gray.600'
+                                        }}
+                                    >
                                         Cancel
                                     </Button>
                                     <Button
                                         colorScheme="blue"
                                         onClick={handleSubmitReview}
                                         isLoading={isSubmitting}
+                                        bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                                        color="white"
+                                        _hover={{
+                                            bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                                        }}
                                     >
                                         Submit Review
                                     </Button>
@@ -589,9 +628,17 @@ const ProfessorPage = () => {
                     {professor?.reviews?.length > 0 ? (
                         <VStack spacing={4} align="stretch">
                             {professor.reviews.map((review, index) => (
-                                <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="white" position="relative">
+                                <Box 
+                                    key={index} 
+                                    p={4} 
+                                    border="1px" 
+                                    borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} 
+                                    borderRadius="md" 
+                                    bg={colorMode === 'light' ? 'white' : 'gray.700'} 
+                                    position="relative"
+                                >
                                     <Flex justify="space-between" align="center">
-                                        <Text fontSize="md" fontWeight="bold">
+                                        <Text fontSize="md" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                                             ⭐ {review.overall_rating}/5
                                         </Text>
                                         <HStack spacing={2}>
@@ -605,9 +652,12 @@ const ProfessorPage = () => {
                                                 <FaRegHeart
                                                     cursor="pointer"
                                                     onClick={() => handleLikeReview(review._id)}
+                                                    color={colorMode === 'light' ? 'inherit' : 'gray.300'}
                                                 />
                                             )}
-                                            <Text>{review.likes.length}</Text>
+                                            <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                                                {review.likes.length}
+                                            </Text>
 
                                             {/* Add the ReportDialog button */}
                                             <ReportDialog 
@@ -625,29 +675,41 @@ const ProfessorPage = () => {
                                         </Text>
                                     )}
                                     {review.course_id && (
-                                        <Text fontSize="sm" color="gray.500">
+                                        <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                                             Course: {review.course_id}
                                         </Text>
                                     )}
-                                    <Text mt={2}>{review.content}</Text>
-                                    <Text fontSize="sm" color="gray.500" mt={2}>
+                                    <Text mt={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
                                     By{" "}
                                     <Link to={`/profile/${review.author}`}>
-                                        <Text as="span" fontWeight="medium" color="blue.500" _hover={{ textDecoration: "underline" }}>
+                                        <Text 
+                                            as="span" 
+                                            fontWeight="medium" 
+                                            color={colorMode === 'light' ? 'blue.500' : 'blue.300'} 
+                                            _hover={{ textDecoration: "underline" }}
+                                        >
                                         {review.author}
                                         </Text>
                                     </Link>{" "}
                                     | {new Date(review.created_at).toLocaleDateString()}
                                     </Text>
-                                    <Separator my={2} />
-                                    <Text fontSize="sm">Strictness: {review.strictness}/5</Text>
-                                    <Text fontSize="sm">Clarity: {review.clarity}/5</Text>
-                                    <Text fontSize="sm">Engagement: {review.engagement}/5</Text>
+                                    <Separator my={2} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} />
+                                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                                        Strictness: {review.strictness}/5
+                                    </Text>
+                                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                                        Clarity: {review.clarity}/5
+                                    </Text>
+                                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                                        Engagement: {review.engagement}/5
+                                    </Text>
                                 </Box>
                             ))}
                         </VStack>
                     ) : (
-                        <Text>No reviews yet.</Text>
+                        <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                            No reviews yet.
+                        </Text>
                     )}
                 </Container>
             </Box>

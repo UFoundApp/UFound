@@ -17,6 +17,7 @@ import CommentsSection from './CommentsSection.jsx';
 import { FaFlag } from 'react-icons/fa';
 import ReportDialog from './Reporting.jsx';
 import { Link } from 'react-router-dom';
+import { useColorMode } from '../theme/ColorModeContext';
 
 
 const ViewPost = () => {
@@ -29,6 +30,7 @@ const ViewPost = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [views, setViews] = useState(0);
+    const { colorMode } = useColorMode();
 
     useEffect(() => {
         let isMounted = true; // Flag to track if component is mounted
@@ -170,17 +172,26 @@ const ViewPost = () => {
     }
 
     return (
-        <Box maxW="800px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="md" mt={8} position="relative" >
+        <Box 
+            maxW="800px" 
+            mx="auto" 
+            p={6} 
+            bg={colorMode === 'light' ? 'white' : 'gray.700'} 
+            borderRadius="md" 
+            boxShadow="md" 
+            mt={8} 
+            position="relative" 
+        >
             <Box position="absolute" top="16px" right="16px">
                 <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
             </Box>
-            <Text fontSize="sm" color="gray.500" mb={2}>
+            <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
                 {post.author ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
             </Text>
-            <Heading as="h1" size="lg" mb={3}>
+            <Heading as="h1" size="lg" mb={3} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
                 {post.title}
             </Heading>
-            <Text fontSize="lg" mb={4}>
+            <Text fontSize="lg" mb={4} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
                 {post.content}
             </Text>
 
@@ -195,13 +206,32 @@ const ViewPost = () => {
                     leftIcon={hasLiked ? <FaThumbsDown /> : <FaRegThumbsUp />}
                     onClick={handleLike}
                     isLoading={isProcessing}
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                    _hover={{
+                        bg: colorMode === 'light' ? 'gray.100' : 'gray.500'
+                    }}
                 >
                     {likes} {hasLiked ? "Unlike" : "Like"}
                 </Button>
-                <Button leftIcon={<FaCommentAlt />}>
+                <Button 
+                    leftIcon={<FaCommentAlt />}
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    bg={colorMode === 'light' ? 'white' : 'gray.600'}
+                    _hover={{
+                        bg: colorMode === 'light' ? 'gray.100' : 'gray.500'
+                    }}
+                >
                     {post.comments.length} Comments
                 </Button>
-                <Button leftIcon={<FaEye />} variant="ghost">
+                <Button 
+                    leftIcon={<FaEye />} 
+                    variant="ghost"
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                    _hover={{
+                        bg: colorMode === 'light' ? 'gray.100' : 'gray.600'
+                    }}
+                >
                     {views} Views
                 </Button>
             </HStack>
