@@ -31,7 +31,12 @@ const LeftSidebar = () => {
       }}
     >
       <Stack spacing={2} align="stretch" direction="column">
-        <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
+        <Text 
+          fontWeight="bold" 
+          color={colorMode === "light" ? "gray.600" : "gray.300"} 
+          px={4} 
+          pt={2}
+        >
           Quick Links
         </Text>
         <Box as="hr" my={4} borderColor="gray.200" />
@@ -138,6 +143,7 @@ const LeftSidebar = () => {
             justifyContent="flex-start"
             py={2}
             color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+            onClick={() => navigate('/courses')}
           >
             Courses
           </Button>
@@ -146,14 +152,7 @@ const LeftSidebar = () => {
             justifyContent="flex-start"
             py={2}
             color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
-          >
-            Health Plan
-          </Button>
-          <Button
-            variant="ghost"
-            justifyContent="flex-start"
-            py={2}
-            color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+            onClick={() => navigate('/professors')}
           >
             Professors
           </Button>
