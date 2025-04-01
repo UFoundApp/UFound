@@ -865,6 +865,12 @@ const ProfessorPage = () => {
                   >
                     Engagement: {review.engagement}/5
                   </Text>
+                  <Text
+                    mt={3}
+                    color={colorMode === "light" ? "gray.800" : "gray.200"}
+                  >
+                    {review.content}
+                  </Text>
                 </Box>
               ))}
             </VStack>
