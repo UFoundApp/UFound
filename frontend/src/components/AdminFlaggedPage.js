@@ -5,13 +5,8 @@ import {
   Heading,
   Flex,
   Spinner,
+  Tabs
 } from "@chakra-ui/react";
-import {
-  TabsRoot,
-  TabList,
-  TabTrigger,
-  TabContent
-} from "@ark-ui/react/tabs";
 import axios from "axios";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
@@ -114,8 +109,8 @@ const AdminFlaggedPage = () => {
           Flagged Content (Admin)
         </Heading>
 
-        <TabsRoot defaultValue="posts" variant="line">
-          <TabList 
+        <Tabs.Root defaultValue="posts" variant="line">
+          <Tabs.List 
             as={Flex} 
             gap={4} 
             flexWrap="wrap" 
@@ -125,7 +120,7 @@ const AdminFlaggedPage = () => {
             borderRadius="lg"
             boxShadow="sm"
           >
-            <TabTrigger 
+            <Tabs.Trigger 
               value="posts" 
               px={4} 
               py={3}
@@ -150,8 +145,8 @@ const AdminFlaggedPage = () => {
             >
               <Box as={LuUser} fontSize="18px" />
               <Text ml={2} fontWeight="medium">Flagged Posts</Text>
-            </TabTrigger>
-            <TabTrigger 
+            </Tabs.Trigger>
+            <Tabs.Trigger 
               value="comments" 
               px={4} 
               py={3}
@@ -176,8 +171,8 @@ const AdminFlaggedPage = () => {
             >
               <Box as={LuFolder} fontSize="18px" />
               <Text ml={2} fontWeight="medium">Flagged Comments</Text>
-            </TabTrigger>
-            <TabTrigger 
+            </Tabs.Trigger>
+            <Tabs.Trigger 
               value="courseReviews" 
               px={4} 
               py={3}
@@ -202,8 +197,8 @@ const AdminFlaggedPage = () => {
             >
               <Box as={LuSquareCheck} fontSize="18px" />
               <Text ml={2} fontWeight="medium">Course Reviews</Text>
-            </TabTrigger>
-            <TabTrigger 
+            </Tabs.Trigger>
+            <Tabs.Trigger 
               value="professorReviews" 
               px={4} 
               py={3}
@@ -228,11 +223,11 @@ const AdminFlaggedPage = () => {
             >
               <Box as={LuSquareCheck} fontSize="18px" />
               <Text ml={2} fontWeight="medium">Professor Reviews</Text>
-            </TabTrigger>
-          </TabList>
+            </Tabs.Trigger>
+          </Tabs.List>
         
           {/* Posts */}
-          <TabContent value="posts">
+          <Tabs.Content value="posts">
             {flaggedPosts.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged posts.
@@ -297,10 +292,10 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
-          </TabContent>
+          </Tabs.Content>
 
           {/* Comments */}
-          <TabContent value="comments">
+          <Tabs.Content value="comments">
             {flaggedComments.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged comments.
@@ -372,10 +367,10 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
-          </TabContent>
+          </Tabs.Content>
 
           {/* Course Reviews */}
-          <TabContent value="courseReviews">
+          <Tabs.Content value="courseReviews">
             {flaggedCourseReviews.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged course reviews.
@@ -454,10 +449,10 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
-          </TabContent>
+          </Tabs.Content>
 
           {/* Professor Reviews */}
-          <TabContent value="professorReviews">
+          <Tabs.Content value="professorReviews">
             {flaggedProfessorReviews.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged professor reviews.
@@ -536,8 +531,8 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
-          </TabContent>
-        </TabsRoot>
+          </Tabs.Content>
+        </Tabs.Root>
       </Box>
 
       {/* Right Sidebar */}
