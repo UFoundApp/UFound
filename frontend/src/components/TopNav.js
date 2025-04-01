@@ -159,7 +159,7 @@ const TopNav = () => {
       alignItems="center"
       justifyContent={
         location.pathname === "/login" || location.pathname === "/reset-password"
-          ? "flex-start"
+          ? "space-between"
           : "space-between"
       }
       borderBottom="1px"
@@ -178,6 +178,19 @@ const TopNav = () => {
       >
         UFound
       </Text>
+
+      {/* Dark mode toggle - always visible */}
+      <Button
+        variant="ghost"
+        onClick={toggleColorMode}
+        aria-label="Toggle color mode"
+        color={colorMode === "light" ? "gray.600" : "white"}
+        _hover={{
+          color: colorMode === "light" ? "primary" : "secondary",
+        }}
+      >
+        {colorMode === "light" ? <FaMoon /> : <FaSun />}
+      </Button>
 
       {/* Only show these elements if NOT on the auth or reset password page */}
       {!location.pathname.includes("/login") &&
@@ -297,26 +310,15 @@ const TopNav = () => {
               >
                 Professors
               </Button>
+              
               <Button
-                variant="ghost"
+                variant="solid"
                 color="white"
-                bg="primary"
-                _hover={{ color: "gray.500" }}
+                bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                _hover={{ bg: colorMode === 'light' ? 'blue.600' : 'blue.500' }}
                 onClick={() => navigate("/create-post")}
               >
                 Write a post
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={toggleColorMode}
-                aria-label="Toggle color mode"
-                color={colorMode === "light" ? "gray.600" : "white"}
-                _hover={{
-                  color:
-                    colorMode === "light" ? "primary" : "secondary",
-                }}
-              >
-                {colorMode === "light" ? <FaMoon /> : <FaSun />}
               </Button>
             </Flex>
 
@@ -355,8 +357,9 @@ const TopNav = () => {
                     Sign in
                   </Button>
                   <Button
-                    bg="primary"
-                    color="white"
+                    variant="ghost"
+                    bg={colorMode === "light" ? "black" : "white"}
+                    color={colorMode === "light" ? "white" : "black"}
                     _hover={{ bg: "primary", opacity: 0.9 }}
                     onClick={() => handleAuth("signup")}
                   >
