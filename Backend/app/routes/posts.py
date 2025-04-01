@@ -269,10 +269,11 @@ async def create_post(request: Request, post_data: PostCreateRequest = Body(...)
     await post.insert()
     
     # Get the user and update their posts array
-    user = await UserModel.find_one(UserModel.id == current_user.id)
-    if user:
-        user.posts.append(str(post.id))
-        await user.save()
+    if post_data.author.lower() != "anonymous":
+        user = await UserModel.find_one(UserModel.id == current_user.id)
+        if user:
+            user.posts.append(str(post.id))
+            await user.save()
     
     return post
 

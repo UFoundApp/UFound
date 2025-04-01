@@ -7,6 +7,7 @@ import { getUser } from './AuthPageUtil';
 
 import { useContext } from 'react';
 import { AlertContext } from './ui/AlertContext';
+import { useColorMode } from '../theme/ColorModeContext';
 
 const Timeline = () => {
   const [posts, setPosts] = useState([]);
@@ -14,6 +15,7 @@ const Timeline = () => {
   const navigate = useNavigate();
 
   const { showAlert } = useContext(AlertContext);
+  const { colorMode } = useColorMode();
 
   useEffect(() => {
     async function fetchUser() {
@@ -114,8 +116,11 @@ const Timeline = () => {
     });
   };
   
-
-
+  const countTotalComments = (comments) => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + countTotalComments(comment.replies || []);
+    }, 0);
+  };
 
   const handleLike = async (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
@@ -198,24 +203,39 @@ const Timeline = () => {
                 as={Link}
                 to={`/view-post/${post._id}`}
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
                 p={4}
                 mt={4}
                 borderRadius="md"
-                bg="white"
-                _hover={{ cursor: 'pointer', backgroundColor: 'gray.100' }}
+                bg={colorMode === 'light' ? 'white' : 'gray.700'}
+                _hover={{ 
+                    cursor: 'pointer', 
+                    backgroundColor: colorMode === 'light' ? 'gray.100' : 'gray.600' 
+                }}
                 minHeight="190px"
                 position="relative"
                 display="flex"
                 flexDirection="column"
             >
               <Flex justifyContent="space-between" alignItems="center">
-                <Text fontWeight="bold">{post.title}</Text>
-                <Text fontSize="sm" color="gray.500">
-                  {formatDate(post.created_at)}
+                <Text 
+                    fontWeight="bold"
+                    color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+                >
+                    {post.title}
+                </Text>
+                <Text 
+                    fontSize="sm" 
+                    color={colorMode === 'light' ? 'gray.500' : 'gray.400'}
+                >
+                    {formatDate(post.created_at)}
                 </Text>
               </Flex>
-              <Text mt={2} flex="1">
+              <Text 
+                mt={2} 
+                flex="1"
+                color={colorMode === 'light' ? 'gray.700' : 'gray.300'}
+              >
                 {post.content.length > 400 ? post.content.slice(0, 450) + '...' : post.content}
               </Text>
               
@@ -228,35 +248,35 @@ const Timeline = () => {
                 <Flex alignItems="center" onClick={(e) => handleLike(e, post._id)}>
                   <Icon 
                     as={user && post.likes.includes(user.id) ? FaHeart : FaRegHeart} 
-                    color={user && post.likes.includes(user.id) ? "red.500" : "gray.500"} 
+                    color={user && post.likes.includes(user.id) ? "red.500" : colorMode === 'light' ? "gray.500" : "white"} 
                     cursor="pointer" 
                     mr={1}
                   />
                   {post.likes.length > 0 && (
-                    <Text fontSize="sm" color="gray.600">{post.likes.length}</Text>
+                    <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>{post.likes.length}</Text>
                   )}
                 </Flex>
                 
-                {/* Comment count */}
+                {/* Comment count - Updated to include replies */}
                 <Flex alignItems="center" ml={4}>
-                  <Icon as={FaComment} color="gray.500" mr={1} />
-                  {post.comments.length > 0 && (
-                    <Text fontSize="sm" color="gray.600">{post.comments.length}</Text>
-                  )}
+                  <Icon as={FaComment} color={colorMode === 'light' ? "gray.500" : "white"} mr={1} />
+                  <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>
+                    {countTotalComments(post.comments)}
+                  </Text>
                 </Flex>
                 
-                {/* Views count - always show the icon */}
+                {/* Views count */}
                 <Flex alignItems="center" ml={4}>
-                  <Icon as={FaEye} color="gray.500" mr={1} />
-                  <Text fontSize="sm" color="gray.600">{post.views || 0}</Text>
+                  <Icon as={FaEye} color={colorMode === 'light' ? "gray.500" : "white"} mr={1} />
+                  <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>{post.views || 0}</Text>
                 </Flex>
                 
                 <Spacer />
                 
                 {/* Share button */}
                 <Flex alignItems="center" ml={4} onClick={(e) => handleShare(e, post._id)} cursor="pointer">
-                    <Icon as={FaShareAlt} color="gray.500" mr={1} />
-                    <Text fontSize="sm" color="gray.600">Share</Text>
+                    <Icon as={FaShareAlt} color={colorMode === 'light' ? "gray.500" : "white"} mr={1} />
+                    <Text fontSize="sm" color={colorMode === 'light' ? "gray.600" : "white"}>Share</Text>
                 </Flex>
               </Flex>
             </Box>

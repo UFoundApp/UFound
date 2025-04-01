@@ -22,46 +22,49 @@ import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import { AlertProvider } from './components/ui/AlertContext';
 import AlertComponent from './components/ui/Alert';
+import { ColorModeProvider } from './theme/ColorModeContext';
 
 function App() {
 
   return (
     <ChakraProvider value={system}>
-      <AlertProvider>
-      <Router>
-        <Flex direction="column" minH="100vh">
-          {/* Fixed TopNav */}
-          <Box position="fixed" top="0" left="0" right="0" zIndex="1000">
-            <TopNav />
-            <AlertComponent />
-          </Box>
+      <ColorModeProvider>
+        <AlertProvider>
+          <Router>
+            <Flex direction="column" minH="100vh">
+              {/* Fixed TopNav */}
+              <Box position="fixed" top="0" left="0" right="0" zIndex="1000">
+                <TopNav />
+                <AlertComponent />
+              </Box>
 
-          {/* Main content with top padding to account for fixed TopNav */}
-          <Box flex="1" pt="75px">
+              {/* Main content with top padding to account for fixed TopNav */}
+              <Box flex="1" pt="75px">
 
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-                <Route path="/login" element={<PageTransition><AuthPage /></PageTransition>} />
-                <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-                <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-                <Route path="/home" element={<PageTransition><MainPage /></PageTransition>} />
-                <Route path="/view-post/:id" element={<PageTransition><ViewPost /></PageTransition>} />
-                <Route path="/create-post" element={<PageTransition><CreatePost /></PageTransition>} />
-                <Route path="/courses" element={<PageTransition><ReviewsPage /></PageTransition>} />
-                <Route path="/course/:courseId" element={<PageTransition><CoursePage /></PageTransition>} />
-                <Route path="/professors" element={<PageTransition><Professors /></PageTransition>} />
-                <Route path="/professors/:professorId" element={<PageTransition><ProfessorPage /></PageTransition>} />
-                <Route path="/profile/:username" element={<PageTransition><UserProfile /></PageTransition>} />
-                <Route path="/search" element={<PageTransition><SearchResults /></PageTransition>} />
-                <Route path="/admin" element={<PageTransition><AdminFlaggedPage /></PageTransition>} />                         
-                                         
-              </Routes>
-            </AnimatePresence>
-          </Box>
-        </Flex>
-      </Router>
-      </AlertProvider>
+                <AnimatePresence mode="wait">
+                  <Routes>
+                    <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+                    <Route path="/login" element={<PageTransition><AuthPage /></PageTransition>} />
+                    <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+                    <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+                    <Route path="/home" element={<PageTransition><MainPage /></PageTransition>} />
+                    <Route path="/view-post/:id" element={<PageTransition><ViewPost /></PageTransition>} />
+                    <Route path="/create-post" element={<PageTransition><CreatePost /></PageTransition>} />
+                    <Route path="/courses" element={<PageTransition><ReviewsPage /></PageTransition>} />
+                    <Route path="/course/:courseId" element={<PageTransition><CoursePage /></PageTransition>} />
+                    <Route path="/professors" element={<PageTransition><Professors /></PageTransition>} />
+                    <Route path="/professors/:professorId" element={<PageTransition><ProfessorPage /></PageTransition>} />
+                    <Route path="/profile/:username" element={<PageTransition><UserProfile /></PageTransition>} />
+                    <Route path="/search" element={<PageTransition><SearchResults /></PageTransition>} />
+                    <Route path="/admin" element={<PageTransition><AdminFlaggedPage /></PageTransition>} />                         
+                                                     
+                  </Routes>
+                </AnimatePresence>
+              </Box>
+            </Flex>
+          </Router>
+        </AlertProvider>
+      </ColorModeProvider>
     </ChakraProvider>
   );
 }
