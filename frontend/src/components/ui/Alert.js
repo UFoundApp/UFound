@@ -34,8 +34,12 @@ const AlertComponent = () => {
             </Button>
             : null}
         </Alert.Content>
-        <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={hideAlert} />
-      
+        <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => 
+          {
+            alert.alertOff();
+            hideAlert();
+          }
+        } />
       </Alert.Root>
     </div>
   );

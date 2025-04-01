@@ -370,10 +370,11 @@ function UserProfile() {
                     {profile.bio || "This user hasn't written a bio yet."}
                   </Text>
                 </Box>
-</>
-}
+                </>
+                )}
               </>
             )}
+              
           </VStack>
         </Box>
       </Box>

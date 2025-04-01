@@ -75,40 +75,6 @@ const ViewPost = () => {
           // Only increment if not already viewed in this session
           const viewResponse = await axios.post(`http://localhost:8000/api/posts/${id}/view`);
 
-    const handleDeletePost = async () => {
-        setIsDeletingReview(true);
-
-        try {
-            // Wait for the user to confirm the action
-            const confirmed = await showAlert(
-                'warning',
-                'surface',
-                'Are you sure?',
-                'This action cannot be undone.',
-                'popup',
-                async () => {
-                setAlertConfirm(true); // This will run when "Yes" is clicked
-                }
-            );
-        
-            // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
-            if (confirmed) {
-                await axios.delete(`http://localhost:8000/api/posts/${id}`, {
-                    withCredentials: true,
-                });
-                // After deletion, redirect to homepage or another page
-                window.location.href = "/";
-            } else {
-                // User clicked "No", do nothing
-                console.log("User canceled the deletion.");
-            }
-        } catch (error) {
-          setMessage("Failed to delete post.");
-          setIsError(true);
-        } finally {
-            setIsDeletingReview(false);
-        }
-      };
           if (!isMounted) return; // Don't update state if component unmounted
 
           setViews(viewResponse.data.views);
@@ -137,17 +103,37 @@ const ViewPost = () => {
   }, [id]);
 
   const handleDeletePost = async () => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    setIsDeletingReview(true);
 
     try {
-      await axios.delete(`http://localhost:8000/api/posts/${id}`, {
-        withCredentials: true,
-      });
-      // After deletion, redirect to homepage or another page
-      window.location.href = "/";
+        // Wait for the user to confirm the action
+        const confirmed = await showAlert(
+            'warning',
+            'surface',
+            'Are you sure?',
+            'This action cannot be undone.',
+            'popup',
+            async () => {
+            setAlertConfirm(true); // This will run when "Yes" is clicked
+            }
+        );
+    
+        // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+        if (confirmed) {
+            await axios.delete(`http://localhost:8000/api/posts/${id}`, {
+                withCredentials: true,
+            });
+            // After deletion, redirect to homepage or another page
+            window.location.href = "/";
+        } else {
+            // User clicked "No", do nothing
+            console.log("User canceled the deletion.");
+        }
     } catch (error) {
       setMessage("Failed to delete post.");
       setIsError(true);
+    } finally {
+        setIsDeletingReview(false);
     }
   };
 
