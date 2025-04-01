@@ -205,7 +205,7 @@ const ViewPost = () => {
                 <ReportDialog endpoint={`http://localhost:8000/api/posts/${id}/report`} />
             </Box>
             <Text fontSize="sm" color="gray.500" mb={2}>
-                {post.author ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
+            {(post.author !== "Anonymous") ? post.author : "Anonymous"} • {new Date(post.created_at).toLocaleDateString()}
             </Text>
             <Heading as="h1" size="lg" mb={3}>
                 {post.title}
