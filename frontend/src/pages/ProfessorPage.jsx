@@ -28,6 +28,8 @@ import ReportDialog from "../Posts/Reporting";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { Link as RouterLink } from "react-router-dom";
 
+import { useContext } from "react";
+import { AlertContext } from '../components/ui/AlertContext';
 
 // DonutChart: uses the numeric rating (out of 5) for the fill,
 // shows "X.X/5" in the center, and "Overall Rating" below.
@@ -100,6 +102,9 @@ const ProfessorPage = () => {
     const [user, setUser] = useState(null);
     const isUofT = user?.is_uoft === true;
     const disableReviewUI = user && !isUofT;   
+    const [reviewLikeDisabled, setReviewLikeDisabled] = useState({});
+    const { showAlert } = useContext(AlertContext);
+
     
     useEffect(() => {
         const loadUser = async () => {
@@ -196,47 +201,54 @@ const ProfessorPage = () => {
     };
 
     const handleLikeReview = async (reviewId) => {
-    const user = await getUser();
-
-        if (!user) {
-            setReviewMessage("You must be logged in to like a review.");
-            return;
+        // If already disabled for this review, show alert
+        if (reviewLikeDisabled[reviewId]) {
+          showAlert("warning", "surface", "Please wait", "Please wait before attempting to like/unlike");
+          return;
         }
-
+        // Mark review as disabled for liking/unliking
+        setReviewLikeDisabled(prev => ({ ...prev, [reviewId]: true }));
+    
+        const currentUser = await getUser();
+        if (!currentUser) {
+          setReviewMessage("You must be logged in to like a review.");
+          setReviewLikeDisabled(prev => ({ ...prev, [reviewId]: false }));
+          return;
+        }
         setIsProcessingLike(true);
         try {
-            const response = await axios.post(
-                `http://127.0.0.1:8000/api/professors/reviews/${reviewId}/like`,
-                { user_id: user.id }, {
-                  withCredentials: true,
-                }
-            );
-
-            // Update local data
-            const updatedProfessor = { ...professor };
-            const reviewIndex = updatedProfessor.reviews.findIndex(
-                (r) => r._id === reviewId
-            );
-            if (reviewIndex !== -1) {
-                updatedProfessor.reviews[reviewIndex] = response.data;
-                setProfessor(updatedProfessor);
-
-                setTimeout(() => {
-                    setLikeMessages((prev) => {
-                        const newMessages = { ...prev };
-                        delete newMessages[reviewId];
-                        return newMessages;
-                    });
-                }, 3000);
-            }
+          // Send the like request
+          const response = await axios.post(
+            `http://127.0.0.1:8000/api/professors/reviews/${reviewId}/like`,
+            { user_id: currentUser.id },
+            { withCredentials: true }
+          );
+          // Update the review within professor reviews list
+          const updatedProfessor = { ...professor };
+          const reviewIndex = updatedProfessor.reviews.findIndex(r => r._id === reviewId);
+          if (reviewIndex !== -1) {
+            updatedProfessor.reviews[reviewIndex] = response.data;
+            setProfessor(updatedProfessor);
+            // Optionally clear like messages after some time
+            setTimeout(() => {
+              setLikeMessages(prev => {
+                const newMessages = { ...prev };
+                delete newMessages[reviewId];
+                return newMessages;
+              });
+            }, 3000);
+          }
         } catch (error) {
-            console.error("Error liking review:", error);
-            setReviewMessage("Failed to like review. Please try again.");
+          console.error("Error liking review:", error);
+          setReviewMessage("Failed to like review. Please try again.");
         } finally {
-            setIsProcessingLike(false);
+          setIsProcessingLike(false);
+          // Re-enable after a controlled delay
+          setTimeout(() => {
+            setReviewLikeDisabled(prev => ({ ...prev, [reviewId]: false }));
+          }, 500); // You can change this value to control the delay
         }
-    };
-
+      };
     const handleDeleteReview = async (reviewId) => {
         if (!window.confirm("Are you sure you want to delete this review?")) return;
         try {
@@ -619,19 +631,19 @@ const ProfessorPage = () => {
                                             ⭐ {review.overall_rating}/5
                                         </Text>
                                         <HStack spacing={2}>
-                                            {review.likes.includes(getUser()?.id) ? (
-                                                <FaHeart
-                                                    color="red"
-                                                    cursor="pointer"
-                                                    onClick={() => handleLikeReview(review._id)}
-                                                />
-                                            ) : (
-                                                <FaRegHeart
-                                                    cursor="pointer"
-                                                    onClick={() => handleLikeReview(review._id)}
-                                                />
-                                            )}
-                                            <Text>{review.likes.length}</Text>
+                                        {review.likes.includes(user?.id) ? (
+                                        <FaHeart
+                                        color="red"
+                                        cursor="pointer"
+                                        onClick={() => handleLikeReview(review._id)}
+                                        />
+                                    ) : (
+                                        <FaRegHeart
+                                        cursor="pointer"
+                                        onClick={() => handleLikeReview(review._id)}
+                                        />
+                                    )}
+                                                            <Text>{review.likes.length}</Text>
 
                                             {/* Add the ReportDialog button */}
                                             <ReportDialog 

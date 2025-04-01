@@ -22,6 +22,7 @@ const CommentsSection = ({ postId, onCommentsChange  }) => {
     const [isCommenting, setIsCommenting] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
+    const [likeDisabled, setLikeDisabled] = useState(false);
 
     const [user, setUser] = useState(null);
 
@@ -182,46 +183,51 @@ const handleComment = async (parentId = null, replyText = null) => {
             return { ...comment, replies: updateCommentLikes(comment.replies, commentId, userId, action) };
         });
     }
-
     const handleLike = async (commentId) => {
-        if (!user || !user.id) {
-            setMessage("You must be logged in to like a comment.");
-            setIsError(true);
-            return;
-        }
-
+        if (likeDisabled) return; // Prevent action if still in cooldown
+        setLikeDisabled(true);
+        
         try {
-            await axios.post(`http://localhost:8000/api/posts/${postId}/comments/${commentId}/like`, {
-                user_id: user.id
-            });
-
-            // Update state
-            setComments(prevComments => updateCommentLikes(prevComments, commentId, user.id, "like"));
+            await axios.post(
+                `http://127.0.0.1:8000/api/posts/${postId}/comments/${commentId}/like`,
+                { user_id: user.id },
+                { withCredentials: true }
+            );
+            // Update the local state to add the like for the given comment
+            setComments(prevComments =>
+                updateCommentLikes(prevComments, commentId, user.id, "like")
+            );
         } catch (error) {
-            setMessage("Failed to like comment.");
-            setIsError(true);
+            console.error("Failed to like comment:", error.response?.data || error.message);
+        } finally {
+            setTimeout(() => {
+                setLikeDisabled(false);
+            }, 1000);
         }
     };
-
+    
     const handleUnlike = async (commentId) => {
-        if (!user || !user.id) {
-            setMessage("You must be logged in to unlike a comment.");
-            setIsError(true);
-            return;
-        }
-
+        if (likeDisabled) return;
+        setLikeDisabled(true);
         try {
-            await axios.post(`http://localhost:8000/api/posts/${postId}/comments/${commentId}/unlike`, {
-                user_id: user.id
-            });
-
-            // Update state
-            setComments(prevComments => updateCommentLikes(prevComments, commentId, user.id, "unlike"));
+            await axios.post(
+                `http://127.0.0.1:8000/api/posts/${postId}/comments/${commentId}/unlike`,
+                { user_id: user.id },
+                { withCredentials: true }
+            );
+            // Update the local state to remove the like for the given comment
+            setComments(prevComments =>
+                updateCommentLikes(prevComments, commentId, user.id, "unlike")
+            );
         } catch (error) {
-            setMessage("Failed to unlike comment.");
-            setIsError(true);
+            console.error("Failed to unlike comment:", error.response?.data || error.message);
+        } finally {
+            setTimeout(() => {
+                setLikeDisabled(false);
+            }, 500);
         }
     };
+    
 
 
 

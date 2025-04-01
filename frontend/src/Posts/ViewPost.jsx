@@ -9,6 +9,7 @@ import {
     Spinner,
     Button,
     HStack,
+    useToast
 } from '@chakra-ui/react';
 import { FaRegThumbsUp, FaThumbsDown, FaCommentAlt, FaEye } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
@@ -18,6 +19,8 @@ import { FaFlag } from 'react-icons/fa';
 import ReportDialog from './Reporting.jsx';
 import { Link } from 'react-router-dom';
 
+import { useContext } from 'react';
+import { AlertContext } from '../components/ui/AlertContext';
 
 const ViewPost = () => {
     const { id } = useParams();
@@ -30,6 +33,8 @@ const ViewPost = () => {
     const [isError, setIsError] = useState(false);
     const [views, setViews] = useState(0);
     const [user, setUser] = useState(null); // Track current user
+    const [postLikeDisabled, setPostLikeDisabled] = useState(false);
+    const { showAlert } = useContext(AlertContext);
 
 
     useEffect(() => {
@@ -115,64 +120,80 @@ const ViewPost = () => {
         }, 0);
     };
     
-
     const handleLike = async () => {
-        const user = await getUser();
-        if (!user || !user.id) {
-            setMessage("You must be logged in to like a post.");
-            setIsError(true);
+        if (postLikeDisabled) {
+            showAlert("warning", "surface", "Please wait", "Please wait before attempting to like/unlike");
+            setTimeout(() => setMessage(""), 1500);
             return;
+          } // Prevent action if still in cooldown
+        setPostLikeDisabled(true);
+        
+        const currentUser = await getUser();
+        if (!currentUser || !currentUser.id) {
+          setMessage("You must be logged in to like a post.");
+          setIsError(true);
+          setPostLikeDisabled(false);
+          return;
         }
-
         if (hasLiked) {
-            await handleUnlike();
-            return;
+          await handleUnlike();
+          // Re-enable the button after cooldown
+          setTimeout(() => setPostLikeDisabled(false), 1000);
+          return;
         }
-
         try {
-            setIsProcessing(true);
-            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/like?user_id=${user.id}`,
-                {}, {
-                withCredentials: true,
-            });
-            setLikes((prev) => prev + 1);
-            setHasLiked(true);
-            setIsError(false);
+          setIsProcessing(true);
+          await axios.post(
+            `http://127.0.0.1:8000/api/posts/${id}/like?user_id=${currentUser.id}`,
+            {},
+            { withCredentials: true }
+          );
+          // Live update: increment the like count and update state
+          setLikes((prev) => prev + 1);
+          setHasLiked(true);
+          setIsError(false);
         } catch (error) {
-            setMessage("Failed to like post.");
+            showAlert("error", "surface", "Error", "Failed to like post");
             setIsError(true);
         } finally {
-            setIsProcessing(false);
-            setTimeout(() => setMessage(""), 3000);
+          setIsProcessing(false);
+          // Re-enable the button after 1 second
+          setTimeout(() => setPostLikeDisabled(false), 1000);
+          setTimeout(() => setMessage(""), 3000);
         }
-    };
-
-    const handleUnlike = async () => {
-        const user = await getUser();
-        if (!user || !user.id) {
-            setMessage("You must be logged in to unlike a post.");
+      };
+      
+      const handleUnlike = async () => {
+    
+        setPostLikeDisabled(true);
+        
+        const currentUser = await getUser();
+        if (!currentUser || !currentUser.id) {
+            showAlert("warning", "surface", "Please wait", "Please wait before attempting to like/unlike");
             setIsError(true);
-            return;
+          setPostLikeDisabled(false);
+          return;
         }
-
         try {
-            setIsProcessing(true);
-            await axios.post(`http://127.0.0.1:8000/api/posts/${id}/unlike?user_id=${user.id}`,
-                {}, {
-                withCredentials: true,
-            }
-            );
-            setLikes((prev) => prev - 1);
-            setHasLiked(false);
-            setIsError(false);
+          setIsProcessing(true);
+          await axios.post(
+            `http://127.0.0.1:8000/api/posts/${id}/unlike?user_id=${currentUser.id}`,
+            {},
+            { withCredentials: true }
+          );
+          // Live update: decrement the like count and update state
+          setLikes((prev) => prev - 1);
+          setHasLiked(false);
+          setIsError(false);
         } catch (error) {
-            setMessage("Failed to unlike post.");
-            setIsError(true);
+          setMessage("Failed to unlike post.");
+          setIsError(true);
         } finally {
-            setIsProcessing(false);
-            setTimeout(() => setMessage(""), 3000);
+          setIsProcessing(false);
+          setTimeout(() => setPostLikeDisabled(false), 1000);
+          setTimeout(() => setMessage(""), 3000);
         }
-    };
+      };
 
     const handleReport = async () => {
         const user = await getUser();

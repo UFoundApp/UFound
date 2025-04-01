@@ -12,6 +12,7 @@ const Timeline = () => {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const [likeDisabled, setLikeDisabled] = useState(false);
 
   const { showAlert } = useContext(AlertContext);
 
@@ -116,59 +117,60 @@ const Timeline = () => {
   
 
 
-
   const handleLike = async (e, postId) => {
-    e.preventDefault(); // Prevent navigation to post
-    e.stopPropagation(); // Stop event propagation
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (likeDisabled) {
+      showAlert("warning", "surface", "Please wait", "Please wait before attempting to like/unlike");
+      return;
+    }
+    setLikeDisabled(true);
 
     if (!user || !user.id) {
-        showAlert("error", "surface", "Error", "You must be logged in to like a post");
-        return;
+      showAlert("error", "surface", "Error", "You must be logged in to like a post");
+      setLikeDisabled(false);
+      return;
     }
 
     try {
-        const post = posts.find(p => p._id === postId);
-        const hasLiked = post.likes.includes(user.id);
+      const post = posts.find(p => p._id === postId);
+      const hasLiked = post.likes.includes(user.id);
 
-        if (hasLiked) {
-            // Unlike
-            await axios.post(
-                `http://127.0.0.1:8000/api/posts/${postId}/unlike`,
-                { user_id: user.id },
-                { withCredentials: true }
-            );
-            setPosts(prevPosts => prevPosts.map(p => {
-                if (p._id === postId) {
-                    return {
-                        ...p,
-                        likes: p.likes.filter(id => id !== user.id)
-                    };
-                }
-                return p;
-            }));
-        } else {
-            // Like
-            await axios.post(
-                `http://127.0.0.1:8000/api/posts/${postId}/like`,
-                { user_id: user.id },
-                { withCredentials: true }
-            );
-            setPosts(prevPosts => prevPosts.map(p => {
-                if (p._id === postId) {
-                    return {
-                        ...p,
-                        likes: [...p.likes, user.id]
-                    };
-                }
-                return p;
-            }));
-        }
+      if (hasLiked) {
+        // Unlike
+        await axios.post(
+          `http://127.0.0.1:8000/api/posts/${postId}/unlike`,
+          { user_id: user.id },
+          { withCredentials: true }
+        );
+        setPosts(prevPosts => prevPosts.map(p => {
+          if (p._id === postId) {
+            return { ...p, likes: p.likes.filter(id => id !== user.id) };
+          }
+          return p;
+        }));
+      } else {
+        // Like
+        await axios.post(
+          `http://127.0.0.1:8000/api/posts/${postId}/like`,
+          { user_id: user.id },
+          { withCredentials: true }
+        );
+        setPosts(prevPosts => prevPosts.map(p => {
+          if (p._id === postId) {
+            return { ...p, likes: [...p.likes, user.id] };
+          }
+          return p;
+        }));
+      }
     } catch (error) {
-        console.error("Error updating like:", error);
-        showAlert("error", "surface", "Error", "Failed to update like");
+      console.error("Error updating like:", error);
+      showAlert("error", "surface", "Error", "Failed to update like");
+    } finally {
+      setTimeout(() => setLikeDisabled(false), 500);
     }
   };
-
   const handleShare = (e, postId) => {
     e.preventDefault(); // Prevent navigation to post
     e.stopPropagation(); // Stop event propagation
