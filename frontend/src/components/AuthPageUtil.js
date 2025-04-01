@@ -20,34 +20,49 @@ export const getUser = async () => {
 
 export const isLoggedIn = async () => {
   try {
-    const refreshResponse = await fetch("http://127.0.0.1:8000/auth/check-refresh", {
-      credentials: "include",
-    });
-
-    if (refreshResponse.status === 204) {
-      console.warn("🔹 No refresh token found. Skipping auth check.");
-      return false;
-    }
+    // Step 1: Check if the user is authenticated with the current access token
     const response = await fetch("http://127.0.0.1:8000/auth/me", {
       credentials: "include",
     });
 
     if (response.ok) {
       const data = await response.json();
-      console.log("User is logged in:", data);
-      return true;
+      console.log("User is logged in with access token:", data);
+      return true; // Access token is valid, no need to refresh
     }
 
-    console.warn("⚠️ Access token expired. Attempting refresh...");
+    console.warn("⚠️ Access token invalid or expired. Checking refresh token...");
 
+    // Step 2: Check if a refresh token exists
+    const refreshResponse = await fetch("http://127.0.0.1:8000/auth/check-refresh", {
+      credentials: "include",
+    });
+
+    if (refreshResponse.status === 204) {
+      console.warn("🔹 No refresh token found. Cannot refresh access token.");
+      return false; // No refresh token, and access token is invalid, so user is not logged in
+    }
+
+    // Step 3: Attempt to refresh the access token
     const refreshSuccess = await refreshAccessToken();
     if (!refreshSuccess) {
+      console.warn("⚠️ Failed to refresh access token.");
       return false;
     }
+
+    // Step 4: Retry authentication with the new access token
     const retryResponse = await fetch("http://127.0.0.1:8000/auth/me", {
       credentials: "include",
     });
-    return retryResponse.ok;
+
+    if (retryResponse.ok) {
+      const data = await retryResponse.json();
+      console.log("User is logged in after refresh:", data);
+      return true;
+    }
+
+    console.warn("⚠️ Retry failed after refresh.");
+    return false;
 
   } catch (error) {
     console.error("Error checking login status:", error);

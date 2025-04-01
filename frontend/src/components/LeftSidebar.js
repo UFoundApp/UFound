@@ -3,131 +3,173 @@ import React from 'react';
 import { Box, Stack, Button, Text } from '@chakra-ui/react';
 import { FaRss, FaBuilding, FaPoll, FaLayerGroup, FaStar, FaChartLine } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-
+import { useColorMode } from '../theme/ColorModeContext';
 
 const LeftSidebar = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { colorMode } = useColorMode();
 
-    return (
-        <Box
-            bg="gray.50"  // Very light grey background
-            height="85vh"  // Changed to viewport height
-            p={4}
-            pl={14}  // Added more left padding
-            width="100%"
-            overflowY="auto"  // Enable vertical scrolling when needed
-            css={{
-                '&::-webkit-scrollbar': {
-                    width: '4px',
-                },
-                '&::-webkit-scrollbar-track': {
-                    width: '6px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                    background: 'gray.200',
-                    borderRadius: '24px',
-                },
-            }}
+  return (
+    <Box
+      bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
+      height="85vh"
+      p={4}
+      pl={14}
+      width="100%"
+      overflowY="auto"
+      css={{
+        '&::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: colorMode === 'light' ? 'gray.200' : 'gray.600',
+          borderRadius: '24px',
+        },
+      }}
+    >
+      <Stack spacing={2} align="stretch" direction="column">
+        <Text 
+          fontWeight="bold" 
+          color={colorMode === "light" ? "gray.600" : "gray.300"} 
+          px={4} 
+          pt={2}
         >
-            <Stack spacing={2} align="stretch" direction="column">
-                {/* Main Navigation */}
-                <Button
-                    leftIcon={<FaRss />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                    onClick={() => navigate("/home")}
-                >
-                    Feed
-                </Button>
-                
-                <Button
-                    leftIcon={<FaBuilding />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                >
-                    My School
-                </Button>
+          Quick Links
+        </Text>
+        <Box as="hr" my={4} borderColor="gray.200" />
 
-                <Button
-                    leftIcon={<FaPoll />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                >
-                    Polls
-                </Button>
+        {/* Main Navigation */}
+        <Button
+          leftIcon={<FaRss />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() => window.open("https://www.acorn.utoronto.ca/")}
+        >
+          Acorn
+        </Button>
+        <Button
+          leftIcon={<FaChartLine />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() =>
+            window.open("https://studentlife.utoronto.ca/service/mental-health-clinical-services/")
+          }
+        >
+          Wellness
+        </Button>
+        <Button
+          leftIcon={<FaPoll />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() => window.open("https://www.utoronto.ca/alerts")}
+        >
+          UTAlert
+        </Button>
+        <Button
+          leftIcon={<FaBuilding />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          _hover={{ bg: 'gray.100' }}
+          onClick={() =>
+            window.open(
+              "https://www.utoronto.ca/news/university-toronto-names-its-17th-president?utm_source=UofTHome&utm_medium=WebsiteBanner&utm_campaign=news_2025&utm_content=president_woodin"
+            )
+          }
+        >
+          UofT News
+        </Button>
+        <Button
+          leftIcon={<FaLayerGroup />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() => window.open("https://www.utm.utoronto.ca/shuttle/")}
+        >
+          Shuttle Service
+        </Button>
+        <Button
+          leftIcon={<FaStar />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() => window.open("https://www.utoronto.ca/campus-status")}
+        >
+          Campus Status
+        </Button>
+        <Button
+          leftIcon={<FaStar />}
+          justifyContent="flex-start"
+          variant="ghost"
+          width="100%"
+          py={6}
+          color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          onClick={() => window.open("https://utm.calendar.utoronto.ca/")}
+        >
+          Acamic Calendar
+        </Button>
 
-                <Button
-                    leftIcon={<FaLayerGroup />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                >
-                    All Channels
-                </Button>
+        {/* Additional Section: Reviews */}
+        <Box as="hr" my={4} borderColor="gray.200" />
+        <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
+          Reviews
+        </Text>
+        <Stack spacing={1} align="stretch" pl={4}>
+          <Button
+            variant="ghost"
+            justifyContent="flex-start"
+            py={2}
+            color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+            onClick={() => navigate('/courses')}
+          >
+            Courses
+          </Button>
+          <Button
+            variant="ghost"
+            justifyContent="flex-start"
+            py={2}
+            color={colorMode === 'light' ? 'gray.600' : 'gray.200'}
+            onClick={() => navigate('/professors')}
+          >
+            Professors
+          </Button>
+          <Button
+            variant="ghost"
+            justifyContent="flex-start"
+            py={2}
+            color={colorMode === 'light' ? 'blue.500' : 'blue.300'}
+          >
+            Show more
+          </Button>
+        </Stack>
 
-                <Button
-                    leftIcon={<FaStar />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                >
-                    Featured Content
-                </Button>
-
-                <Button
-                    leftIcon={<FaChartLine />}
-                    justifyContent="flex-start"
-                    variant="ghost"
-                    width="100%"
-                    py={6}
-                    _hover={{ bg: 'gray.100' }}
-                >
-                    Trending
-                </Button>
-
-                {/* Industries Section */}
-                <Box as="hr" my={4} borderColor="gray.200" />
-                <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
-                    Reviews
-                </Text>
-                <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Tech</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Healthcare</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Hardware</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
-                        Show more
-                    </Button>
-                </Stack>
-
-                {/* Job Groups Section */}
-                <Box as="hr" my={4} borderColor="gray.200" />
-                <Text fontWeight="bold" color="gray.600" px={4} pt={2}>
-                    JOB GROUPS
-                </Text>
-                <Stack spacing={1} align="stretch" pl={4}>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Software Engineering</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Product Management</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2}>Finance</Button>
-                    <Button variant="ghost" justifyContent="flex-start" py={2} color="blue.500">
-                        Show more
-                    </Button>
-                </Stack>
-            </Stack>
-        </Box>
-    );
+        <Box as="hr" my={4} borderColor="gray.200" />
+      </Stack>
+    </Box>
+  );
 };
 
 export default LeftSidebar;

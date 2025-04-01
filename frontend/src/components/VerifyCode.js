@@ -7,10 +7,15 @@ import {
   Text,
 } from '@chakra-ui/react';
 
+import { useContext } from 'react';
+import { AlertContext } from './ui/AlertContext';
+
 function VerifyCode({ email, onSuccess }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const { showAlert } = useContext(AlertContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +23,7 @@ function VerifyCode({ email, onSuccess }) {
 
     if (code.length !== 6 || isNaN(code)) {
       setMessage("Please enter a valid 6-digit code.");
+      showAlert("error", "surface", "Verification Error", "Please enter a valid 6-digit code.");
       return;
     }
 
@@ -32,6 +38,7 @@ function VerifyCode({ email, onSuccess }) {
       onSuccess();
     } catch (error) {
       setMessage(error.response?.data?.detail || "Invalid or expired verification code.");
+      showAlert("error", "surface", "Verification Error", error.response?.data?.detail || "Invalid or expired verification");
     }
 
     setLoading(false);

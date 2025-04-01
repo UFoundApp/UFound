@@ -12,6 +12,7 @@ import {
   Link,
   Button,
 } from '@chakra-ui/react';
+import { useColorMode } from '../theme/ColorModeContext';
 
 function ResetPassword() {
   const [resetPasswordState, setResetPasswordState] = useState(true);
@@ -19,28 +20,54 @@ function ResetPassword() {
   const [email, setEmail] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [isPassUpdated, setIsPassUpdated] = useState(false);
+  const { colorMode } = useColorMode();
 
   const navigate = useNavigate();
 
   const toggleForm = () => setIsLogin(!isLogin);
 
   return (
-    <Box minH="100vh" bg="gray.50" py={20} px={4}>
+    <Box 
+      minH="100vh" 
+      bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} 
+      py={20} 
+      px={4}
+    >
       <Container maxW="lg">
-        <VStack spacing={8} bg="white" rounded="lg" boxShadow="lg" p={10}>
-          <Heading size="lg" mb={2}>
+        <VStack 
+          spacing={8} 
+          bg={colorMode === 'light' ? 'white' : 'gray.700'} 
+          rounded="lg" 
+          boxShadow="lg" 
+          p={10}
+          borderWidth="1px"
+          borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+        >
+          <Heading 
+            size="lg" 
+            mb={2}
+            color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+          >
             Reset Password
           </Heading>
           
           <>
           {!email ? (
             <VStack spacing={6} w="100%" align="center">
-              <Text color="gray.600" fontSize="sm" textAlign="center">
+              <Text 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+                fontSize="sm" 
+                textAlign="center"
+              >
                 Enter your UofT email address to receive a verification code.
               </Text>
               <VStack w="100%" spacing={6}>
                 <VStack w="100%" spacing={2} align="flex-start">
-                  <Text fontSize="sm" fontWeight="medium">
+                  <Text 
+                    fontSize="sm" 
+                    fontWeight="medium"
+                    color={colorMode === 'light' ? 'gray.700' : 'gray.200'}
+                  >
                     Enter Your UofT Email
                   </Text>
                   <EmailInput 
@@ -52,6 +79,11 @@ function ResetPassword() {
                       size: "lg",
                       colorScheme: "blue",
                       borderRadius: "full",
+                      bg: colorMode === 'light' ? 'blue.500' : 'blue.400',
+                      color: "white",
+                      _hover: {
+                        bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                      },
                       children: "Send Code"
                     }}
                   />
@@ -60,7 +92,11 @@ function ResetPassword() {
             </VStack>
           ) : !isVerified ? (
             <VStack spacing={6} w="100%" align="center">
-              <Text color="gray.600" fontSize="sm" textAlign="center">
+              <Text 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+                fontSize="sm" 
+                textAlign="center"
+              >
                 Check your email for the 6-digit verification code.
               </Text>
               <VerifyCode 
@@ -70,7 +106,11 @@ function ResetPassword() {
             </VStack>
           ) : !isPassUpdated ? (
             <VStack spacing={6} w="100%" align="center">
-              <Text color="gray.600" fontSize="sm" textAlign="center">
+              <Text 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+                fontSize="sm" 
+                textAlign="center"
+              >
                 Set up a new password for your account.
               </Text>
               <PasswordSetup 
@@ -81,8 +121,17 @@ function ResetPassword() {
             </VStack>
           ) : (
             <VStack spacing={6} w="100%" align="center">
-              <Heading size="md">🎉 Password Updated Successfully!</Heading>
-              <Text color="gray.600" fontSize="sm" textAlign="center">
+              <Heading 
+                size="md"
+                color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+              >
+                🎉 Password Updated Successfully!
+              </Heading>
+              <Text 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+                fontSize="sm" 
+                textAlign="center"
+              >
                 You can now log in with your new password
               </Text>
               <Button
@@ -91,6 +140,11 @@ function ResetPassword() {
                 size="lg"
                 width="100%"
                 borderRadius="full"
+                bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
+                color="white"
+                _hover={{
+                  bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
+                }}
               >
                 Return to Login
               </Button>
@@ -99,29 +153,56 @@ function ResetPassword() {
           </>
 
           <VStack spacing={4} pt={4}>
-            <Text color="gray.600" fontSize="sm">
+            <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'} fontSize="sm">
               Don't have an account?{' '}
               <Link
-                color="blue.500"
+                color={colorMode === 'light' ? 'blue.500' : 'blue.300'}
                 href="/login"
-                _hover={{ textDecoration: 'underline' }}
+                _hover={{ 
+                  textDecoration: 'underline',
+                  color: colorMode === 'light' ? 'blue.600' : 'blue.200'
+                }}
               >
                 Sign Up
               </Link>
             </Text>
 
-            <Text color="gray.600" fontSize="xs" textAlign="center">
+            <Text 
+              color={colorMode === 'light' ? 'gray.600' : 'gray.300'} 
+              fontSize="xs" 
+              textAlign="center"
+            >
               If you need help, please contact{' '}
-              <Link color="blue.500" href="mailto:ufoundapp@gmail.com">
+              <Link 
+                color={colorMode === 'light' ? 'blue.500' : 'blue.300'}
+                href="mailto:ufoundapp@gmail.com"
+                _hover={{
+                  color: colorMode === 'light' ? 'blue.600' : 'blue.200'
+                }}
+              >
                 ufoundapp@gmail.com
               </Link>
             </Text>
 
             <VStack spacing={2}>
-              <Link fontSize="xs" color="gray.600" href="#">
+              <Link 
+                fontSize="xs" 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                href="#"
+                _hover={{
+                  color: colorMode === 'light' ? 'gray.700' : 'gray.200'
+                }}
+              >
                 Terms of Use
               </Link>
-              <Link fontSize="xs" color="gray.600" href="#">
+              <Link 
+                fontSize="xs" 
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                href="#"
+                _hover={{
+                  color: colorMode === 'light' ? 'gray.700' : 'gray.200'
+                }}
+              >
                 Privacy Policy
               </Link>
             </VStack>

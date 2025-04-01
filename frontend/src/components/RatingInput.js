@@ -6,7 +6,7 @@ import {
 
 
 
-const RatingInput = ({rating , size}) => {
+const RatingInput = ({rating , size, isDisabled= false}) => {
 
 
     return ( 
@@ -14,7 +14,14 @@ const RatingInput = ({rating , size}) => {
                 <RatingGroup.HiddenInput />
                 <RatingGroup.Control>
                     {rating.items.map((index) => (
-                    <RatingGroup.Item key={index} index={index}>
+                    <RatingGroup.Item key={index} index={index}
+                    onClick={isDisabled ? (e) => e.preventDefault() : undefined}
+                    style={{
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.4 : 1,
+                      pointerEvents: isDisabled ? 'none' : 'auto',
+                    }}
+                    > 
                         <RatingGroup.ItemIndicator />
                     </RatingGroup.Item>
                     ))}
