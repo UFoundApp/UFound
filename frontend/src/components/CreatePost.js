@@ -50,7 +50,7 @@ function CreatePost() {
       }
     } catch (error) {
       setMessage("Failed to create post.");
-      showAlert("error", "surface", "Failed to create post", "Failed to create post.");
+      showAlert("error", "surface", "Failed to create post", "You need an account to post. Sign in");
     }
     setLoading(false);
   };
