@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, VStack, Text, Flex, Icon } from '@chakra-ui/react';
 import { FaSearch, FaGraduationCap, FaChalkboardTeacher } from 'react-icons/fa';
 
-const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
+const SearchSuggestions = ({ suggestions, onSelect, type, query, colorMode }) => {
   if (!suggestions.length) return null;
 
   const getHighlightedText = (text, query) => {
@@ -20,36 +20,37 @@ const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
 
   return (
     <Box
-      position="absolute"
-      top="100%"
-      left="0"
-      right="0"
-      bg="white"
-      boxShadow="lg"
+      bg={colorMode === 'light' ? 'white' : 'gray.700'}
+      boxShadow="md"
       borderRadius="md"
-      mt={1}
-      maxH="480px"
-      overflowY="auto"
-      zIndex={1000}
+      border="1px"
+      borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+      overflow="hidden"
     >
-      <VStack align="stretch" spacing={0}>
+      <VStack align="stretch" spacing={0} divider={
+        <Box 
+          w="100%" 
+          h="1px" 
+          bg={colorMode === 'light' ? 'gray.100' : 'gray.600'}
+        />
+      }>
         {/* Display first 4 suggestions */}
         {displaySuggestions.map((suggestion, index) => (
           <Box
             key={index}
             p={3}
-            _hover={{ bg: 'gray.50' }}
             cursor="pointer"
+            _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.600' }}
             onClick={() => onSelect(suggestion, false)}
-            borderBottom="1px"
-            borderColor="gray.100"
+            color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+            borderBottom={colorMode === 'light' ? '1px' : '1px solid gray.600'}
           >
             <Flex align="center" gap={2}>
               <Icon 
                 as={type === 'posts' ? FaSearch : 
                     type === 'courses' ? FaGraduationCap : 
                     FaChalkboardTeacher} 
-                color="gray.500"
+                color={colorMode === 'light' ? 'gray.500' : 'gray.400'}
               />
               {type === 'posts' && (
                 <Box>
@@ -57,7 +58,7 @@ const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
                     {getHighlightedText(suggestion.title)}
                   </Text>
                   {suggestion.content && (
-                    <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                    <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} noOfLines={1}>
                       {suggestion.content.substring(0, 100)}...
                     </Text>
                   )}
@@ -69,7 +70,7 @@ const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
                     {getHighlightedText(suggestion.title)}
                   </Text>
                   {suggestion.description && (
-                    <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                    <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} noOfLines={1}>
                       {suggestion.description.substring(0, 100)}...
                     </Text>
                   )}
@@ -80,7 +81,7 @@ const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
                   <Text fontSize="sm" fontWeight="medium">
                     {getHighlightedText(suggestion.name)}
                   </Text>
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                     {suggestion.department}
                   </Text>
                 </Box>
@@ -92,15 +93,15 @@ const SearchSuggestions = ({ suggestions, onSelect, type, query }) => {
         {/* Add "Search..." as the fifth item */}
         <Box
           p={3}
-          _hover={{ bg: 'gray.50' }}
           cursor="pointer"
+          _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.600' }}
           onClick={() => onSelect(query, true)} // Pass true for search action
-          borderBottom="1px"
-          borderColor="gray.100"
+          color={colorMode === 'light' ? 'gray.800' : 'gray.100'}
+          borderBottom={colorMode === 'light' ? '1px' : '1px solid gray.600'}
         >
           <Flex align="center" gap={2}>
-            <Icon as={FaSearch} color="gray.500" />
-            <Text fontSize="sm" color="gray.600">
+            <Icon as={FaSearch} color={colorMode === 'light' ? 'gray.500' : 'gray.400'} />
+            <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
               Search "{query}"...
             </Text>
           </Flex>

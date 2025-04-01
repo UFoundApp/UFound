@@ -3,6 +3,7 @@ import { Box, Text, VStack, Link, Spinner, Heading, Flex } from "@chakra-ui/reac
 import { Link as RouterLink } from "react-router-dom";
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
+import { useColorMode } from '../theme/ColorModeContext';
 
 const Professors = () => {
   const [professors, setProfessors] = useState([]);
@@ -10,6 +11,7 @@ const Professors = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
+  const { colorMode } = useColorMode();
 
   // Function to fetch ONLY the next batch of professors
   async function fetchNextBatch() {
@@ -71,13 +73,13 @@ const Professors = () => {
   }
 
   return (
-    <Flex flex="1" bg="gray.50">
+    <Flex flex="1" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
       {/* Left Sidebar Area - Fixed */}
       <Box
         as="aside"
         width={{ base: '0', md: '25%' }}
         display={{ base: 'none', md: 'block' }}
-        bg="gray.50"
+        bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
         height="calc(100vh - 60px)"
         position="fixed"
         left="0"
@@ -93,16 +95,16 @@ const Professors = () => {
         flex="1"
         ml={{ base: 0, md: '25%' }}
         mr={{ base: 0, md: '25%' }}
-        bg="gray.50"
+        bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
         minH="calc(100vh - 60px)"
       >
-        <Box p={4} maxW="900px" mx="auto" bg="gray.50">
-          <Heading as="h1" size="xl" mb={6}>
+        <Box p={4} maxW="900px" mx="auto" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}>
+          <Heading as="h1" size="xl" mb={6} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
             Professors
           </Heading>
           
           {professors.length === 0 ? (
-            <Text fontSize="lg" color="gray.500" textAlign="center" mt={10}>
+            <Text fontSize="lg" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} textAlign="center" mt={10}>
               No professors found.
             </Text>
           ) : (
@@ -117,21 +119,28 @@ const Professors = () => {
                     width="100%"
                     p={4} 
                     border="1px" 
-                    borderColor="gray.300" 
+                    borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'} 
                     borderRadius="md" 
-                    _hover={{ bg: "gray.100", transform: "translateY(-2px)" }}
+                    _hover={{ 
+                      bg: colorMode === 'light' ? 'gray.100' : 'gray.700', 
+                      transform: "translateY(-2px)" 
+                    }}
                     transition="all 0.2s"
                     boxShadow="sm"
-                    bg="white"
+                    bg={colorMode === 'light' ? 'white' : 'gray.700'}
                   >
-                    <Text fontWeight="bold" fontSize="lg">{professor.name}</Text>
-                    <Text fontSize="md" color="gray.600">{professor.department}</Text>
+                    <Text fontWeight="bold" fontSize="lg" color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>
+                      {professor.name}
+                    </Text>
+                    <Text fontSize="md" color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                      {professor.department}
+                    </Text>
                     {professor.ratings && typeof professor.ratings.overall === "number" && (
-                        <Text fontSize="sm" color="gray.500">
-                          Rating: ⭐ {professor.ratings.overall.toFixed(1)}/5
-                        </Text>
+                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                        Rating: ⭐ {professor.ratings.overall.toFixed(1)}/5
+                      </Text>
                     )}
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                       Current Courses: {professor.current_courses.length}
                     </Text>
                   </Box>
@@ -141,7 +150,9 @@ const Professors = () => {
               {loading && (
                 <Flex justify="center" p={4}>
                   <Spinner size="md" color="blue.500" />
-                  <Text ml={2} color="gray.500">Loading batch {page + 1}...</Text>
+                  <Text ml={2} color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                    Loading batch {page + 1}...
+                  </Text>
                 </Flex>
               )}
             </VStack>
