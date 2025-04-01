@@ -7,11 +7,8 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import {
-  TabsRoot,
-  TabList,
-  TabTrigger,
-  TabContent
-} from "@ark-ui/react/tabs";
+  Tabs
+} from "@chakra-ui/react";
 import axios from "axios";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
@@ -110,28 +107,28 @@ const AdminFlaggedPage = () => {
       >
         <Heading size="lg" mb={6}>Flagged Content (Admin)</Heading>
 
-        <TabsRoot defaultValue="posts" variant="line">
-        <TabList as={Flex} gap={4} flexWrap="wrap" mb={4}>
-        <TabTrigger value="posts" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
+        <Tabs.Root defaultValue="posts" variant="line">
+        <Tabs.List as={Flex} gap={4} flexWrap="wrap" mb={4}>
+        <Tabs.Trigger value="posts" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
             <LuUser />
             <Text ml={2}>Flagged Posts</Text>
-        </TabTrigger>
-        <TabTrigger value="comments" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="comments" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
             <LuFolder />
             <Text ml={2}>Flagged Comments</Text>
-        </TabTrigger>
-        <TabTrigger value="courseReviews" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="courseReviews" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
             <LuSquareCheck />
             <Text ml={2}>Course Reviews</Text>
-        </TabTrigger>
-        <TabTrigger value="professorReviews" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="professorReviews" px={4} py={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
             <LuSquareCheck />
             <Text ml={2}>Professor Reviews</Text>
-        </TabTrigger>
-        </TabList>
+        </Tabs.Trigger>
+        </Tabs.List>
         
           {/* Posts */}
-            <TabContent value="posts">
+            <Tabs.Content value="posts">
             {flaggedPosts.length === 0 ? (
                 <Text>No flagged posts.</Text>
             ) : (
@@ -158,10 +155,10 @@ const AdminFlaggedPage = () => {
                 </Box>
                 ))
             )}
-            </TabContent>
+            </Tabs.Content>
 
             {/* Comments */}
-            <TabContent value="comments">
+            <Tabs.Content value="comments">
             {flaggedComments.length === 0 ? (
               <Text>No flagged comments.</Text>
             ) : (
@@ -197,12 +194,12 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
-          </TabContent>
+          </Tabs.Content>
 
 
 
           {/* Course Reviews */}
-            <TabContent value="courseReviews">
+            <Tabs.Content value="courseReviews">
             {flaggedCourseReviews.length === 0 ? (
                 <Text>No flagged course reviews.</Text>
             ) : (
@@ -239,10 +236,10 @@ const AdminFlaggedPage = () => {
                 </Box>
                 ))
             )}
-            </TabContent>
+            </Tabs.Content>
 
             {/* Professor Reviews */}
-            <TabContent value="professorReviews">
+            <Tabs.Content value="professorReviews">
             {flaggedProfessorReviews.length === 0 ? (
                 <Text>No flagged professor reviews.</Text>
             ) : (
@@ -279,11 +276,8 @@ const AdminFlaggedPage = () => {
                 </Box>
                 ))
             )}
-            </TabContent>
-
-
-
-        </TabsRoot>
+            </Tabs.Content>
+        </Tabs.Root>
       </Box>
 
       {/* Right Sidebar */}

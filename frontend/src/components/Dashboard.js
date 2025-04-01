@@ -6,7 +6,6 @@ function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // 
   useEffect(() => {
     if (!isLoggedIn()) {
       navigate("/login"); // Redirect if not logged in

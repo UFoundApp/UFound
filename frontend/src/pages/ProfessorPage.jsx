@@ -88,6 +88,8 @@ const ProfessorPage = () => {
     const [strictness, setStrictness] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [alertConfirm, setAlertConfirm] = useState(false);
     const [reviewMessage, setReviewMessage] = useState("");
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [reviewContent, setReviewContent] = useState("");
@@ -245,23 +247,49 @@ const ProfessorPage = () => {
     };
 
     const handleDeleteReview = async (reviewId) => {
-        if (!window.confirm("Are you sure you want to delete this review?")) return;
+        setIsDeleting(true);
+
         try {
-          await axios.delete(`http://localhost:8000/api/professors/reviews/${reviewId}`, {
-            withCredentials: true, // ensures cookies/token are sent
-          });
-          // Remove the deleted review from local state
-          setProfessor((prev) => ({
-            ...prev,
-            reviews: prev.reviews.filter((r) => r._id !== reviewId),
-          }));
+            // Wait for the user to confirm the action
+            const confirmed = await showAlert(
+                'warning',
+                'surface',
+                'Are you sure?',
+                'This action cannot be undone.',
+                'popup',
+                async () => {
+                setAlertConfirm(true); // This will run when "Yes" is clicked
+                }
+            );
+        
+            // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+            if (confirmed) {
+                await axios.delete(`http://localhost:8000/api/professors/reviews/${reviewId}`, {
+                    withCredentials: true, // ensures cookies/token are sent
+                });
+                // Remove the deleted review from local state
+                setProfessor((prev) => ({
+                    ...prev,
+                    reviews: prev.reviews.filter((r) => r._id !== reviewId),
+                }));
+            } else {
+                console.log("User canceled the deletion.");
+            }
         } catch (error) {
           console.error("Failed to delete review:", error);
           setReviewMessage("Failed to delete review.");
+        } finally {
+            setIsDeleting(false);
         }
       };
 
-    if (loading) return <Spinner size="xl" mt="20px" />;
+    if (loading) {
+        return (
+            <Flex justify="center" align="center" height="50vh">
+                <Spinner size="xl" thickness="4px" color="blue.500" />
+            </Flex>
+        );
+    }
     if (!professor) return <Text fontSize="xl" mt="20px">Professor not found.</Text>;
 
     // We'll show the total number of reviews in the donut area
@@ -607,7 +635,9 @@ const ProfessorPage = () => {
                                     <Button
                                         colorScheme="blue"
                                         onClick={handleSubmitReview}
-                                        isLoading={isSubmitting}
+                                        loading={isSubmitting}
+                                        isDisabled={isSubmitting || disableReviewUI}
+                                        loadingText="Submitting Review"
                                     >
                                         Submit Review
                                     </Button>
@@ -654,6 +684,9 @@ const ProfessorPage = () => {
                                             colorPalette="red"
                                             size="xs"
                                             onClick={() => handleDeleteReview(review._id)}
+                                            loading={isDeleting}
+                                            isDisabled={isDeleting}
+                                            loadingText="Deleting Review"
                                             >
                                             Delete
                                             </Button>

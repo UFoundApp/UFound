@@ -39,6 +39,8 @@ const CoursePage = () => {
     const ratingAD = useRatingGroup({ count: 5, defaultValue: 0 });
     const [overallRating, setOverallRating] = useState(0);
     const [isPostingReview, setIsPostingReview] = useState(false);
+    const [isDeletingReview, setIsDeletingReview] = useState(false);
+    const [alertConfirm, setAlertConfirm] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -140,22 +142,43 @@ const CoursePage = () => {
     };
 
     const handleDeleteReview = async (reviewIndex) => {
-        if (!window.confirm("Are you sure you want to delete this review?")) return;
+        setIsDeletingReview(true);
+
         try {
-            await axios.delete(`http://localhost:8000/api/courses/${courseId}/reviews/${reviewIndex}`, {
-                withCredentials: true,
-            });
-            // Update the course state by filtering out the deleted review
-            setCourse(prev => ({
-                ...prev,
-                reviews: prev.reviews.filter((_, idx) => idx !== reviewIndex)
-            }));
-            setMessage("Review deleted successfully.");
-            setIsError(false);
+            // Wait for the user to confirm the action
+            const confirmed = await showAlert(
+                'warning',
+                'surface',
+                'Are you sure?',
+                'This action cannot be undone.',
+                'popup',
+                async () => {
+                setAlertConfirm(true); // This will run when "Yes" is clicked
+                }
+            );
+        
+            // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+            if (confirmed) {
+                await axios.delete(`http://localhost:8000/api/courses/${courseId}/reviews/${reviewIndex}`, {
+                    withCredentials: true,
+                });
+                // Update the course state by filtering out the deleted review
+                setCourse(prev => ({
+                    ...prev,
+                    reviews: prev.reviews.filter((_, idx) => idx !== reviewIndex)
+                }));
+                setMessage("Review deleted successfully.");
+                setIsError(false);
+            } else {
+                console.log("User canceled the deletion.");
+            }
         } catch (error) {
             console.error("Failed to delete review:", error.response?.data || error.message);
             setMessage("Failed to delete review.");
             setIsError(true);
+        } finally {
+            setIsDeletingReview(false);
+            setTimeout(() => setMessage(""), 3000);
         }
     };
     
@@ -369,7 +392,9 @@ const CoursePage = () => {
                         onClick={handleAddReview}
                         aria-label="Add Review"
                         text="Add Review"
-                        isLoading={isPostingReview}
+                        loading={isPostingReview}
+                        isDisabled={isPostingReview || disableReviewUI}
+                        loadingText="Adding Review"
                         mt={2}
                     >
                         Add Review
@@ -440,6 +465,9 @@ const CoursePage = () => {
                                             colorPalette="red"
                                             size="xs"
                                             onClick={() => handleDeleteReview(index)}
+                                            loading={isDeletingReview}
+                                            isDisabled={isDeletingReview}
+                                            loadingText="Deleting Review"
                                         >
                                             Delete
                                         </Button>

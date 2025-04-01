@@ -1,6 +1,6 @@
 // src/components/UserProfile.js
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex } from '@chakra-ui/react';
+import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex, Spinner } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, updateStoredUsername } from './AuthPageUtil';
 import axios from 'axios';
@@ -15,6 +15,7 @@ function UserProfile() {
   const [code, setCode] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
   const [emailUpdated, setEmailUpdated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // State for current signed-in user
   const [currentUser, setCurrentUser] = useState(null);
@@ -47,6 +48,8 @@ function UserProfile() {
       } catch (error) {
         console.error('Error fetching profile:', error);
         setMessage('Error loading profile');
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -158,10 +161,18 @@ function UserProfile() {
                   }>                    {message}
                   </Text>
                 )}
-                <Text mb={2}>Username</Text>
-                <Input value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder="Username" />
-                <Text mb={2}>Bio</Text>
-                <Textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell other users about yourself" h="150px" />
+                { loading ? 
+                  <Flex justify="center" align="center" height="100vh">
+                      <Spinner size="xl" />
+                  </Flex> :
+                  <div>
+                    <Text mb={2}>Username</Text>
+                    <Input value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder="Username" />
+                    <Text mb={2}>Bio</Text>
+                    <Textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell other users about yourself" h="150px" />
+                  </div>
+                }
+                
                 <Button colorScheme="blue" onClick={handleSave} w="100%">Save</Button>
 
                 {/* UofT Email Upgrade */}
@@ -257,11 +268,19 @@ function UserProfile() {
                </>
              ) : (
               <>
-                <Heading mb={4}>{profile.username}'s Profile</Heading>
-                <Box p={6} borderWidth="1px" borderRadius="lg" bg="gray.50">
-                  <Text fontSize="lg" fontWeight="bold" mb={2}>About {profile.username}</Text>
-                  <Text>{profile.bio || "This user hasn't written a bio yet."}</Text>
-                </Box>
+                { loading ? (
+                  <>
+                  </>
+                ) : 
+                (
+                  <>
+                    <Heading mb={4}>{profile.username}'s Profile</Heading>
+                    <Box p={6} borderWidth="1px" borderRadius="lg" bg="gray.50">
+                      <Text fontSize="lg" fontWeight="bold" mb={2}>About {profile.username}</Text>
+                      <Text>{profile.bio || "This user hasn't written a bio yet."}</Text>
+                    </Box>
+                  </>
+                )}
               </>
             )}
           </VStack>
@@ -298,7 +317,14 @@ function UserProfile() {
           }}
         >
           <Flex justify="space-between" align="center" mb={4}>
-            <Text fontWeight="bold" color="gray.700">{profile.username}'s RECENT POSTS</Text>
+            { loading ? (
+              <Spinner size="sm" />
+            ) : (
+              <Text fontSize="lg" fontWeight="bold">
+                {profile.username}'s Posts
+              </Text>
+            )
+            }
           </Flex>
 
           <Box bg="white" borderRadius="xl" boxShadow="sm" p={3} border="1px" borderColor="gray.200">

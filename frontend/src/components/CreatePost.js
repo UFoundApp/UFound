@@ -79,11 +79,7 @@ function CreatePost() {
           <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <Textarea placeholder="What's on your mind?" value={content} onChange={(e) => setContent(e.target.value)} required />
           <Button type="submit" colorScheme="blue" isLoading={loading}>Post</Button>
-          {message && (
-            <Text color={message.includes("Failed") ? "red.500" : "green.500"}>
-              {message}
-            </Text>
-)}
+         
         </VStack>
       </form>
     </Box>
