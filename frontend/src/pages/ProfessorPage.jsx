@@ -27,7 +27,8 @@ import axios from "axios";
 import ReportDialog from "../Posts/Reporting";  
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { Link as RouterLink } from "react-router-dom";
-
+import { useContext } from 'react';
+import { AlertContext } from '../components/ui/AlertContext';
 
 // DonutChart: uses the numeric rating (out of 5) for the fill,
 // shows "X.X/5" in the center, and "Overall Rating" below.
@@ -100,6 +101,7 @@ const ProfessorPage = () => {
     const [user, setUser] = useState(null);
     const isUofT = user?.is_uoft === true;
     const disableReviewUI = user && !isUofT;   
+    const { showAlert } = useContext(AlertContext);
     
     useEffect(() => {
         const loadUser = async () => {
@@ -200,6 +202,11 @@ const ProfessorPage = () => {
 
         if (!user) {
             setReviewMessage("You must be logged in to like a review.");
+            return;
+        }
+
+        if (!user?.is_uoft) {
+            showAlert("error", "solid", "Restricted", "Only UofT students can like reviews.");
             return;
         }
 
@@ -634,13 +641,14 @@ const ProfessorPage = () => {
                                             <Text>{review.likes.length}</Text>
 
                                             {/* Add the ReportDialog button */}
-                                            <ReportDialog 
-                                            endpoint={`http://localhost:8000/api/professors/reviews/${review._id}/report`}
+                                            {user?.is_uoft && (
+                                            <ReportDialog endpoint={`http://localhost:8000/api/professors/reviews/${review._id}/report`}
                                             postId={review._id}
                                             type="professor"
                                             setMessage={setReviewMessage}
                                             setIsError={() => {}} // optional, you can modify this to match your error handling
                                             />
+                                            )}
                                             {user?.username === review.author && (
                                             <Button
                                             colorPalette="red"

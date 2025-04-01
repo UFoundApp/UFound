@@ -25,6 +25,9 @@ import { useParams, Link } from 'react-router-dom';
 import { getUser } from '../components/AuthPageUtil';
 import ReportDialog from '../Posts/Reporting.jsx';
 import dayjs from 'dayjs';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { useContext } from 'react';
+import { AlertContext } from './ui/AlertContext';
 
 const CoursePage = () => {
     const { courseId } = useParams();
@@ -39,14 +42,19 @@ const CoursePage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [isProcessingLike, setIsProcessingLike] = useState(false);
+    const { showAlert } = useContext(AlertContext);
 
     useEffect(() => {
         async function fetchUser() {
             const userData = await getUser();
-            setCurrentUser(userData);
+            setCurrentUser(userData);      
         }
         fetchUser();
     }, []);
+
+    const isUofT = currentUser?.is_uoft === true;
+    const disableReviewUI = currentUser && !isUofT;      
 
      const fetchCourse = useCallback(async () => {
         try {
@@ -111,7 +119,11 @@ const CoursePage = () => {
             return;
         }
 
-
+        if (!user.is_uoft) {
+            showAlert("error", "solid", "Unauthorized", "Only UofT students can post course reviews.");
+            return;
+        }
+        
         const newReview = { 
             content: review, 
             ratingE: ratingE.value, 
@@ -292,16 +304,32 @@ const CoursePage = () => {
 
                 {/* Reviews Section */}
                 <Heading as="h2" size="md" mt={5} mb={3}>Leave a Review</Heading>
-                <VStack mt={4} position="relative" alignItems="start" bg="white" borderColor="gray.100" borderWidth="1px" p={4} borderRadius="md">
+                {disableReviewUI && (
+                    <Text fontSize="sm" color="red.500" mb={2}>
+                        Only UofT-verified students can leave course reviews.
+                    </Text>
+                )}
+                <VStack
+                    mt={4}
+                    position="relative"
+                    alignItems="start"
+                    bg="white"
+                    borderColor="gray.100"
+                    borderWidth="1px"
+                    p={4}
+                    borderRadius="md"
+                    opacity={disableReviewUI ? 0.5 : 1}
+                    pointerEvents={disableReviewUI ? "none" : "auto"}
+                >
 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Engagement:</Heading>
-                    <RatingInput rating={ratingE} size="lg"/>
+                    <RatingInput rating={ratingE} size="lg" isDisabled={disableReviewUI} />
                                 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Material Difficulty:</Heading>
-                    <RatingInput rating={ratingMD} size="lg"/>
+                    <RatingInput rating={ratingMD} size="lg" isDisabled={disableReviewUI} />
 
                     <Heading as="h2" size="sm" mt={1} mb={1}>Assessment Difficulty:</Heading>
-                    <RatingInput rating={ratingAD} size="lg"/>
+                    <RatingInput rating={ratingAD} size="lg" isDisabled={disableReviewUI} />
 
                     <Field.Root 
                         invalid={isError}
@@ -355,8 +383,59 @@ const CoursePage = () => {
                     course.reviews.map((r, index) => (
                             <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.100" position="relative">
                                 <Box position="absolute" top="8px" right="8px">
-                                <ReportDialog endpoint={`http://localhost:8000/api/courses/reviews/${courseId}/${index}/report`} />
-                                {currentUser && currentUser.username === r.author && (
+                                <HStack spacing={2}>
+                                    {/* Like button */}
+                                    {r.likes?.includes(currentUser?.id) ? (
+                                        <FaHeart
+                                            color="red"
+                                            cursor="pointer"
+                                            onClick={async () => {
+                                                if (isProcessingLike) return;
+                                                setIsProcessingLike(true);
+                                                try {
+                                                    await axios.post(`http://127.0.0.1:8000/api/courses/reviews/${courseId}/${index}/unlike`, {}, {
+                                                        withCredentials: true,
+                                                    });
+                                                    await fetchCourse();
+                                                } catch (err) {
+                                                    console.error("Unlike error:", err);
+                                                } finally {
+                                                    setIsProcessingLike(false);
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                            <FaRegHeart
+                                                cursor="pointer"
+                                                onClick={async () => {
+                                                    if (isProcessingLike) return;
+                                                    setIsProcessingLike(true);
+                                                    try {
+                                                        await axios.post(`http://127.0.0.1:8000/api/courses/reviews/${courseId}/${index}/like`, {}, {
+                                                            withCredentials: true,
+                                                        });
+                                                        await fetchCourse();
+                                                    } catch (err) {
+                                                        if (err.response?.status === 401 || err.response?.status === 403) {
+                                                            showAlert("error", "solid", "Unauthorized", "Only UofT students can like reviews.");
+                                                        } else {
+                                                            console.error("Like error:", err);
+                                                        }
+                                                    } finally {
+                                                        setIsProcessingLike(false);
+                                                    }
+                                                }}
+                                            />
+
+                                    )}
+                                    <Text fontSize="sm">{r.likes?.length || 0}</Text>
+
+                                    {/* Report button */}
+                                    {currentUser?.is_uoft && (
+                                        <ReportDialog endpoint={`http://localhost:8000/api/courses/reviews/${courseId}/${index}/report`} />
+)}
+                                    {/* Delete button */}
+                                    {currentUser && currentUser.username === r.author && (
                                         <Button
                                             colorPalette="red"
                                             size="xs"
@@ -364,8 +443,9 @@ const CoursePage = () => {
                                         >
                                             Delete
                                         </Button>
-                                )}
-                                </Box>
+                                    )}
+                                </HStack>
+                            </Box>
                                 <Text fontWeight="bold">{r.author}</Text>
                                 <RatingGroup.Root readOnly count={5} value={Math.floor((r.ratingE + r.ratingMD + r.ratingAD ) / 3) } size="sm" >
                                     <RatingGroup.HiddenInput />

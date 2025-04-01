@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Depends
 from app.models.courses import CourseModel, ReviewModel, OverallRatingModel, ReportDetail
 from app.models.user import UserModel
+from app.routes.auth import get_current_user
 from app.courseScrape import scrape_all_pages
 from beanie import PydanticObjectId
 from pydantic import BaseModel
@@ -91,6 +92,49 @@ async def delete_course_review(course_id: str, index: int):
 
     await course.save()
     return {"message": "Course review deleted and ratings updated"}
+
+
+@router.post("/courses/reviews/{course_id}/{review_index}/like")
+async def like_review(course_id: str, review_index: int, request: Request):
+    current_user = await get_current_user(request)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    if not current_user.is_uoft:
+        raise HTTPException(status_code=403, detail="Only UofT users can like reviews")
+
+    course = await CourseModel.get(course_id)
+    if not course or review_index >= len(course.reviews):
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review = course.reviews[review_index]
+    if current_user.id in review.likes:
+        raise HTTPException(status_code=400, detail="Already liked")
+
+    review.likes.append(current_user.id)
+    course.reviews[review_index] = review
+    await course.save()
+    return {"message": "Review liked", "likes": len(review.likes)}
+
+
+@router.post("/courses/reviews/{course_id}/{review_index}/unlike")
+async def unlike_review(course_id: str, review_index: int, request: Request):
+    current_user = await get_current_user(request)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    course = await CourseModel.get(course_id)
+    if not course or review_index >= len(course.reviews):
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review = course.reviews[review_index]
+    if current_user.id not in review.likes:
+        raise HTTPException(status_code=400, detail="You haven't liked this review")
+
+    review.likes.remove(current_user.id)
+    course.reviews[review_index] = review
+    await course.save()
+    return {"message": "Review unliked", "likes": len(review.likes)}
 
 
 @router.post("/admin/courses/{course_id}/reviews/{index}/unflag")
