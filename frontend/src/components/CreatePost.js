@@ -95,6 +95,7 @@ function CreatePost() {
       </HStack>
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
+
           <Input 
             placeholder="Title" 
             value={title} 
@@ -122,7 +123,7 @@ function CreatePost() {
           <Button 
             type="submit" 
             colorScheme="blue" 
-            isLoading={loading}
+            loading={loading}
             bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
             color="white"
             _hover={{
@@ -136,6 +137,7 @@ function CreatePost() {
               {message}
             </Text>
           )}
+
         </VStack>
       </form>
     </Box>

@@ -64,6 +64,7 @@ const Comment = ({ comment, postId, handleReply, handleLike, handleUnlike, depth
                         color="gray" 
                         cursor="pointer" 
                         onClick={() => handleDelete(comment.id)}
+                        
                         />
 )}
 

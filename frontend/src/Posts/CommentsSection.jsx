@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
     VStack,
@@ -15,6 +15,8 @@ import { FaCommentAlt, FaReply } from "react-icons/fa";
 import { getUser } from "../components/AuthPageUtil";
 import Comment from "./Comment"; // Import the Comment component
 import { useColorMode } from '../theme/ColorModeContext';
+import { AlertContext } from "../components/ui/AlertContext";
+
 
 const CommentsSection = ({ postId, onCommentsChange  }) => {
     const [comments, setComments] = useState([]);
@@ -23,7 +25,9 @@ const CommentsSection = ({ postId, onCommentsChange  }) => {
     const [isCommenting, setIsCommenting] = useState(false);
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
-
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [alertConfirm, setAlertConfirm] = useState(false);
+    const { showAlert } = useContext(AlertContext);
     const [user, setUser] = useState(null);
     const { colorMode } = useColorMode();
 
@@ -89,26 +93,49 @@ const CommentsSection = ({ postId, onCommentsChange  }) => {
 
     
 const handleDelete = async (commentId) => {
-    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    setIsDeleting(true);
 
     try {
-        // Ensure commentId is a string before sending it
-        const objectId = commentId.toString();
-
-        await axios.delete(`http://127.0.0.1:8000/api/posts/${postId}/comments/${objectId}`, {
-            withCredentials: true, 
-        });
-
-        // Remove deleted comment from state
-        setComments(prevComments => {
-            const updatedComments = removeCommentById(prevComments, commentId);
-            // Call the callback to inform the parent
-            if (onCommentsChange) {
-                onCommentsChange(updatedComments);
+        // Wait for the user to confirm the action
+       const confirmed = await showAlert(
+            'warning',
+            'surface',
+            'Are you sure?',
+            'This action cannot be undone.',
+            'popup',
+            async () => {
+            setAlertConfirm(true); // This will run when "Yes" is clicked
+            } ,
+            async () => {
+            setAlertConfirm(false); // This will run when "No" is clicked
             }
-            return updatedComments;
-        });    } catch (error) {
+        );
+
+        // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+        if (confirmed) {
+            const objectId = commentId.toString();
+
+            await axios.delete(`http://127.0.0.1:8000/api/posts/${postId}/comments/${objectId}`, {
+                withCredentials: true, 
+            });
+
+            // Remove deleted comment from state
+            setComments(prevComments => {
+                const updatedComments = removeCommentById(prevComments, commentId);
+                // Call the callback to inform the parent
+                if (onCommentsChange) {
+                    onCommentsChange(updatedComments);
+                }
+                return updatedComments;
+            });  
+        } else {
+            // User clicked "No", do nothing
+            console.log("Comment deletion cancelled.");
+        }  
+        } catch (error) {
         console.error("Failed to delete comment:", error.response?.data || error.message);
+    } finally {
+        setIsDeleting(false);
     }
 };
     

@@ -88,6 +88,7 @@ const DonutChart = ({ value, size = "150px", thickness = "15px" }) => {
 };
 
 const ProfessorPage = () => {
+
   const { professorId } = useParams();
   const [professor, setProfessor] = useState(null);
   const [overallRating, setOverallRating] = useState(null);
@@ -99,6 +100,8 @@ const ProfessorPage = () => {
   const [reviewMessage, setReviewMessage] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewContent, setReviewContent] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [alertConfirm, setAlertConfirm] = useState(false);
 
   const overallRatingGroup = useRatingGroup({ count: 5, defaultValue: 3 });
   const clarityRatingGroup = useRatingGroup({ count: 5, defaultValue: 3 });
@@ -243,23 +246,57 @@ const ProfessorPage = () => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    setIsDeleting(true);
+    
     try {
-      await axios.delete(`http://localhost:8000/api/professors/reviews/${reviewId}`, {
-        withCredentials: true,
-      });
-      // Remove deleted review from state
-      setProfessor((prev) => ({
-        ...prev,
-        reviews: prev.reviews.filter((r) => r._id !== reviewId),
-      }));
+       // Wait for the user to confirm the action
+       const confirmed = await showAlert(
+          'warning',
+          'surface',
+          'Are you sure?',
+          'This action cannot be undone.',
+          'popup',
+          async () => {
+          setAlertConfirm(true); // This will run when "Yes" is clicked
+          } ,
+          async () => {
+            setAlertConfirm(false); // This will run when "No" is clicked
+          }
+      );
+
+      // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+      if (confirmed) {
+        await axios.delete(`http://localhost:8000/api/professors/reviews/${reviewId}`, {
+          withCredentials: true,
+        });
+        // Remove deleted review from state
+        setProfessor((prev) => ({
+          ...prev,
+          reviews: prev.reviews.filter((r) => r._id !== reviewId),
+        }));
+      } else {
+        console.log("Review deletion cancelled.");
+      }
     } catch (error) {
       console.error("Failed to delete review:", error);
       setReviewMessage("Failed to delete review.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  if (loading) return <Spinner size="xl" mt="20px" />;
+  if (loading) {
+    return (
+      <Flex
+        justify="center"
+        align="center"
+        height="100vh"
+        bg={colorMode === "light" ? "gray.50" : "gray.800"}
+      >
+        <Spinner size="xl" color="blue.500" />
+      </Flex>
+    );
+  };
   if (!professor) return <Text fontSize="xl" mt="20px">Professor not found.</Text>;
 
   const totalReviews = professor?.reviews?.length || 0;
@@ -717,7 +754,9 @@ const ProfessorPage = () => {
                   <Button
                     colorScheme="blue"
                     onClick={handleSubmitReview}
-                    isLoading={isSubmitting}
+                    loading={isSubmitting}
+                    isDisabled={isSubmitting || disableReviewUI}
+                    loadingText="Submitting Review"
                     bg={colorMode === "light" ? "blue.500" : "blue.400"}
                     color="white"
                     _hover={{
@@ -793,6 +832,9 @@ const ProfessorPage = () => {
                           colorPalette="red"
                           size="xs"
                           onClick={() => handleDeleteReview(review._id)}
+                          loading={isDeleting}
+                          isDisabled={isDeleting}
+                          loadingText="Deleting"
                         >
                           Delete
                         </Button>

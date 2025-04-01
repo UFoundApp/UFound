@@ -1,5 +1,5 @@
 // src/components/ViewPost.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
   Box,
@@ -22,6 +22,7 @@ import { getUser } from '../components/AuthPageUtil';
 import CommentsSection from './CommentsSection.jsx';
 import ReportDialog from './Reporting.jsx';
 import { useColorMode } from '../theme/ColorModeContext';
+import { AlertContext } from '../components/ui/AlertContext';
 
 const ViewPost = () => {
   const { id } = useParams();
@@ -35,6 +36,11 @@ const ViewPost = () => {
   const [views, setViews] = useState(0);
   const { colorMode } = useColorMode();
   const [user, setUser] = useState(null); // Track current user
+  const { showAlert } = useContext(AlertContext);
+  const [isDeletingReview, setIsDeletingReview] = useState(false);
+  const [alertConfirm, setAlertConfirm] = useState(false);
+
+
 
   useEffect(() => {
     // Fetch the currently logged-in user
@@ -97,17 +103,37 @@ const ViewPost = () => {
   }, [id]);
 
   const handleDeletePost = async () => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    setIsDeletingReview(true);
 
     try {
-      await axios.delete(`http://localhost:8000/api/posts/${id}`, {
-        withCredentials: true,
-      });
-      // After deletion, redirect to homepage or another page
-      window.location.href = "/";
+        // Wait for the user to confirm the action
+        const confirmed = await showAlert(
+            'warning',
+            'surface',
+            'Are you sure?',
+            'This action cannot be undone.',
+            'popup',
+            async () => {
+            setAlertConfirm(true); // This will run when "Yes" is clicked
+            }
+        );
+    
+        // If confirmed is true (i.e., user clicked "Yes"), proceed with deletion
+        if (confirmed) {
+            await axios.delete(`http://localhost:8000/api/posts/${id}`, {
+                withCredentials: true,
+            });
+            // After deletion, redirect to homepage or another page
+            window.location.href = "/";
+        } else {
+            // User clicked "No", do nothing
+            console.log("User canceled the deletion.");
+        }
     } catch (error) {
       setMessage("Failed to delete post.");
       setIsError(true);
+    } finally {
+        setIsDeletingReview(false);
     }
   };
 
@@ -230,6 +256,7 @@ const ViewPost = () => {
             >
               {post.author}
             </Text>
+
           </Link>
         ) : (
           "Anonymous"
@@ -294,7 +321,12 @@ const ViewPost = () => {
         </Button>
 
         {user && user.id === post.author_id && (
-          <Button colorPalette="red" onClick={handleDeletePost}>
+          <Button colorPalette="red" 
+            onClick={handleDeletePost}
+            loading={isDeletingReview}
+            isDisabled={isDeletingReview}
+            loadingText="Deleting..."
+          >
             Delete
           </Button>
         )}

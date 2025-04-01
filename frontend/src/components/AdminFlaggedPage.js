@@ -110,6 +110,7 @@ const AdminFlaggedPage = () => {
         </Heading>
 
         <Tabs.Root defaultValue="posts" variant="line">
+
           <Tabs.List 
             as={Flex} 
             gap={4} 
@@ -228,6 +229,7 @@ const AdminFlaggedPage = () => {
         
           {/* Posts */}
           <Tabs.Content value="posts">
+
             {flaggedPosts.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged posts.
@@ -292,10 +294,12 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
+
           </Tabs.Content>
 
           {/* Comments */}
           <Tabs.Content value="comments">
+
             {flaggedComments.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged comments.
@@ -369,8 +373,10 @@ const AdminFlaggedPage = () => {
             )}
           </Tabs.Content>
 
+
           {/* Course Reviews */}
           <Tabs.Content value="courseReviews">
+
             {flaggedCourseReviews.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged course reviews.
@@ -449,10 +455,12 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
+
           </Tabs.Content>
 
           {/* Professor Reviews */}
           <Tabs.Content value="professorReviews">
+
             {flaggedProfessorReviews.length === 0 ? (
               <Text color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
                 No flagged professor reviews.
@@ -531,6 +539,7 @@ const AdminFlaggedPage = () => {
                 </Box>
               ))
             )}
+
           </Tabs.Content>
         </Tabs.Root>
       </Box>
