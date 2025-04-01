@@ -1,6 +1,6 @@
 // src/components/UserProfile.js
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex } from '@chakra-ui/react';
+import { Box, Heading, VStack, Input, Textarea, Button, Text, Flex, Spinner } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUser, updateStoredUsername } from './AuthPageUtil';
 import axios from 'axios';
@@ -16,6 +16,7 @@ function UserProfile() {
   const [code, setCode] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
   const [emailUpdated, setEmailUpdated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { colorMode } = useColorMode();
 
   // State for current signed-in user
@@ -49,6 +50,8 @@ function UserProfile() {
       } catch (error) {
         console.error('Error fetching profile:', error);
         setMessage('Error loading profile');
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -169,6 +172,13 @@ function UserProfile() {
                     {message}
                   </Text>
                 )}
+                
+                { loading ? 
+                  <Flex justify="center" align="center" height="100vh">
+                      <Spinner size="xl" />
+                  </Flex> :
+                
+                <div>
                 <Text mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>Username</Text>
                 <Input 
                   value={profile.username} 
@@ -200,6 +210,9 @@ function UserProfile() {
                 >
                   Save
                 </Button>
+                 </div>
+}
+
 
                 {/* UofT Email Upgrade */}
                 {currentUser && !currentUser.is_uoft && (
@@ -329,6 +342,14 @@ function UserProfile() {
               </>
             ) : (
               <>
+
+                { loading ? (
+                  <>
+                  </>
+                ) : 
+                (
+                  <>
+                   
                 <Heading mb={4} color={colorMode === 'light' ? 'gray.800' : 'gray.100'}>{profile.username}'s Profile</Heading>
                 <Box 
                   p={6} 
@@ -349,8 +370,11 @@ function UserProfile() {
                     {profile.bio || "This user hasn't written a bio yet."}
                   </Text>
                 </Box>
+                </>
+                )}
               </>
             )}
+              
           </VStack>
         </Box>
       </Box>
@@ -385,12 +409,19 @@ function UserProfile() {
           }}
         >
           <Flex justify="space-between" align="center" mb={4}>
+
+            { loading ? (
+              <Spinner size="sm" />
+            ) : (
+             
             <Text 
               fontWeight="bold" 
               color={colorMode === 'light' ? 'gray.700' : 'gray.200'}
             >
               {profile.username}'s RECENT POSTS
             </Text>
+)}
+
           </Flex>
 
           <Box 

@@ -10,6 +10,7 @@ import {
   Box,
   Container,
   VStack,
+  Stack,
   Input,
   Button,
   Text,
@@ -36,6 +37,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [showVerification, setShowVerification] = useState(false);
   const [isSending, setIsSending] = useState(false);  // Track loading state
+  const [loginLoading, setLoginLoading] = useState(false); // Track loading state for login
 
   const { showAlert } = useContext(AlertContext);
   const { colorMode } = useColorMode();
@@ -74,6 +76,7 @@ function AuthPage() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setLoginLoading(true); // Disable button & show loading state
 
     try {
         const response = await fetch("http://127.0.0.1:8000/auth/login", {
@@ -98,7 +101,7 @@ function AuthPage() {
             const loggedIn = await isLoggedIn();
             if (loggedIn) {
               showAlert("success", "surface", "Login Successful", "Redirecting to dashboard...");
-              setTimeout(() => navigate("/home"), 2000); // Redirect to dashboard 
+              navigate("/home");
             }
         } else {
             console.error("Login failed:", data.detail);
@@ -107,7 +110,8 @@ function AuthPage() {
     } catch (error) {
         console.error("Error during login:", error);
         showAlert("error", "surface", "Login Failed", "An error occurred");
-    }
+    } 
+    setLoginLoading(false); 
 };
 
 
@@ -117,10 +121,6 @@ function AuthPage() {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-
-    if (isSending) return; // Prevent multiple requests
-
-    
     setIsSending(true); // Disable button & show loading state
     
     try {
@@ -132,7 +132,7 @@ function AuthPage() {
     } catch (error) {
       showAlert("error", "surface", "Error", "An error occurred while sending the verification code");
     }
-    setTimeout(() => setIsSending(false), 5000); // 🔹 Ensure cooldown before enabling
+    setTimeout(() => setIsSending(false), 2000); // 🔹 Ensure cooldown before enabling
   };
 
   return (
@@ -259,11 +259,15 @@ function AuthPage() {
                   width="100%"
                   borderRadius="full"
                   mt={4}
+                  loading={loginLoading}
+                  isDisabled={loginLoading} 
+                  loadingText="Logging in..."
                   bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
                   color="white"
                   _hover={{
                     bg: colorMode === 'light' ? 'blue.600' : 'blue.500'
                   }}
+
                 >
                   Log In
                 </Button>
@@ -295,13 +299,15 @@ function AuthPage() {
                 </VStack>
 
                 <Button
+
                   type="submit"
                   colorScheme="blue"
                   size="lg"
                   width="100%"
                   borderRadius="full"
-                  isLoading={isSending}
-                  isDisabled={isSending}
+                  loading={isSending}
+                  isDisabled={isSending} // Prevent multiple clicks
+                  loadingText="Sending..."
                   bg={colorMode === 'light' ? 'blue.500' : 'blue.400'}
                   color="white"
                   _hover={{
@@ -309,6 +315,7 @@ function AuthPage() {
                   }}
                 >
                   {isSending ? "Sending..." : "Send Verification Code"}
+
                 </Button>
               </VStack>
             ) : !isVerified ? (
