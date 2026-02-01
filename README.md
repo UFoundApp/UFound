@@ -1,16 +1,4 @@
-# UFound - Lost and Found Application
-
-**UFound** is a comprehensive lost and found platform designed to help people reunite with their lost items. Whether you've lost something or found an item that doesn't belong to you, UFound makes it easy to post, search, and connect with others in your community.
-
-## What is UFound?
-
-UFound is a web-based application that streamlines the lost and found process by:
-
-- **Posting Lost Items**: Users can report items they've lost with detailed descriptions, locations, and photos
-- **Reporting Found Items**: Good Samaritans can post items they've found to help return them to their rightful owners
-- **Smart Search**: Advanced search functionality to match lost and found items based on descriptions, locations, and categories
-- **Community-Driven**: Connect people in a community to help each other recover lost belongings
-- **Real-time Updates**: Get notified when potential matches are found
+# UFound
 
 ## Tech Stack
 
